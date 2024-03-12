@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\FEM\FEM.csproj" />
+    <ProjectReference Include="..\GaussIntegr\GaussIntegr.csproj" />
+    <ProjectReference Include="..\PostProcessor\PostProcessor.csproj" />
+    <ProjectReference Include="..\Managers\Managers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dumpify" Version="0.6.3" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

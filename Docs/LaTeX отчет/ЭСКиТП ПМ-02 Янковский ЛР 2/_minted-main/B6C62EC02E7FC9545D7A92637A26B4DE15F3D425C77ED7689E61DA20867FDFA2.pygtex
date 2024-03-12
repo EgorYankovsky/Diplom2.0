@@ -1,0 +1,21 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{n+nn}{Project}\PYG{p}{;}
+\PYG{k}{using}\PYG{+w}{ }\PYG{n+nn}{System.Globalization}\PYG{p}{;}
+\PYG{k}{using}\PYG{+w}{ }\PYG{n+nn}{MathObjects}\PYG{p}{;}
+\PYG{k}{using}\PYG{+w}{ }\PYG{n+nn}{DataStructs}\PYG{p}{;}
+\PYG{k}{using}\PYG{+w}{ }\PYG{n+nn}{Solver}\PYG{p}{;}
+\PYG{n}{CultureInfo}\PYG{p}{.}\PYG{n}{CurrentCulture}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{CultureInfo}\PYG{p}{.}\PYG{n}{InvariantCulture}\PYG{p}{;}
+
+\PYG{k}{const}\PYG{+w}{ }\PYG{k+kt}{string}\PYG{+w}{ }\PYG{n}{CalculationArea}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s}{@\PYGZdq{}D:\PYGZbs{}CodeRepos\PYGZbs{}CS\PYGZbs{}Diplom\PYGZbs{}Data\PYGZbs{}Input\PYGZbs{}Info.dat\PYGZdq{}}\PYG{p}{;}
+\PYG{k}{const}\PYG{+w}{ }\PYG{k+kt}{string}\PYG{+w}{ }\PYG{n}{BordersInfo}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s}{@\PYGZdq{}D:\PYGZbs{}CodeRepos\PYGZbs{}CS\PYGZbs{}Diplom\PYGZbs{}Data\PYGZbs{}Input\PYGZbs{}Borders.dat\PYGZdq{}}\PYG{p}{;}
+\PYG{k}{const}\PYG{+w}{ }\PYG{k+kt}{string}\PYG{+w}{ }\PYG{n}{AnswerPath}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s}{@\PYGZdq{}D:\PYGZbs{}CodeRepos\PYGZbs{}CS\PYGZbs{}Diplom\PYGZbs{}Data\PYGZbs{}Output\PYGZbs{}Answer.dat\PYGZdq{}}\PYG{p}{;}
+
+
+\PYG{n}{FEM}\PYG{+w}{ }\PYG{n}{myFEM}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k}{new}\PYG{p}{();}
+\PYG{n}{myFEM}\PYG{p}{.}\PYG{n}{ReadData}\PYG{p}{(}\PYG{n}{CalculationArea}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{BordersInfo}\PYG{p}{);}
+\PYG{n}{myFEM}\PYG{p}{.}\PYG{n}{ConstructMesh}\PYG{p}{();}
+\PYG{n}{myFEM}\PYG{p}{.}\PYG{n}{BuildMatrixAndVector}\PYG{p}{();}
+\PYG{n}{myFEM}\PYG{p}{.}\PYG{n}{SetSolver}\PYG{p}{(}\PYG{k}{new}\PYG{+w}{ }\PYG{n}{MCG}\PYG{p}{());}
+\PYG{n}{myFEM}\PYG{p}{.}\PYG{n}{Solve}\PYG{p}{();}
+\PYG{n}{myFEM}\PYG{p}{.}\PYG{n}{WriteData}\PYG{p}{(}\PYG{n}{AnswerPath}\PYG{p}{);}
+\end{Verbatim}
