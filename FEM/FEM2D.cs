@@ -243,10 +243,6 @@ public class FEM2D : FEM
             if (Mesh2D.nodesZ[j] <= z && z <= Mesh2D.nodesZ[j + 1])
                 break;
 
-        var elem = elemsArr[j * (Mesh2D.nodesR.Count - 1) + i];
-        
-        //double q1 = E_phi2D[elem[0]][t];
-
         return elemsArr[j * (Mesh2D.nodesR.Count - 1) + i];
     }
 }

@@ -40,11 +40,12 @@ public class FEM3D : FEM
         if (mesh.nodesX is null) throw new ArgumentNullException("null object");
         if (mesh.nodesY is null) throw new ArgumentNullException("null object");
 
-        foreach (var R in fem2d.Mesh2D.nodesR)
-        {
-            mesh.nodesX.Add(R / Math.Sqrt(2));
-            mesh.nodesY.Add(R / Math.Sqrt(2));
-        }
+        mesh.nodesX = fem2d.Mesh2D.nodesR.Where(r => r < fem2d.Mesh2D.nodesR.Last() / Math.Sqrt(2.0D)).ToList();
+        mesh.nodesY = fem2d.Mesh2D.nodesR.Where(r => r < fem2d.Mesh2D.nodesR.Last() / Math.Sqrt(2.0D)).ToList();
+        
+        mesh.nodesX.Add(fem2d.Mesh2D.nodesR.Last() / Math.Sqrt(2.0D));
+        mesh.nodesY.Add(fem2d.Mesh2D.nodesR.Last() / Math.Sqrt(2.0D));
+        
         mesh.nodesZ = fem2d.Mesh2D.nodesZ;
         timeMesh = fem2d.timeMesh;
     }
@@ -59,8 +60,11 @@ public class FEM3D : FEM
         if (fem2d.pointsArr is null) throw new ArgumentNullException();
 
         int i = 0;
+        
         foreach (var t in timeMesh)
         {
+            if (t == timeMesh.Last())
+                continue;
             int j = 0;
             Ex_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
             Ey_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
@@ -71,16 +75,20 @@ public class FEM3D : FEM
                 {
                     foreach (var X in mesh.nodesX)
                     {
-                        Console.WriteLine($"{X:E10} {Y:E10} {Z:E10}");
                         var elem = fem2d.GetE_phi(Math.Sqrt(X * X + Y * Y), Z, t);
+
                         Ex_3D[i][j] = -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * 
-                            BasisFunctions2D.GetValue(elem[0], elem[1], elem[2], elem[3],
+                            BasisFunctions2D.GetValue(
+                                fem2d.E_phi2D[i][elem[0]], fem2d.E_phi2D[i][elem[1]],
+                                fem2d.E_phi2D[i][elem[2]], fem2d.E_phi2D[i][elem[3]],
                                 fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
                                 fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
                                 Math.Sqrt(X * X + Y * Y), Z);
                         
                         Ey_3D[i][j] = X / Math.Sqrt(X * X + Y * Y) * 
-                            BasisFunctions2D.GetValue(elem[0], elem[1], elem[2], elem[3],
+                            BasisFunctions2D.GetValue(
+                                fem2d.E_phi2D[i][elem[0]], fem2d.E_phi2D[i][elem[1]],
+                                fem2d.E_phi2D[i][elem[2]], fem2d.E_phi2D[i][elem[3]],
                                 fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
                                 fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
                                 Math.Sqrt(X * X + Y * Y), Z);
