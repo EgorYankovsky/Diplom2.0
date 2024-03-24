@@ -43,7 +43,10 @@ if path1.is_dir():
             plt.colorbar(cbar)
             plt.title(file.name)
             cont.clabel()
-            plt.savefig(pictures_path + "Picture" + str(i) + ".png")
+
+            name = file.name.replace('.dat', '')
+
+            plt.savefig(pictures_path + name + ".png")
             i += 1
             add.basis = []
             #plt.show()

@@ -4,12 +4,35 @@ namespace MathObjects;
 
 public static class Generator
 {
-    public static void BuildPortait(ref GlobalMatrix m, ArrayOfPoints arrPt, ArrayOfElems arrEl)
+    public static void FillMatrixG(ref GlobalMatrix m, ArrayOfPoints arrPt, ArrayOfElems arrEl, ArrayOfBorders arrBd, TypeOfMatrixM typeOfMatrixM)
+    {
+        m._al = new double[m._jg.Count];
+        m._au = new double[m._jg.Count];
+
+        for (int i = 0; i < arrEl.Length; i++)
+            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mu0i[i], 0.0), ref m, arrEl[i]);
+        
+        ConsiderBoundaryConditions(ref m, arrBd);
+    }
+
+    public static void FillMatrixM(ref GlobalMatrix m, ArrayOfPoints arrPt, ArrayOfElems arrEl, ArrayOfBorders arrBd, TypeOfMatrixM typeOfMatrixM)
+    {
+        m._al = new double[m._jg.Count];
+        m._au = new double[m._jg.Count];
+
+        for (int i = 0; i < arrEl.Length; i++)
+            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, 0.0, arrEl.mu0i[i]), ref m, arrEl[i]);
+
+        ConsiderBoundaryConditions(ref m, arrBd);
+    }
+
+
+    public static void BuildPortait(ref GlobalMatrix m, int arrPtLen, ArrayOfElems arrEl)
     {
         List<List<int>> arr = new();
 
         // ! Дерьмодристный момент.
-        for(int i = 0; i < arrPt.Length; i++)
+        for(int i = 0; i < arrPtLen; i++)
             arr.Add(new List<int>());
 
         foreach (var _elem in arrEl)
@@ -22,26 +45,26 @@ public static class Generator
                     }
 
         m._ig[0] = 0;
-        for (int i = 0; i < arrPt.Length; i++)
+        for (int i = 0; i < arrPtLen; i++)
         {
             m._ig[i + 1] = m._ig[i] + arr[i].Count;
             m._jg.AddRange(arr[i]);
         }
     }
 
-    public static void FillMatrix(ref GlobalMatrix m, ArrayOfPoints arrPt, ArrayOfElems arrEl, ArrayOfBorders arrBd, double koef = 0.0D)
+    public static void FillMatrix(ref GlobalMatrix m, ArrayOfPoints arrPt, ArrayOfElems arrEl, ArrayOfBorders arrBd, TypeOfMatrixM typeOfMatrixM)
     {    
         m._al = new double[m._jg.Count];
         m._au = new double[m._jg.Count];
 
         for (int i = 0; i < arrEl.Length; i++)
         {
-            Add(new LocalMatrix(arrEl[i], arrPt, arrEl.mu0i[i], koef), ref m, arrEl[i], arrPt);
+            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mu0i[i], arrEl.mu0i[i]), ref m, arrEl[i]);
         }
         ConsiderBoundaryConditions(ref m, arrBd);
     }
 
-    private static void Add(LocalMatrix lm, ref GlobalMatrix gm, List<int> elem, ArrayOfPoints arrPt)
+    private static void Add(LocalMatrix lm, ref GlobalMatrix gm, List<int> elem)
     {
         if (gm._diag is null) throw new Exception("_diag isn't initialized");
         if (gm._ig is null) throw new Exception("_ig isn't initialized");

@@ -21,33 +21,33 @@ public enum EquationType
 }
 
 
-public class FEM
+public abstract class FEM
 {
-    private protected double[]? _timeMesh;
+    internal double[]? timeMesh;
 
     protected internal EquationType equationType;
 
-    private protected Mesh? _mesh;
+    private protected Mesh? mesh;
 
     protected ISolver? solver;
 
-    protected ArrayOfElems? _elemsArr; 
+    public ArrayOfElems? elemsArr; 
 
-    protected ArrayOfPoints? _pointsArr; 
+    public ArrayOfPoints? pointsArr; 
 
-    protected ArrayOfBorders? _bordersArr; 
+    public ArrayOfBorders? bordersArr; 
 
-    protected List<double>? _mu0;
+    protected List<double>? mu0;
 
-    protected List<double>? _sigma;
+    protected List<double>? sigma;
 
-    public GlobalMatrix? _matrix;
+    public GlobalMatrix? Matrix;
 
-    public GlobalVector? _vector;
+    public GlobalVector? Vector;
 
-    public GlobalVector? _answer;
+    public GlobalVector? Answer;
 
-    public GlobalVector[]? _solutions;
+    public GlobalVector[]? Solutions;
 
     private protected void SetTimeMesh(string data)
     {
@@ -60,12 +60,12 @@ public class FEM
         if (t0 - t1 == 0)
         {
             equationType = EquationType.Elliptic;
-            _solutions = new GlobalVector[1];
+            Solutions = new GlobalVector[1];
             return;
         }
 
-        _timeMesh = new double[tn + 1];
-        _solutions = new GlobalVector[tn + 1];
+        timeMesh = new double[tn + 1];
+        Solutions = new GlobalVector[tn + 1];
 
         double h = t1 - t0;
         double denominator = 0.0;
@@ -74,10 +74,10 @@ public class FEM
             denominator += Math.Pow(double.Parse(info[3]), j);
 
         double x0 = h / denominator;
-        _timeMesh[0] = t0;
+        timeMesh[0] = t0;
         for(int j = 0; j < tn - 1; j++)
-            _timeMesh[j + 1] = _timeMesh[j] + x0 * Math.Pow(tk, j);
-        _timeMesh[^1] = t1;
+            timeMesh[j + 1] = timeMesh[j] + x0 * Math.Pow(tk, j);
+        timeMesh[^1] = t1;
         equationType = EquationType.Parabolic;
         Debug.WriteLine("Time mesh built correctly!");
     }

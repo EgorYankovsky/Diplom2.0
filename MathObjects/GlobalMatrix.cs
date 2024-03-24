@@ -1,6 +1,13 @@
 using DataStructs;
 namespace MathObjects;
 
+public enum TypeOfMatrixM
+{
+    Mr,
+    Mrr
+}
+
+
 public class GlobalMatrix : Matrix
 {
     #region Компоненты матрицы.
@@ -114,115 +121,8 @@ public class GlobalMatrix : Matrix
     {
         _jg = new();
         _ig = new int[_arrOfPnt.Length + 1];
-        _diag = new double[_arrOfPnt.Length];
-
-        // Рабочий массив.
-        List<List<int>> arr = new();
-
-        // ! Дерьмодристный момент.
-        for(int i = 0; i < _arrOfPnt.Length; i++)
-            arr.Add(new List<int>());
-
-        foreach (var _elem in _arrOfElms)
-            foreach (var point in _elem)
-                foreach (var pnt in _elem)
-                    if (pnt < point && Array.IndexOf(arr[point].ToArray(), pnt) == -1)
-                    {
-                        arr[point].Add(pnt);
-                        arr[point].Sort();
-                    }
-
-        _ig[0] = 0;
-        for (int i = 0; i < _arrOfPnt.Length; i++)
-        {
-            _ig[i + 1] = _ig[i] + arr[i].Count;
-            _jg.AddRange(arr[i]);
-        }
-
-        _al = new double[_jg.Count];
-        _au = new double[_jg.Count];
-        foreach (var _elem in _arrOfElms)
-        {
-            Add(_elem, _arrOfPnt, mu0[0], koef); //! Здесь необходимо подбирать mu0.
-        }
-        ConsiderBoundaryConditions(_arrOfBord, _arrOfPnt);    
+        _diag = new double[_arrOfPnt.Length];   
     }
     #endregion
-
-    private void ConsiderBoundaryConditions(ArrayOfBorders arrBrd, ArrayOfPoints arrPt)
-    {
-        if (_ig is null) throw new Exception("_ig is null.");
-        if (_al is null) throw new Exception("_al is null.");
-        if (_diag is null) throw new Exception("_diag is null.");
-        if (_au is null) throw new Exception("_au is null.");
-        
-        foreach (var border in arrBrd)
-        {
-            switch (border[0])
-            {
-                case 1:
-                {
-                    for (int i = 2; i < 4; i++)
-                    {
-                        for (int j = _ig[border[i]]; j < _ig[border[i] + 1]; j++)
-                            _al[j] = 0;
-                        _diag[border[i]] = 1;
-                        for (int j = 0; j < _jg.Count; j++)
-                            if (_jg[j] == border[i])
-                                _au[j] = 0;
-                    }
-                    break;
-                }
-                case 2: break; // du / dn = 0
-                case 3: throw new ArgumentException("Пока нет возможности учитывать КУ 3-го рода");
-
-            }
-        }
-    }
-
-    private void Add(List<int> elem, ArrayOfPoints arrPt, double mu0, double koef)
-    {
-        LocalMatrix lm = new(elem, arrPt, mu0, koef);
-
-        if (_diag is null) throw new Exception("_diag isn't initialized");
-        if (_ig is null) throw new Exception("_ig isn't initialized");
-        if (_au is null) throw new Exception("_au isn't initialized");
-        if (_al is null) throw new Exception("_au isn't initialized");
-        
-        
-        int ii = 0;
-        foreach (var i in elem)
-        {
-            int jj = 0;
-            foreach (var j in elem)
-            {
-                int ind = 0;
-                double val = 0.0D;
-                switch(i - j)
-                {
-                    case 0:
-                        val = lm[ii, jj];
-                        _diag[i] += lm[ii, jj];
-                        break;
-                    case < 0:
-                        ind = _ig[j];
-                        for (; ind <= _ig[j + 1] - 1; ind++)
-                            if (_jg[ind] == i) break;
-                        val = lm[ii, jj];
-                        _au[ind] += lm[ii, jj];
-                        break;
-                    case > 0:
-                        ind = _ig[i];
-                        for (; ind <= _ig[i + 1] - 1; ind++)
-                            if (_jg[ind] == j) break;
-                        val = lm[ii, jj];
-                        _al[ind] += lm[ii, jj];
-                        break;
-                }
-                jj++;
-            }
-            ii++;
-        }
-    }
 
 }

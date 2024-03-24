@@ -5,9 +5,10 @@ namespace MathObjects;
 
 public class LocalMatrix : Matrix
 {
-    private readonly double _mu0;
+    private TypeOfMatrixM _typeOfMatrixM;
+    private readonly double _lambda;
 
-    private readonly double _c;
+    private readonly double _gamma;
 
     private readonly double _rk;
 
@@ -20,11 +21,14 @@ public class LocalMatrix : Matrix
         get
         {
             if (i > 3 || j > 3) throw new IndexOutOfRangeException("Local matrix error.");
-            if (_c == 0.0D)
-                return (1.0D / _mu0) * (_Gr[i % 2, j % 2] * _Mz[i / 2, j / 2] + _Mr[i % 2, j % 2] * _Gz[i / 2, j / 2]) + 
-                       (1.0D / _mu0) * (_Mrr[i % 2, j % 2] * _Mz[i / 2, j / 2]);
-            else 
-                return /*(1.0D / _c) * */(_Mrr[i % 2, j % 2] * _Mz[i / 2, j / 2]);
+            return _typeOfMatrixM switch
+            {
+                TypeOfMatrixM.Mr => (1.0D / _lambda) * (_Gr[i % 2, j % 2] * _Mz[i / 2, j / 2] + _Mr[i % 2, j % 2] * _Gz[i / 2, j / 2]) +
+                                    (1.0D / _gamma) * (_Mr[i % 2, j % 2] * _Mz[i / 2, j / 2]),
+                TypeOfMatrixM.Mrr => (1.0D / _lambda) * (_Gr[i % 2, j % 2] * _Mz[i / 2, j / 2] + _Mr[i % 2, j % 2] * _Gz[i / 2, j / 2]) +
+                                     (1.0D / _gamma) * (_Mrr[i % 2, j % 2] * _Mz[i / 2, j / 2]),
+                _ => throw new Exception("Unexpected matrix"),
+            };
         }
     }
 
@@ -57,20 +61,21 @@ public class LocalMatrix : Matrix
 
     public LocalMatrix(double mu0, double rk, double hz, double hr)
     {
-        _mu0 = mu0;
+        _lambda = mu0;
         _rk = rk;
         _hr = hr;
         _hz = hz;
     }
 
-    public LocalMatrix(List<int> elem, ArrayOfPoints arrPt, double mu0 = 1.0D, double koef = 0.0D)
+    public LocalMatrix(List<int> elem, ArrayOfPoints arrPt, TypeOfMatrixM typeOfMatrixM, double lambda = 0.0D, double gamma = 0.0D)
     {
+        _typeOfMatrixM = typeOfMatrixM;
         _rk = arrPt[elem[0]].R;
         _hr = arrPt[elem[1]].R - arrPt[elem[0]].R;
         _hz = arrPt[elem[2]].Z - arrPt[elem[0]].Z;
         double _d = _rk / _hr;
-        _mu0 = mu0;
-        _c = koef;
+        _lambda = lambda;
+        _gamma = gamma;
         _Mr1 = new double[2,2] {{ (1 + _d) * (1 + _d), -1.0 * _d * (1 + _d)},
                                 {-1.0 * _d * (1 + _d),              _d * _d}};
 

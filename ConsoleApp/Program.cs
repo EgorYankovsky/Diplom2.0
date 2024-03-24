@@ -32,9 +32,13 @@ myFEM2D.SubmitGeneratedData();
 myFEM2D.SetSolver(new LOS());
 myFEM2D.Solve();
 myFEM2D.WriteData(AnswerPath);
-//myFEM2D.GenerateVectorEphi();
+myFEM2D.GenerateVectorEphi();
 
-//FEM3D myFEM3D = new(myFEM2D);
+FEM3D myFEM3D = new(myFEM2D);
+myFEM3D.ConstructMesh(myFEM2D);
+myFEM3D.GenerateExy(myFEM2D);
+
+
 
 int a = Postprocessor.ShowAnswer();
 Debug.WriteLine($"Postprocessor finished with code: {a}");
