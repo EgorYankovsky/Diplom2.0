@@ -13,17 +13,30 @@ using System.Timers;
 
 public class FEM3D : FEM
 {
+    public List<GlobalVector> Ax_3D;
+
+    public List<GlobalVector> Ay_3D;
+
+    public List<GlobalVector> Az_3D;
+
     public List<GlobalVector> Ex_3D;
 
     public List<GlobalVector> Ey_3D;
 
     public List<GlobalVector> Ez_3D;
 
+    // Maybe private?
+    public List<Mesh3Dim> Layers;
+
     public FEM3D(FEM2D fem2d)
     {
+        Ax_3D = new();
+        Ay_3D = new();
+        Az_3D = new();
         Ex_3D = new();
         Ey_3D = new();
         Ez_3D = new();
+        Layers = new();
         mesh = new Mesh3Dim
         {
             nodesX = new(),
@@ -50,7 +63,56 @@ public class FEM3D : FEM
         timeMesh = fem2d.timeMesh;
     }
 
-    public void GenerateExy(FEM2D fem2d)
+    public void GenerateAxyz(FEM2D fem2d)
+    {
+        if (timeMesh is null) throw new ArgumentNullException();
+        if (mesh is null) throw new ArgumentNullException();
+        if (mesh.nodesX is null) throw new ArgumentNullException();
+        if (mesh.nodesY is null) throw new ArgumentNullException();
+        if (mesh.nodesZ is null) throw new ArgumentNullException();
+        if (fem2d.pointsArr is null) throw new ArgumentNullException();
+
+        int i = 0;
+        
+        foreach (var t in timeMesh)
+        {
+            int j = 0;
+            Ax_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
+            Ay_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
+            Az_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
+            foreach (var Z in mesh.nodesZ)
+            {
+                foreach (var Y in mesh.nodesY)
+                {
+                    foreach (var X in mesh.nodesX)
+                    {
+                        var elem = fem2d.GetE_phi(Math.Sqrt(X * X + Y * Y), Z, t);
+
+                        Ax_3D[i][j] = -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * 
+                            BasisFunctions2D.GetValue(
+                                fem2d.A_phi[i][elem[0]], fem2d.A_phi[i][elem[1]],
+                                fem2d.A_phi[i][elem[2]], fem2d.A_phi[i][elem[3]],
+                                fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
+                                fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
+                                Math.Sqrt(X * X + Y * Y), Z);
+                        
+                        Ay_3D[i][j] = X / Math.Sqrt(X * X + Y * Y) * 
+                            BasisFunctions2D.GetValue(
+                                fem2d.A_phi[i][elem[0]], fem2d.A_phi[i][elem[1]],
+                                fem2d.A_phi[i][elem[2]], fem2d.A_phi[i][elem[3]],
+                                fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
+                                fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
+                                Math.Sqrt(X * X + Y * Y), Z);
+                        
+                        j++;
+                    }
+                }
+            }
+            i++;
+        }
+    }
+
+    public void GenerateExyz(FEM2D fem2d)
     {
         if (timeMesh is null) throw new ArgumentNullException();
         if (mesh is null) throw new ArgumentNullException();
@@ -99,5 +161,10 @@ public class FEM3D : FEM
             }
             i++;
         }
+    }
+
+    public void AddField(Mesh3Dim mesh)
+    {
+        
     }
 }

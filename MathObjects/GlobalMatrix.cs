@@ -76,6 +76,8 @@ public class GlobalMatrix : Matrix
         return 0.0D;  
     }   
 
+    public GlobalMatrix Transpose() => new(_ig, _jg, _diag, _au, _al);
+
     public bool CheckPortrait(GlobalMatrix gm)
     {
         if (Size != gm.Size) return false;

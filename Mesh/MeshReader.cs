@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace Grid;
 
@@ -58,5 +59,41 @@ public static class MeshReader
             Console.WriteLine($"Error during reading {_currPath} file: {ex}");
             throw new IOException();
         }
+    }
+
+    public static Mesh3Dim ReadMesh(string path)
+    {
+        var mesh = new Mesh3Dim();
+        try
+        {
+            using var sr = new StreamReader(path);
+
+            mesh.nodesX = sr.ReadLine().Split().Select(double.Parse).ToList();
+            for (int i = 0; i < mesh.nodesX.Count; i++)
+                mesh.nodesXRefs.Add(i);            
+            mesh.NodesXWithoutFragmentation = mesh.nodesX.ToImmutableArray();
+            mesh.infoAboutX = sr.ReadLine() ?? "";
+
+            mesh.nodesY = sr.ReadLine().Split().Select(double.Parse).ToList();
+            for (int i = 0; i < mesh.nodesY.Count; i++)
+                mesh.nodesYRefs.Add(i);
+            mesh.NodesYWithoutFragmentation = mesh.nodesY.ToImmutableArray();
+            mesh.infoAboutY = sr.ReadLine() ?? "";
+
+            mesh.nodesZ = sr.ReadLine().Split().Select(double.Parse).ToList();
+            for (int i = 0; i < mesh.nodesZ.Count; i++)
+                mesh.nodesZRefs.Add(i);
+            mesh.NodesZWithoutFragmentation = mesh.nodesZ.ToImmutableArray();
+            mesh.infoAboutZ = sr.ReadLine() ?? "";
+
+            string[] str = sr.ReadLine().Split();
+            mesh.mu0.Add(double.Parse(str[0]));
+            mesh.sigma.Add(double.Parse(str[1]));
+        }
+        catch(Exception ex)
+        {
+            Debug.WriteLine($"Exception during reading file {path}: {ex.Message}.\nReturn empty mesh.");
+        }
+        return mesh;    
     }
 }

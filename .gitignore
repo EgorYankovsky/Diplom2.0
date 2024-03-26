@@ -1,9 +1,10 @@
-**\bin
-**\obj
-**\Output
-**\.vs
+**/bin
+**/obj
+**/Output
+**/.vs
 *.lnk
 *.sln
-**\__pycache__
-**\.vscode
-**\Pictures
+**/__pycache__
+**/.vscode
+**/Pictures
+**/Docs

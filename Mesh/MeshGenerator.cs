@@ -54,7 +54,6 @@ public static class MeshGenerator
             }
             currentPosition++;
             mesh.nodesZRefs[i + 1] = currentPosition;
-
         }
         RemakeBorders(ref mesh);
     }
@@ -76,11 +75,80 @@ public static class MeshGenerator
         mesh.nodesZRefs = mesh2dim.nodesZRefs;
         mesh.NodesZWithoutFragmentation = mesh2dim.NodesZWithoutFragmentation;
         mesh.infoAboutZ = mesh2dim.infoAboutZ;
+
+        RemakeBorders(ref mesh);
+    }
+
+    public static void GenerateMesh(ref Mesh3Dim mesh)
+    {
+        int currentPosition = 0;
+        double[] kek = mesh.infoAboutX.Split().Select(double.Parse).ToArray();
+        for (int i = 0; i < mesh.NodesXWithoutFragmentation.Length - 1; i++)
+        {
+            double h = mesh.nodesR[1 + currentPosition] - mesh.nodesR[currentPosition];
+            double denominator = 0.0;
+
+            int negr = Convert.ToInt32(kek[2 * i]);
+            for (int j = 0; j < negr; j++)
+                denominator += Math.Pow(kek[2 * i + 1], j);
+
+            double x0 = h / denominator;
+
+            for(int j = 0; j < negr - 1; j++)
+            {
+                mesh.nodesR.Insert(currentPosition + 1, mesh.nodesR[currentPosition] + x0 * Math.Pow(kek[2 * i + 1], j));
+                currentPosition++;
+            }
+            currentPosition++;
+            mesh.nodesXRefs[i + 1] = currentPosition;
+        }
+        
+        currentPosition = 0;
+        kek = mesh.infoAboutY.Split().Select(double.Parse).ToArray();
+        for (int i = 0; i < mesh.NodesYWithoutFragmentation.Length - 1; i++)
+        {
+            double h = mesh.nodesY[1 + currentPosition] - mesh.nodesY[currentPosition];
+            double denominator = 0.0;
+
+            int negr = Convert.ToInt32(kek[2 * i]);
+            for (int j = 0; j < negr; j++)
+                denominator += Math.Pow(kek[2 * i + 1], j);
+            double x0 = h / denominator;
+
+            for(int j = 0; j < negr - 1; j++)
+            {
+                mesh.nodesY.Insert(currentPosition + 1, mesh.nodesY[currentPosition] + x0 * Math.Pow(kek[2 * i + 1], j));
+                currentPosition++;
+            }
+            currentPosition++;
+            mesh.nodesYRefs[i + 1] = currentPosition;
+        }
+
+        currentPosition = 0;
+        kek = mesh.infoAboutZ.Split().Select(double.Parse).ToArray();
+        for (int i = 0; i < mesh.NodesZWithoutFragmentation.Length - 1; i++)
+        {
+            double h = mesh.nodesZ[1 + currentPosition] - mesh.nodesZ[currentPosition];
+            double denominator = 0.0;
+
+            int negr = Convert.ToInt32(kek[2 * i]);
+            for (int j = 0; j < negr; j++)
+                denominator += Math.Pow(kek[2 * i + 1], j);
+            double x0 = h / denominator;
+
+            for(int j = 0; j < negr - 1; j++)
+            {
+                mesh.nodesZ.Insert(currentPosition + 1, mesh.nodesZ[currentPosition] + x0 * Math.Pow(kek[2 * i + 1], j));
+                currentPosition++;
+            }
+            currentPosition++;
+            mesh.nodesZRefs[i + 1] = currentPosition;
+        }
     }
 
     private static void RemakeBorders(ref Mesh3Dim mesh)
     {
-
+        
     }
 
     private static void RemakeBorders(ref Mesh2Dim mesh)

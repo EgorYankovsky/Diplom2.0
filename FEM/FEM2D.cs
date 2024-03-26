@@ -148,24 +148,39 @@ public class FEM2D : FEM
 
     public void WriteData(string _path)
     {
-        if (Solutions is null) throw new ArgumentNullException();
+        if (A_phi is null) throw new ArgumentNullException();
+        if (E_phi2D is null) throw new ArgumentNullException();
 
         if (timeMesh is not null)
+        {
             for (int i = 0; i < timeMesh.Length; i++)
             {
-                using var sw = new StreamWriter($"{_path}Answer_time={timeMesh[i]}.dat");
-                for (int j = 0;   j < Solutions[i].Size; j++)
-                    sw.WriteLine($"{Solutions[i][j]:E8}");
+                using var sw = new StreamWriter($"{_path}\\A_phi\\Answer_Aphi_time={timeMesh[i]}.dat");
+                for (int j = 0;   j < A_phi[i].Size; j++)
+                    sw.WriteLine($"{A_phi[i][j]:E8}");
                 sw.Close();
             }
+            for (int i = 0; i < timeMesh.Length; i++)
+            {
+                using var sw = new StreamWriter($"{_path}\\E_phi\\Answer_Ephi_time={timeMesh[i]}.dat");
+                for (int j = 0;   j < E_phi2D[i].Size; j++)
+                    sw.WriteLine($"{E_phi2D[i][j]:E8}");
+                sw.Close();
+            }
+        }
         else
         {
             using var sw = new StreamWriter($"{_path}Answer.dat");
-            for (int j = 0; j < Solutions[0].Size; j++)
-                sw.WriteLine($"{Solutions[0][j]:E8}");
+            for (int j = 0; j < A_phi[0].Size; j++)
+                sw.WriteLine($"{A_phi[0][j]:E8}");
             sw.Close();
+
+            using var sw1 = new StreamWriter($"{_path}Answer.dat");
+            for (int j = 0; j < A_phi[0].Size; j++)
+                sw1.WriteLine($"{A_phi[0][j]:E8}");
+            sw1.Close();
         }
-        WriteDiscrepancy(_path);
+        // WriteDiscrepancy(_path);
     }
 
     private void WriteDiscrepancy(string _path)
@@ -222,9 +237,17 @@ public class FEM2D : FEM
     public void GenerateVectorEphi()
     {
         if (timeMesh is null) throw new NullReferenceException("timeMesh is null");
-        E_phi2D = new GlobalVector[A_phi.Length - 1];
+        
+        E_phi2D = new GlobalVector[A_phi.Length];
         for (int i = 0; i < E_phi2D.Length; i++)
-            E_phi2D[i] = (1.0 / (timeMesh[i + 1] - timeMesh[i])) * (A_phi[i] - A_phi[i + 1]);
+        {
+            if (i == 0)
+                E_phi2D[i] = (-1.0 / (timeMesh[i + 1] - timeMesh[i])) * (A_phi[i + 1] - A_phi[i]);
+            else if (i == E_phi2D.Length - 1)
+                E_phi2D[i] = (-1.0 / (timeMesh[i] - timeMesh[i - 1])) * (A_phi[i] - A_phi[i - 1]);
+            else
+                E_phi2D[i] = (-1.0 / (timeMesh[i + 1] - timeMesh[i - 1])) * (A_phi[i + 1] - A_phi[i - 1]);
+        }
     }
 
     internal List<int> GetE_phi(double r, double z, double t)
