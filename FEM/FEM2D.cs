@@ -60,6 +60,7 @@ public class FEM2D : FEM
         if (elemsArr is null) throw new ArgumentNullException("elems array is null !");
         if (bordersArr is null) throw new ArgumentNullException("borders array is null !");
         if (Solutions is null) throw new ArgumentNullException("solutions array is null !");
+        if (Discrepancy is null) throw new ArgumentNullException("discrepancy array is null !");
         if (solver is null) throw new ArgumentNullException("solver is null !");
 
         switch(equationType)
@@ -69,7 +70,7 @@ public class FEM2D : FEM
                 Generator.BuildPortait(ref Matrix, pointsArr.Length, elemsArr);
                 Generator.FillMatrix(ref Matrix, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mrr);
                 Vector = new GlobalVector(pointsArr, bordersArr, 1.0);
-                Solutions[0] = solver.Solve(Matrix, Vector);
+                (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
             break;
 
             case EquationType.Parabolic:
@@ -85,26 +86,10 @@ public class FEM2D : FEM
                         Generator.BuildPortait(ref Matrix, pointsArr.Length, elemsArr);
                         Generator.FillMatrix(ref Matrix, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mrr);
                         Vector = new GlobalVector(pointsArr, bordersArr, timeMesh[i]);
-                        Solutions[0] = solver.Solve(Matrix, Vector);
+                        (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
                     }
                     else if (i == 1)
-                    {
-                        /*
-                        double deltT = timeMesh[i] - timeMesh[i - 1];
-                        var matrix1 = new GlobalMatrix(pointsArr.Length);
-                        Generator.BuildPortait(ref matrix1, pointsArr, elemsArr);
-                        Generator.FillMatrix(ref matrix1, pointsArr, elemsArr, bordersArr);
-
-                        var M = new GlobalMatrix(pointsArr.Length); // ???
-                        Generator.BuildPortait(ref M, pointsArr, elemsArr);
-                        Generator.FillMatrix(ref M, pointsArr, elemsArr, bordersArr, 1.0);
-                        Matrix = 1.0 / deltT * M + matrix1;
-                    
-                        var bi = new GlobalVector(pointsArr, bordersArr, timeMesh[i]);
-                        Vector = bi + 1.0 / deltT * M * Solutions[i - 1];
-                        */
                         Solutions[i] = Solutions[i - 1];
-                    }
                     else
                     {
                         double deltT = timeMesh[i] - timeMesh[i - 2];
@@ -129,7 +114,7 @@ public class FEM2D : FEM
 
                         var bi = new GlobalVector(pointsArr, bordersArr, timeMesh[i]);
                         Vector = bi - deltT0 / (deltT * deltT1) * M * Solutions[i - 2] + deltT / (deltT1 * deltT0) * M * Solutions[i - 1];
-                        Solutions[i] = solver.Solve(Matrix, Vector);
+                        (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
                     }
                 }
             break;
@@ -155,14 +140,14 @@ public class FEM2D : FEM
         {
             for (int i = 0; i < timeMesh.Length; i++)
             {
-                using var sw = new StreamWriter($"{_path}\\A_phi\\Answer_Aphi_time={timeMesh[i]}.dat");
+                using var sw = new StreamWriter($"{_path}\\A_phi\\Answer\\Answer_Aphi_time={timeMesh[i]}.dat");
                 for (int j = 0;   j < A_phi[i].Size; j++)
                     sw.WriteLine($"{A_phi[i][j]:E8}");
                 sw.Close();
             }
             for (int i = 0; i < timeMesh.Length; i++)
             {
-                using var sw = new StreamWriter($"{_path}\\E_phi\\Answer_Ephi_time={timeMesh[i]}.dat");
+                using var sw = new StreamWriter($"{_path}\\E_phi\\Answer\\Answer_Ephi_time={timeMesh[i]}.dat");
                 for (int j = 0;   j < E_phi2D[i].Size; j++)
                     sw.WriteLine($"{E_phi2D[i][j]:E8}");
                 sw.Close();
@@ -170,68 +155,109 @@ public class FEM2D : FEM
         }
         else
         {
-            using var sw = new StreamWriter($"{_path}Answer.dat");
+            using var sw = new StreamWriter($"{_path}\\A_phi\\Answer\\Answer.dat");
             for (int j = 0; j < A_phi[0].Size; j++)
                 sw.WriteLine($"{A_phi[0][j]:E8}");
             sw.Close();
 
-            using var sw1 = new StreamWriter($"{_path}Answer.dat");
-            for (int j = 0; j < A_phi[0].Size; j++)
-                sw1.WriteLine($"{A_phi[0][j]:E8}");
+            using var sw1 = new StreamWriter($"{_path}\\E_phi\\Answer\\Answer.dat");
+            for (int j = 0; j < E_phi2D[0].Size; j++)
+                sw1.WriteLine($"{E_phi2D[0][j]:E8}");
             sw1.Close();
         }
-        // WriteDiscrepancy(_path);
     }
 
-    private void WriteDiscrepancy(string _path)
+    public void WriteDiscrepancy(string _path)
     {
         if (Mesh2D is null) throw new ArgumentNullException();
         if (Mesh2D.nodesR is null) throw new ArgumentNullException();
         if (Mesh2D.nodesZ is null) throw new ArgumentNullException();
         if (Solutions is null) throw new ArgumentNullException();
+        if (Discrepancy is null) throw new ArgumentNullException();
+        if (A_phi is null) throw new ArgumentNullException();
+        if (E_phi2D is null) throw new ArgumentNullException();
 
 
-        using var sw = new StreamWriter($"{_path}Discrepancy.dat");
-
-        double avgDisc = 0.0;
-        double maxDisc = 0.0;
-        int NotNaNamount = 0;
-        
-        double sumU = 0.0D;
-        double sumD = 0.0D;
-
-        List<double> TheorAnswer = new();
-        foreach (var Z in Mesh2D.nodesZ)
+        if (timeMesh is not null)
         {
-            foreach (var R in Mesh2D.nodesR)
+            for (int i = 0; i < timeMesh.Length; i++)
             {
-                TheorAnswer.Add(Function.U(R, Z));
+                if (i == 1)
+                    continue;
+                using var sw_d = new StreamWriter($"{_path}\\A_phi\\Discrepancy\\Discrepancy_Aphi_time={timeMesh[i]}.dat");
+
+                int NotNaNamount = 0;
+                double maxDisc = 0.0;
+                double avgDisc = 0.0;
+
+                double sumU = 0.0D;
+                double sumD = 0.0D;
+
+                for (int j = 0; j < A_phi[i].Size; j++)
+                {
+                    double absDiff = A_phi[i][j] - Discrepancy[i][j];
+                    double currDisc = Math.Abs(A_phi[i][j] - Discrepancy[i][j]) / Math.Abs(A_phi[i][j]);
+                    
+                    if (Math.Abs(maxDisc) < Math.Abs(currDisc))
+                        maxDisc = currDisc;
+
+                    if (!double.IsNaN(currDisc))
+                    {
+                        avgDisc += currDisc;
+                        NotNaNamount++;
+                    }
+
+                    sumU += absDiff * absDiff;
+                    sumD += A_phi[i][j] * A_phi[i][j];
+
+                    sw_d.WriteLine($"{absDiff:E15} {currDisc:E15}");
+                }
+                avgDisc = Math.Sqrt(sumU) / Math.Sqrt(sumD);
+                sw_d.WriteLine($"Средняя невязка: {avgDisc:E15}");
+                sw_d.WriteLine($"Максимальная невязка: {maxDisc:E15}");
+                sw_d.WriteLine($"С: {avgDisc:E7}");
+                sw_d.WriteLine($"М: {maxDisc:E7}");
+                sw_d.Close();
             }
         }
-        
-        for (int i = 0; i < Solutions[0].Size; i++)
+        else
         {
-            double absDiff = Solutions[0][i] - TheorAnswer[i];
-            double currDisc = Math.Abs(Solutions[0][i] - TheorAnswer[i]) / Math.Abs(TheorAnswer[i]);
-            if (Math.Abs(maxDisc) < Math.Abs(currDisc))
-                maxDisc = currDisc;
-            if (!double.IsNaN(currDisc))
+            using var sw_d = new StreamWriter($"{_path}\\A_phi\\Discrepancy\\Discrepancy_Aphi.dat");
+
+            int NotNaNamount = 0;
+            double maxDisc = 0.0;
+            double avgDisc = 0.0;
+
+            double sumU = 0.0D;
+            double sumD = 0.0D;
+
+            for (int j = 0; j < A_phi[0].Size; j++)
             {
-                avgDisc += currDisc;
-                NotNaNamount++;
+                double absDiff = A_phi[0][j] - Discrepancy[0][j];
+                double currDisc = Math.Abs(A_phi[0][j] - Discrepancy[0][j]) / Math.Abs(A_phi[0][j]);
+                
+                if (Math.Abs(maxDisc) < Math.Abs(currDisc))
+                    maxDisc = currDisc;
+
+                if (!double.IsNaN(currDisc))
+                {
+                    avgDisc += currDisc;
+                    NotNaNamount++;
+                }
+
+                sumU += absDiff * absDiff;
+                sumD += A_phi[0][j] * A_phi[0][j];
+
+                sw_d.WriteLine($"{absDiff:E15} {currDisc:E15}");
+    
             }
-            sumU += absDiff * absDiff;
-            sumD += TheorAnswer[i] * TheorAnswer[i];
-
-            sw.WriteLine($"{absDiff:E15} {currDisc:E15}");
+            avgDisc = Math.Sqrt(sumU) / Math.Sqrt(sumD);
+            sw_d.WriteLine($"Средняя невязка: {avgDisc:E15}");
+            sw_d.WriteLine($"Максимальная невязка: {maxDisc:E15}");
+            sw_d.WriteLine($"С: {avgDisc:E7}");
+            sw_d.WriteLine($"М: {maxDisc:E7}");
+            sw_d.Close();
         }
-
-        avgDisc = Math.Sqrt(sumU) / Math.Sqrt(sumD);
-        sw.WriteLine($"Средняя невязка: {avgDisc:E15}");
-        sw.WriteLine($"Максимальная невязка: {maxDisc:E15}");
-        sw.WriteLine($"С: {avgDisc:E7}");
-        sw.WriteLine($"М: {maxDisc:E7}");
-        sw.Close();
     }
 
     public void GenerateVectorEphi()

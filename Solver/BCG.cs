@@ -9,7 +9,7 @@ public class BCG : ISolver
 
     private const double _eps = 1E-15;
 
-    public GlobalVector Solve(GlobalMatrix A, GlobalVector b)
+    public (GlobalVector, GlobalVector) Solve(GlobalMatrix A, GlobalVector b)
     {
         GlobalVector x = new(b.Size);
         GlobalVector x_ = new(b.Size);
@@ -30,15 +30,21 @@ public class BCG : ISolver
         double alph = 0.0D;
         double beta = 0.0D;
 
-        r_ = b - A * x_;
-        p_ = r_;
-        z_ = r_;
-        s_ = r_;
+        r = b - A * x_;
+        p = r;
+        z = r;
+        s = r;
 
-        int iter = 0;
+        int iter = 1;
         Stopwatch sw = Stopwatch.StartNew();
         do
         {
+            x_ = x;
+            z_ = z;
+            r_ = r;
+            s_ = s;
+            p_ = p;
+
             var Az = A * z_;
             alph = (p_ * r_) / (s_ * Az);
             
@@ -52,13 +58,6 @@ public class BCG : ISolver
             s = p + beta * s_;
 
             iter++;
-
-            x_ = x;
-            z_ = z;
-            r_ = r;
-            s_ = s;
-            p_ = p;
-
             Console.WriteLine($"{r.Norma() / b.Norma():E15}");
         } while (iter < _maxIter && r.Norma() / b.Norma() >= _eps);
         sw.Stop();
@@ -68,7 +67,7 @@ public class BCG : ISolver
             $"Total iterations: {iter}\n" +
             $"Time ms: {sw.ElapsedMilliseconds}\n" +
             $"Relative residuality: {r.Norma() / b.Norma():E15}\n");
-        return x;
+        return (x, x_);
     }
 }
 

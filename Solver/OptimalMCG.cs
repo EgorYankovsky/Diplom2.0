@@ -8,10 +8,10 @@ public class OptimalMCG : ISolver
 
     private const double _eps = 1E-15;
 
-    public GlobalVector Solve(GlobalMatrix A, GlobalVector b)
+    public (GlobalVector, GlobalVector) Solve(GlobalMatrix A, GlobalVector b)
     {
         GlobalVector x = new(b.Size);
         
-        return x;
+        return (x, x);
     }
 }

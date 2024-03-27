@@ -4,5 +4,5 @@ namespace Solver;
 
 public interface ISolver
 {
-    public GlobalVector Solve(GlobalMatrix A, GlobalVector b);
+    public (GlobalVector, GlobalVector) Solve(GlobalMatrix A, GlobalVector b);
 }

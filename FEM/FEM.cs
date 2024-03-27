@@ -49,6 +49,8 @@ public abstract class FEM
 
     public GlobalVector[]? Solutions;
 
+    public GlobalVector[]? Discrepancy;
+
     private protected void SetTimeMesh(string data)
     {
         var info = data.Split(" ");
@@ -61,11 +63,13 @@ public abstract class FEM
         {
             equationType = EquationType.Elliptic;
             Solutions = new GlobalVector[1];
+            Discrepancy = new GlobalVector[1];
             return;
         }
 
         timeMesh = new double[tn + 1];
         Solutions = new GlobalVector[tn + 1];
+        Discrepancy = new GlobalVector[tn + 1];
 
         double h = t1 - t0;
         double denominator = 0.0;

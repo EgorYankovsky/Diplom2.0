@@ -1,6 +1,7 @@
 **/bin
 **/obj
 **/Output
+**/Subtotals
 **/.vs
 *.lnk
 *.sln

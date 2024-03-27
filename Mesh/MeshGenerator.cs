@@ -243,6 +243,8 @@ public static class MeshGenerator
             index = 2;
         else if (mesh.NodesZWithoutFragmentation[3] <= a.Z && d.Z <= mesh.NodesZWithoutFragmentation[4])
             index = 3;
+        else if (mesh.NodesZWithoutFragmentation[4] <= a.Z && d.Z <= mesh.NodesZWithoutFragmentation[5])
+            index = 4;
         else
             throw new Exception("Out of boundary!");
         return $"{mesh.mu0[index]} {mesh.sigma[index]}";
