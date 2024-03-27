@@ -75,7 +75,7 @@ public class FEM2D : FEM
 
             case EquationType.Parabolic:
                 if (timeMesh is null) throw new ArgumentNullException("timeMesh is null!");
-
+            
                 for (int i = 0; i < timeMesh.Length; i++)
                 {
                     Debug.WriteLine($"\nTime layer: {timeMesh[i]}");

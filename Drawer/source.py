@@ -47,6 +47,7 @@ if path1.is_dir():
             plt.title(file.name)
             plt.plot([min(add.r), min(add.r)], [max(add.z), min(add.z)], 'black', linewidth = 3.5)
             plt.plot([min(add.r), max(add.r)], [0.0, 0.0], 'black', linewidth = 1.8)
+            plt.plot(10.0, 0.0, 'ro') 
             cont.clabel()
 
             name = file.name.replace('.dat', '')
