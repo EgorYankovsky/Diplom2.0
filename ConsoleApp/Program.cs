@@ -40,7 +40,7 @@ FEM2D myFEM2D = new();
 myFEM2D.ReadData(Calculation2dimArea, BordersInfo, TimePath);
 myFEM2D.ConstructMesh();
 myFEM2D.SubmitGeneratedData();
-myFEM2D.SetSolver(new LOS());
+myFEM2D.SetSolver(new BCG());
 myFEM2D.Solve();
 //myFEM2D.GenerateVectorEphi();
 myFEM2D.WriteData(AnswerPath);

@@ -64,6 +64,17 @@ public static class Generator
             if (typeOfMatrixM == TypeOfMatrixM.Mr)
                 Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mu0i[i], arrEl.mu0i[i]), ref m, arrEl[i]);
         }
+/*
+        for (int ii = 0; ii < 9; ii++)
+        {
+            for (int jj = 0; jj < 9; jj++)
+            {
+                Console.Write($"{m[ii, jj]:E2} ");
+            }
+            Console.WriteLine();
+        }
+        Console.WriteLine();
+*/
         ConsiderBoundaryConditions(ref m, arrBd);
     }
 

@@ -132,7 +132,7 @@ public class FEM2D : FEM
                         var M = new GlobalMatrix(pointsArr.Length); // ???
                         Generator.BuildPortait(ref M, pointsArr.Length, elemsArr);
                         Generator.FillMatrix(ref M, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mr);
-                        
+
                         Matrix = (tau0 * M) + matrix1;
 
                         var bi = new GlobalVector(pointsArr);
