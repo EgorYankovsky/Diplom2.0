@@ -6,6 +6,7 @@ namespace MathObjects;
 public class LocalMatrix : Matrix
 {
     private TypeOfMatrixM _typeOfMatrixM;
+
     private readonly double _lambda;
 
     private readonly double _gamma;
@@ -23,8 +24,7 @@ public class LocalMatrix : Matrix
             if (i > 3 || j > 3) throw new IndexOutOfRangeException("Local matrix error.");
             return _typeOfMatrixM switch
             {
-                TypeOfMatrixM.Mr => (1.0D / _lambda) * (_Gr[i % 2, j % 2] * _Mz[i / 2, j / 2] + _Mr[i % 2, j % 2] * _Gz[i / 2, j / 2]) +
-                                    (1.0D / _gamma) * (_Mr[i % 2, j % 2] * _Mz[i / 2, j / 2]),
+                TypeOfMatrixM.Mr =>  _gamma * (_Mr[i % 2, j % 2] * _Mz[i / 2, j / 2]),
                 TypeOfMatrixM.Mrr => (1.0D / _lambda) * (_Gr[i % 2, j % 2] * _Mz[i / 2, j / 2] + _Mr[i % 2, j % 2] * _Gz[i / 2, j / 2]) +
                                      (1.0D / _gamma) * (_Mrr[i % 2, j % 2] * _Mz[i / 2, j / 2]),
                 _ => throw new Exception("Unexpected matrix"),
@@ -96,9 +96,9 @@ public class LocalMatrix : Matrix
         { 
             for (int j = 0; j < 4; j++)
             {
-                matr[i, j] = (1.0D / _mu0) * (_Gr[i % 2, j % 2] * _Mz[i / 2, j / 2] + _Mrr[i % 2, j % 2] * _Gz[i / 2, j / 2]) + 
-                (1.0D / _mu0) * (_Mr[i % 2, j % 2] * _Mz[i / 2, j / 2]);
+                Console.Write($"{this[i, j]:E3} ");
             }   
+            Console.WriteLine();
         }
         */
     }
