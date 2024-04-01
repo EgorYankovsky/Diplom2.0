@@ -5,10 +5,10 @@ namespace Functions;
 public static class Function
 {
     // Функция правой части.
-    public static double F(double r, double z, double t) => t * t * t + 3.0D * t * t;
+    public static double F(double r, double z, double t) => t * t / (r * r) + 2.0D * t;
 
     // Тестируемая функция.
-    public static double U(double r, double z, double t) => t * t * t;
+    public static double U(double r, double z, double t) => t * t;
 
 
 /*
@@ -27,13 +27,13 @@ public static class Function
 
     #region Первые краевые условия.
 
-    public static double U1_1(Point p, double t) => t * t * t;
+    public static double U1_1(Point p, double t) => t * t;
 
-    public static double U1_2(Point p, double t) => t * t * t;
+    public static double U1_2(Point p, double t) => t * t;
 
-    public static double U1_3(Point p, double t) => t * t * t;
+    public static double U1_3(Point p, double t) => t * t;
 
-    public static double U1_4(Point p, double t) => t * t * t;
+    public static double U1_4(Point p, double t) => t * t;
 
     #endregion
 

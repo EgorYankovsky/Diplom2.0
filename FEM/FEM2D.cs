@@ -69,11 +69,13 @@ public class FEM2D : FEM
                 Matrix = new GlobalMatrix(pointsArr.Length);
                 Generator.BuildPortait(ref Matrix, pointsArr.Length, elemsArr);
                 Generator.FillMatrix(ref Matrix, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mrr);
-                
+                Generator.ConsiderBoundaryConditions(ref Matrix, bordersArr);
+
                 Vector = new GlobalVector(pointsArr);
-                
+
                 Generator.FillVector(ref Vector, pointsArr, elemsArr, bordersArr, 1.0);
-            
+                Generator.ConsiderBoundaryConditions(ref Vector, pointsArr, bordersArr, 1.0D);
+
 
                 (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
             break;
