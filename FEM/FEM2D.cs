@@ -85,7 +85,11 @@ public class FEM2D : FEM
                         Matrix = new GlobalMatrix(pointsArr.Length);
                         Generator.BuildPortait(ref Matrix, pointsArr.Length, elemsArr);
                         Generator.FillMatrix(ref Matrix, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mrr);
+                        Generator.ConsiderBoundaryConditions(ref Matrix, bordersArr);
+
                         Vector = new GlobalVector(pointsArr, bordersArr, timeMesh[i]);
+                        Generator.ConsiderBoundaryConditions(ref Vector, bordersArr, pointsArr, 1.0D);
+
                         (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
                     }
                     else if (i == 1)
@@ -100,7 +104,6 @@ public class FEM2D : FEM
                         double tau1 = deltT / (deltT1 * deltT0);
                         double tau2 = deltT0 / (deltT * deltT0);
 
-
                         var matrix1 = new GlobalMatrix(pointsArr.Length);
                         Generator.BuildPortait(ref matrix1, pointsArr.Length, elemsArr);
                         Generator.FillMatrix(ref matrix1, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mrr);
@@ -109,11 +112,13 @@ public class FEM2D : FEM
                         Generator.BuildPortait(ref M, pointsArr.Length, elemsArr);
                         Generator.FillMatrix(ref M, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mr);
                         
-                        
-                        Matrix = (deltT + deltT0) / (deltT * deltT0) * M + matrix1;
+                        Matrix = (tau0 * M) + matrix1;
+                        Generator.ConsiderBoundaryConditions(ref Matrix, bordersArr);
 
                         var bi = new GlobalVector(pointsArr, bordersArr, timeMesh[i]);
-                        Vector = bi - deltT0 / (deltT * deltT1) * M * Solutions[i - 2] + deltT / (deltT1 * deltT0) * M * Solutions[i - 1];
+                        Vector = bi - (tau2 * M * Solutions[i - 2]) + (tau1 * M * Solutions[i - 1]);
+                        Generator.ConsiderBoundaryConditions(ref Vector, bordersArr, pointsArr, timeMesh[i]);
+                        
                         (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
                     }
                 }

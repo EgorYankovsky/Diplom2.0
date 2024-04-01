@@ -1,5 +1,5 @@
 using DataStructs;
-
+using Functions;
 namespace MathObjects;
 
 public static class Generator
@@ -61,7 +61,7 @@ public static class Generator
         {
             Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mu0i[i], arrEl.mu0i[i]), ref m, arrEl[i]);
         }
-        ConsiderBoundaryConditions(ref m, arrBd);
+        //ConsiderBoundaryConditions(ref m, arrBd);
     }
 
     private static void Add(LocalMatrix lm, ref GlobalMatrix gm, List<int> elem)
@@ -107,7 +107,7 @@ public static class Generator
         }
     }
 
-    private static void ConsiderBoundaryConditions(ref GlobalMatrix m, ArrayOfBorders arrBd)
+    public static void ConsiderBoundaryConditions(ref GlobalMatrix m, ArrayOfBorders arrBd)
     {
         if (m._ig is null) throw new Exception("_ig is null.");
         if (m._al is null) throw new Exception("_al is null.");
@@ -136,6 +136,55 @@ public static class Generator
 
             }
         }
+    }
+
+    public static void FillVector(ref GlobalVector v, ArrayOfPoints arrPt, ArrayOfElems arrEl, ArrayOfBorders arrBd)
+    {
+
+    }
+
+    public static void ConsiderBoundaryConditions(ref GlobalVector v, ArrayOfBorders arrBrd, ArrayOfPoints arrp, double t)
+    {
+        if (v is null) throw new Exception("_values is null");
+        foreach (var border in arrBrd)
+            switch (border[0])
+            {
+                // КУ - I-го рода
+                case 1:
+                    switch (border[1])
+                    {
+                        case 1:
+                        for (int i = 2; i < 4; i++)
+                            v[border[i]] = Function.U1_1(arrp[border[i]], t);
+                        break;
+                        
+                        case 2:
+                        for (int i = 2; i < 4; i++)
+                            v[border[i]] = Function.U1_2(arrp[border[i]], t);
+                        break;
+
+                        case 3:
+                        for (int i = 2; i < 4; i++)
+                            v[border[i]] = Function.U1_3(arrp[border[i]], t);
+                        break;
+                        
+                        case 4:
+                        for (int i = 2; i < 4; i++)
+                            v[border[i]] = Function.U1_4(arrp[border[i]], t);
+                        break;
+                        
+                        default:
+                        throw new Exception("No such bord");
+                    }
+                    break;
+                // КУ - II-го рода
+                case 2:
+                    for (int i = 2; i < 4; i++)
+                        v[border[i]] += 0.0D;
+                    break;
+                // КУ - III-го рода
+                case 3: throw new ArgumentException("Пока нет возможности учитывать КУ III-го рода");
+            }
     }
 
 }

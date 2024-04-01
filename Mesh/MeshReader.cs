@@ -1,10 +1,13 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Reflection.Metadata;
 
 namespace Grid;
 
 public static class MeshReader
 {
+    private static readonly double mu0 = 4.0D * Math.PI * Math.Pow(10.0D, -7);
+
     public static void ReadMesh(string path1, string path2, ref Mesh2Dim mesh)
     {
         string _currPath = path1;
@@ -30,7 +33,7 @@ public static class MeshReader
                 for (int i = 0; i < mesh.ElemsAmount; i++)
                 {
                     string[] str = sr.ReadLine().Split();
-                    mesh.mu0.Add(double.Parse(str[5]));
+                    mesh.mu0.Add(mu0);
                     mesh.sigma.Add(double.Parse(str[6]));
                     mesh.Elems.Add(new List<int> {int.Parse(str[0]), int.Parse(str[1]),
                                              int.Parse(str[2]), int.Parse(str[3]), 

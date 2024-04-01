@@ -100,6 +100,6 @@ public class GlobalVector : Vector
         _values = new double[arrPt.Length];
         for (int i = 0; i < _values.Length; i++)
             _values[i] = Function.F(arrPt[i].R, arrPt[i].Z, _t);
-        ConsiderBoundaryConditions(arrBr, arrPt, _t);
+        //ConsiderBoundaryConditions(arrBr, arrPt, _t);
     }
 }

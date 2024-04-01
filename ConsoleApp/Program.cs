@@ -47,7 +47,7 @@ int a = Postprocessor.DrawA_phi();
 int b = Postprocessor.DrawE_phi();
 Debug.WriteLine($"Drawing A_phi finished with code: {a}\n" +
                 $"Drawing E_phi finished with code: {b}");
-return 0;
+
 // Converting 2-dim results into 3-dim form
 FEM3D myFEM3D = new(myFEM2D);
 myFEM3D.ConstructMesh(myFEM2D);

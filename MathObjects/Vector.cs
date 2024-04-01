@@ -2,7 +2,7 @@ namespace MathObjects;
 
 public abstract class Vector : IMathObject
 {
-    protected double[]? _values;
+    public double[]? _values;
 
     public virtual double this[int i]
     {
