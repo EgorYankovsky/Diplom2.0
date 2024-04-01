@@ -16,7 +16,7 @@ public class LocalMatrix : Matrix
     private readonly double _hr;
 
     private readonly double _hz;
-
+/*
     public override double this[int i, int j]
     {
         get
@@ -29,6 +29,16 @@ public class LocalMatrix : Matrix
                                      (1.0D / _gamma) * (_Mrr[i % 2, j % 2] * _Mz[i / 2, j / 2]),
                 _ => throw new Exception("Unexpected matrix"),
             };
+        }
+    }
+*/
+
+    public override double this[int i, int j]
+    {
+        get
+        {
+            return _lambda * (1.0D / _hr * _G[i % 2, j % 2] * _hz / 6.0D * _Mz[i / 2, j / 2] + 1.0D / _hz * _G[i / 2, j / 2] * _hr / 6.0D * _Mz[i % 2, j % 2]) +
+            _gamma * (_hr / 6.0D * _hz / 6.0D * _Mz[i % 2, j % 2] * _Mz[i / 2, j / 2]);
         }
     }
 
@@ -78,7 +88,7 @@ public class LocalMatrix : Matrix
         _gamma = gamma;
         _Mr1 = new double[2,2] {{ (1 + _d) * (1 + _d), -1.0 * _d * (1 + _d)},
                                 {-1.0 * _d * (1 + _d),              _d * _d}};
-
+/*
         for (int i = 0; i < 2; i++)
         { 
             for (int j = 0; j < 2; j++)
@@ -90,7 +100,7 @@ public class LocalMatrix : Matrix
                 _Mz[i, j] = (_hz / 6.0D) * _Mz[i, j];
             }   
         }
-
+*/
         /*
         for (int i = 0; i < 4; i++)
         { 

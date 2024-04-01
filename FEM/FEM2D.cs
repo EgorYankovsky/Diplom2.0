@@ -134,11 +134,15 @@ public class FEM2D : FEM
                         Generator.FillMatrix(ref M, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mr);
 
                         Matrix = (tau0 * M) + matrix1;
+                        Generator.ConsiderBoundaryConditions(ref Matrix, bordersArr);
 
                         var bi = new GlobalVector(pointsArr);
                         Generator.FillVector(ref bi, pointsArr, elemsArr, bordersArr, timeMesh[i]);
 
                         Vector = bi - (tau2 * M * Solutions[i - 2]) + (tau1 * M * Solutions[i - 1]);
+                        
+                        Generator.ConsiderBoundaryConditions(ref Vector, pointsArr, bordersArr, timeMesh[i]);
+                        
                         (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
                     }
                 }

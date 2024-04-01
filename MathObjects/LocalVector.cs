@@ -71,7 +71,8 @@ public class LocalVector : Vector
         {
             for (int j = 0; j < 2; j++)
             {
-                _Mr[i, j] = (_hr / 6.0) * (_r0 * _M1R[i, j] + (_hr / 2.0) * _M2R[i, j]);
+                //_Mr[i, j] = (_hr / 6.0) * (_r0 * _M1R[i, j] + (_hr / 2.0) * _M2R[i, j]);
+                _Mr[i, j] = (_hr / 6.0) * _M1R[i, j];
                 _Mz[i, j] = (_hz / 6.0) * _Mz[i, j];
             }
         }

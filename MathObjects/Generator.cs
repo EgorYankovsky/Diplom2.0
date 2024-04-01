@@ -75,7 +75,7 @@ public static class Generator
         }
         Console.WriteLine();
 */
-        ConsiderBoundaryConditions(ref m, arrBd);
+        //ConsiderBoundaryConditions(ref m, arrBd);
     }
 
     private static void Add(LocalMatrix lm, ref GlobalMatrix gm, List<int> elem)
@@ -121,7 +121,7 @@ public static class Generator
         }
     }
 
-    private static void ConsiderBoundaryConditions(ref GlobalMatrix m, ArrayOfBorders arrBd)
+    public static void ConsiderBoundaryConditions(ref GlobalMatrix m, ArrayOfBorders arrBd)
     {
         if (m._ig is null) throw new Exception("_ig is null.");
         if (m._al is null) throw new Exception("_al is null.");
@@ -158,7 +158,7 @@ public static class Generator
         {
             Add(new LocalVector(arrEl[i], arrPt, t), ref v, arrEl[i]);
         }
-        ConsiderBoundaryConditions(ref v, arrPt, arrBd, t);
+        //ConsiderBoundaryConditions(ref v, arrPt, arrBd, t);
     }
 
     private static void Add(LocalVector lv, ref GlobalVector gv, List<int> elems)
@@ -169,7 +169,7 @@ public static class Generator
         }
     }
 
-    private static void ConsiderBoundaryConditions(ref GlobalVector v, ArrayOfPoints arrp, ArrayOfBorders arrBd, double t)
+    public static void ConsiderBoundaryConditions(ref GlobalVector v, ArrayOfPoints arrp, ArrayOfBorders arrBd, double t)
     {
         foreach (var border in arrBd)
             switch (border[0])
