@@ -10,7 +10,7 @@ public static class Generator
         m._au = new double[m._jg.Count];
 
         for (int i = 0; i < arrEl.Length; i++)
-            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mu0i[i], 0.0), ref m, arrEl[i]);
+            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], 0.0), ref m, arrEl[i]);
         
         ConsiderBoundaryConditions(ref m, arrBd);
     }
@@ -21,7 +21,7 @@ public static class Generator
         m._au = new double[m._jg.Count];
 
         for (int i = 0; i < arrEl.Length; i++)
-            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, 0.0, arrEl.mu0i[i]), ref m, arrEl[i]);
+            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, 0.0, arrEl.mui[i]), ref m, arrEl[i]);
 
         ConsiderBoundaryConditions(ref m, arrBd);
     }
@@ -59,7 +59,7 @@ public static class Generator
 
         for (int i = 0; i < arrEl.Length; i++)
         {
-            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mu0i[i], arrEl.mu0i[i]), ref m, arrEl[i]);
+            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], arrEl.mui[i]), ref m, arrEl[i]);
         }
         //ConsiderBoundaryConditions(ref m, arrBd);
     }

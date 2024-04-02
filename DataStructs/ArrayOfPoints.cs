@@ -6,10 +6,10 @@ public class ArrayOfPoints
     private string _path = Path.GetFullPath("../../../../Data/Subtotals/Points.dat");
 
     // Массив точек.
-    private readonly List<Point> _list;
+    private List<Point> _list;
 
     // Длина массива точек.
-    public int Length { get; set; }
+    public int Length => _list.Count;
 
     /// <summary>
     /// Метод, возвращающий i-ую точку.
@@ -18,6 +18,8 @@ public class ArrayOfPoints
     /// <returns>Точка.</returns>
     public Point? this[int i] => _list[i];
 
+    public void Append(Point p) => _list.Add(p);
+
     /// <summary>
     /// Конструктор класса.
     /// </summary>
@@ -25,8 +27,13 @@ public class ArrayOfPoints
     {
         _list = new();
         using var sr = new StreamReader(_path);
-        Length = int.Parse(sr.ReadLine() ?? "0");
-        for (int i = 0; i < Length; i++)
+        int length = int.Parse(sr.ReadLine() ?? "0");
+        for (int i = 0; i < length; i++)
             _list.Add(new Point(sr.ReadLine().Split().ToList()));
+    }
+
+    public ArrayOfPoints(int pointsAmount)
+    {
+        _list = new(pointsAmount);
     }
 }

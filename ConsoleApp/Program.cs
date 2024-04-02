@@ -1,7 +1,7 @@
-﻿using Project;
+﻿#define NODRAWING
+using Project;
 using System.Globalization;
 using Dumpify;
-using System.Diagnostics;
 using Solver;
 using Manager;
 using Processor;
@@ -43,14 +43,16 @@ myFEM2D.WriteData(AnswerPath);
 myFEM2D.WriteDiscrepancy(AnswerPath);
 
 // Post-processor of zero-layer. Drawing A_phi and E_phi.
+#if DRAWING
 int a = Postprocessor.DrawA_phi();
 int b = Postprocessor.DrawE_phi();
-Debug.WriteLine($"Drawing A_phi finished with code: {a}\n" +
-                $"Drawing E_phi finished with code: {b}");
+Console.WriteLine($"Drawing A_phi finished with code: {a}\n" +
+                  $"Drawing E_phi finished with code: {b}");
+#endif
 
 // Converting 2-dim results into 3-dim form
 FEM3D myFEM3D = new(myFEM2D);
 myFEM3D.ConstructMesh(myFEM2D);
-myFEM3D.GenerateAxyz(myFEM2D);
-myFEM3D.GenerateExyz(myFEM2D);
+myFEM3D.ConvertResultTo3Dim(myFEM2D);
+myFEM3D.GenerateArrays();
 myFEM3D.AddField(MeshReader.ReadMesh(Layer1Area));

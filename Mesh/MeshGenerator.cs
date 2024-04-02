@@ -58,99 +58,6 @@ public static class MeshGenerator
         RemakeBorders(ref mesh);
     }
 
-    public static void GenerateMesh(ref Mesh3Dim mesh, Mesh2Dim mesh2dim)
-    {
-        double range = mesh2dim.nodesR[^1] / Math.Sqrt(2.0D);
-
-        mesh.infoAboutX = mesh2dim.infoAboutR;
-        mesh.infoAboutX = mesh2dim.infoAboutR;
-
-        mesh.nodesX = mesh2dim.nodesR.FindAll(_r => _r <= range);
-        mesh.nodesX.Add(range);
-
-        mesh.nodesY = mesh2dim.nodesR.FindAll(_r => _r <= range);
-        mesh.nodesY.Add(range);
-
-        mesh.nodesZ = mesh2dim.nodesZ;
-        mesh.nodesZRefs = mesh2dim.nodesZRefs;
-        mesh.NodesZWithoutFragmentation = mesh2dim.NodesZWithoutFragmentation;
-        mesh.infoAboutZ = mesh2dim.infoAboutZ;
-
-        RemakeBorders(ref mesh);
-    }
-
-    public static void GenerateMesh(ref Mesh3Dim mesh)
-    {
-        int currentPosition = 0;
-        double[] kek = mesh.infoAboutX.Split().Select(double.Parse).ToArray();
-        for (int i = 0; i < mesh.NodesXWithoutFragmentation.Length - 1; i++)
-        {
-            double h = mesh.nodesR[1 + currentPosition] - mesh.nodesR[currentPosition];
-            double denominator = 0.0;
-
-            int negr = Convert.ToInt32(kek[2 * i]);
-            for (int j = 0; j < negr; j++)
-                denominator += Math.Pow(kek[2 * i + 1], j);
-
-            double x0 = h / denominator;
-
-            for(int j = 0; j < negr - 1; j++)
-            {
-                mesh.nodesR.Insert(currentPosition + 1, mesh.nodesR[currentPosition] + x0 * Math.Pow(kek[2 * i + 1], j));
-                currentPosition++;
-            }
-            currentPosition++;
-            mesh.nodesXRefs[i + 1] = currentPosition;
-        }
-        
-        currentPosition = 0;
-        kek = mesh.infoAboutY.Split().Select(double.Parse).ToArray();
-        for (int i = 0; i < mesh.NodesYWithoutFragmentation.Length - 1; i++)
-        {
-            double h = mesh.nodesY[1 + currentPosition] - mesh.nodesY[currentPosition];
-            double denominator = 0.0;
-
-            int negr = Convert.ToInt32(kek[2 * i]);
-            for (int j = 0; j < negr; j++)
-                denominator += Math.Pow(kek[2 * i + 1], j);
-            double x0 = h / denominator;
-
-            for(int j = 0; j < negr - 1; j++)
-            {
-                mesh.nodesY.Insert(currentPosition + 1, mesh.nodesY[currentPosition] + x0 * Math.Pow(kek[2 * i + 1], j));
-                currentPosition++;
-            }
-            currentPosition++;
-            mesh.nodesYRefs[i + 1] = currentPosition;
-        }
-
-        currentPosition = 0;
-        kek = mesh.infoAboutZ.Split().Select(double.Parse).ToArray();
-        for (int i = 0; i < mesh.NodesZWithoutFragmentation.Length - 1; i++)
-        {
-            double h = mesh.nodesZ[1 + currentPosition] - mesh.nodesZ[currentPosition];
-            double denominator = 0.0;
-
-            int negr = Convert.ToInt32(kek[2 * i]);
-            for (int j = 0; j < negr; j++)
-                denominator += Math.Pow(kek[2 * i + 1], j);
-            double x0 = h / denominator;
-
-            for(int j = 0; j < negr - 1; j++)
-            {
-                mesh.nodesZ.Insert(currentPosition + 1, mesh.nodesZ[currentPosition] + x0 * Math.Pow(kek[2 * i + 1], j));
-                currentPosition++;
-            }
-            currentPosition++;
-            mesh.nodesZRefs[i + 1] = currentPosition;
-        }
-    }
-
-    private static void RemakeBorders(ref Mesh3Dim mesh)
-    {
-        
-    }
-
     private static void RemakeBorders(ref Mesh2Dim mesh)
     {
         foreach (var border in mesh.borders)
@@ -229,6 +136,74 @@ public static class MeshGenerator
                                                        arrPt[k * mesh.NodesAmountR + i + 1],
                                                        arrPt[(k + 1) * mesh.NodesAmountR + i],
                                                        arrPt[(k + 1) * mesh.NodesAmountR + i + 1])}");
+    }
+
+    public static ArrayOfPoints GenerateListOfPoints(Mesh mesh)
+    {
+        var arr = new ArrayOfPoints(mesh.NodesAmountTotal);
+        foreach (var Z in mesh.nodesZ)
+            foreach (var Y in mesh.nodesY)
+                foreach(var X in mesh.nodesX)
+                    arr.Append(new Point(X, Y, Z));
+        return arr;
+    }
+
+    public static ArrayOfElems GenerateListOfElems(Mesh mesh)
+    {
+        var arr = new ArrayOfElems(mesh.ElemsAmount);
+        for (int k = 0; k < mesh.NodesAmountZ - 1; k++)
+            for (int j = 0; j < mesh.NodesAmountY - 1; j++)
+                for (int i = 0; i < mesh.NodesAmountX - 1; i++)
+                    arr.Add(new List<int>{k * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + i, k * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + i + 1,
+                                          k * mesh.NodesAmountY * mesh.NodesAmountX + (j + 1) * mesh.NodesAmountX + i, k * mesh.NodesAmountY * mesh.NodesAmountX + (j + 1) * mesh.NodesAmountX + i + 1,
+                                          (k + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + i, (k + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + i + 1,
+                                          (k + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (j + 1) * mesh.NodesAmountX + i, (k + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (j + 1) * mesh.NodesAmountX + i + 1});
+        
+        return arr;
+    }
+
+    public static ArrayOfBorders GenerateListOfBorders(Mesh mesh)
+    {
+        var arr = new ArrayOfBorders(null);
+
+        // XY0
+        for (int j = 0; j < mesh.NodesAmountY - 1; j++)
+            for (int i = 0; i < mesh.NodesAmountX - 1; i++)
+                arr.Arr.Add(new List<int> {1, 1, j * mesh.NodesAmountX + i, j * mesh.NodesAmountX + i + 1,
+                                                (j + 1) * mesh.NodesAmountX + i, (j + 1) * mesh.NodesAmountX + i + 1});
+        
+        // X0Z
+        for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
+            for (int i = 0; i < mesh.NodesAmountX - 1; i++)
+                arr.Arr.Add(new List<int> {1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i, j * mesh.NodesAmountY * mesh.NodesAmountX + i + 1,
+                                                (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + i, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + i + 1});
+        
+        // X1Z
+        for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
+            for (int i = 0; i < mesh.NodesAmountX - 1; i++)
+                arr.Arr.Add(new List<int> {1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i, j * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i + 1,
+                                                (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i + 1});
+        // 0YZ
+        for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
+            for (int i = 0; i < mesh.NodesAmountY - 1; i++)
+                arr.Arr.Add(new List<int> {1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i * mesh.NodesAmountX, j * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX, 
+                                                (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX});
+        
+        // 1YZ
+        for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
+            for (int i = 0; i < mesh.NodesAmountY - 1; i++)
+                arr.Arr.Add(new List<int> {1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i * mesh.NodesAmountX + mesh.NodesAmountX - 1,
+                                                 j * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX + mesh.NodesAmountX - 1, 
+                                                (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + mesh.NodesAmountX - 1,
+                                                (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX + mesh.NodesAmountX - 1});
+        
+        // XY1
+        for (int j = 0; j < mesh.NodesAmountY - 1; j++)
+            for (int i = 0; i < mesh.NodesAmountX - 1; i++)
+                arr.Arr.Add(new List<int> {2, 1, (mesh.NodesAmountZ - 1) * j * mesh.NodesAmountX + i, (mesh.NodesAmountZ - 1) * j * mesh.NodesAmountX + i + 1,
+                                                 (mesh.NodesAmountZ - 1) * (j + 1) * mesh.NodesAmountX + i, (mesh.NodesAmountZ - 1) * (j + 1) * mesh.NodesAmountX + i + 1});
+        
+        return arr;
     }
 
     // ! Метод написан очень топорно, только для конкретного примера.

@@ -6,7 +6,7 @@ public class ArrayOfElems
 
     public List<List<int>> Arr;
     
-    public List<double> mu0i;
+    public List<double> mui;
 
     public int Length { get; set; }
 
@@ -36,14 +36,25 @@ public class ArrayOfElems
     public ArrayOfElems()
     {
         Arr = new();
-        mu0i = new();
+        mui = new();
         using var sr = new StreamReader(_path);
         Length = int.Parse(sr.ReadLine() ?? "0");
         for (int i = 0; i < Length; i++)
         {
             var info = sr.ReadLine().Split().ToList();
             Arr.Add(new List<int> {int.Parse(info[0]), int.Parse(info[1]), int.Parse(info[2]), int.Parse(info[3])});
-            mu0i.Add(double.Parse(info[4]));
+            mui.Add(double.Parse(info[4]));
         }
+    }
+
+    public void Add(List<int> elem)
+    {
+        Arr.Add(elem);
+    }
+
+    public ArrayOfElems(int elemsAmount)
+    {
+        Arr = new(elemsAmount);
+        mui = new();
     }
 }

@@ -9,6 +9,12 @@ public class Mesh2Dim : Mesh
         get => NodesAmountR * NodesAmountZ;
     }
 
+    public override int ElemsAmount
+    {
+        get => (NodesAmountR - 1) * (NodesAmountZ - 1);
+        set => ElemsAmount = value;
+    }
+
     public int NodesAmountR
     { 
         get => nodesR.Count; 

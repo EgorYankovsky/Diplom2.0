@@ -2,7 +2,7 @@ namespace Grid;
 
 public abstract class Mesh
 {
-    public int ElemsAmount { get; set; }
+    public abstract int ElemsAmount { get; set; }
  
     internal int bordersAmount;
  
@@ -23,4 +23,8 @@ public abstract class Mesh
     public List<List<int>>? Elems;
 
     public abstract int NodesAmountTotal { get; }
+
+    public int NodesAmountX => nodesX.Count;
+    public int NodesAmountY => nodesY.Count;
+    public int NodesAmountZ => nodesZ.Count;
 }

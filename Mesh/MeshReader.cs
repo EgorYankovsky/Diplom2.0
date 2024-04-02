@@ -29,8 +29,8 @@ public static class MeshReader
                 mesh.infoAboutZ = sr.ReadLine() ?? "";
 
 
-                mesh.ElemsAmount = int.Parse(sr.ReadLine() ?? "0");
-                for (int i = 0; i < mesh.ElemsAmount; i++)
+                int elemsAmount = int.Parse(sr.ReadLine() ?? "0");
+                for (int i = 0; i < elemsAmount; i++)
                 {
                     string[] str = sr.ReadLine().Split();
                     mesh.mu0.Add(mu0);
