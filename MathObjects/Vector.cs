@@ -10,6 +10,6 @@ public abstract class Vector : IMathObject
         set => _values[i] = value;
     }
 
-    public int Size => _values.Length;
+    public virtual int Size => _values.Length;
 
 }

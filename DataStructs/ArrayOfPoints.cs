@@ -18,6 +18,27 @@ public class ArrayOfPoints
     /// <returns>Точка.</returns>
     public Point? this[int i] => _list[i];
 
+    public MyEnumerator GetEnumerator() => new(this);
+
+    public class MyEnumerator
+    {  
+        int nIndex;  
+        ArrayOfPoints collection;  
+        public MyEnumerator(ArrayOfPoints coll)
+        {  
+            collection = coll;  
+            nIndex = -1;  
+        }  
+    
+        public bool MoveNext()
+        {  
+            nIndex++;  
+            return nIndex < collection._list.Count;  
+        }  
+    
+        public Point Current => collection._list[nIndex];
+    }
+
     public void Append(Point p) => _list.Add(p);
 
     /// <summary>

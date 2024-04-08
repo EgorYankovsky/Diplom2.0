@@ -25,6 +25,9 @@ public class FEM3D : FEM
 
     public List<GlobalVector> Ez_3D;
 
+    public ArrayOfRibs ribsArr;
+
+
     // Maybe private?
     public List<Mesh3Dim> Layers;
 
@@ -183,8 +186,8 @@ public class FEM3D : FEM
     {
         if (mesh is null) throw new ArgumentNullException("mesh is null!");
         pointsArr = MeshGenerator.GenerateListOfPoints(mesh);
+        ribsArr = MeshGenerator.GenerateListOfRibs(mesh, pointsArr);
         elemsArr = MeshGenerator.GenerateListOfElems(mesh);
-
         // ! А надо ли?
         //bordersArr = MeshGenerator.GenerateListOfBorders(mesh);
     }

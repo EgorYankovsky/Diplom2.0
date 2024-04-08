@@ -63,66 +63,56 @@ public class FEM2D : FEM
         if (Discrepancy is null) throw new ArgumentNullException("discrepancy array is null !");
         if (solver is null) throw new ArgumentNullException("solver is null !");
 
-        switch(equationType)
+        Debug.WriteLine($"\nTime layer: before BC");
+        Thread.Sleep(1500);
+
+        Matrix = new GlobalMatrix(pointsArr.Length);
+        Generator.BuildPortait(ref Matrix, pointsArr.Length, elemsArr);
+        Generator.FillMatrix(ref Matrix, pointsArr, elemsArr, TypeOfMatrixM.Mrr);
+        Generator.ConsiderBoundaryConditions(ref Matrix, bordersArr);
+
+        Vector = new GlobalVector(pointsArr.Length);
+        Generator.FillVector(ref Vector, pointsArr, elemsArr, 0.0);
+        Generator.ConsiderBoundaryConditions(ref Vector, bordersArr, pointsArr, 0.0D);
+
+        (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
+
+        if (equationType == EquationType.Parabolic)
         {
-            case EquationType.Elliptic:
-                Matrix = new GlobalMatrix(pointsArr.Length);
-                Generator.BuildPortait(ref Matrix, pointsArr.Length, elemsArr);
-                Generator.FillMatrix(ref Matrix, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mrr);
-                Vector = new GlobalVector(pointsArr, bordersArr, 1.0);
-                (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
-            break;
+            (Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
 
-            case EquationType.Parabolic:
-                if (timeMesh is null) throw new ArgumentNullException("timeMesh is null!");
-            
-                for (int i = 0; i < timeMesh.Length; i++)
-                {
-                    Debug.WriteLine($"\nTime layer: {timeMesh[i]}");
-                    Thread.Sleep(1500);
-                    if (i == 0)
-                    {
-                        Matrix = new GlobalMatrix(pointsArr.Length);
-                        Generator.BuildPortait(ref Matrix, pointsArr.Length, elemsArr);
-                        Generator.FillMatrix(ref Matrix, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mrr);
-                        Generator.ConsiderBoundaryConditions(ref Matrix, bordersArr);
+            for (int i = 2; i < timeMesh.Length; i++)
+            {
+                Debug.WriteLine($"\nTime layer: {timeMesh[i]}");
+                Thread.Sleep(1500);
 
-                        Vector = new GlobalVector(pointsArr, bordersArr, timeMesh[i]);
-                        Generator.ConsiderBoundaryConditions(ref Vector, bordersArr, pointsArr, 1.0D);
+                double deltT = timeMesh[i] - timeMesh[i - 2];
+                double deltT0 = timeMesh[i] - timeMesh[i - 1];
+                double deltT1 = timeMesh[i - 1] - timeMesh[i - 2];
 
-                        (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
-                    }
-                    else if (i == 1)
-                        Solutions[i] = Solutions[i - 1];
-                    else
-                    {
-                        double deltT = timeMesh[i] - timeMesh[i - 2];
-                        double deltT0 = timeMesh[i] - timeMesh[i - 1];
-                        double deltT1 = timeMesh[i - 1] - timeMesh[i - 2];
+                double tau0 = (deltT + deltT0) / (deltT * deltT0);
+                double tau1 = deltT / (deltT1 * deltT0);
+                double tau2 = deltT0 / (deltT * deltT0);
 
-                        double tau0 = (deltT + deltT0) / (deltT * deltT0);
-                        double tau1 = deltT / (deltT1 * deltT0);
-                        double tau2 = deltT0 / (deltT * deltT0);
+                var matrix1 = new GlobalMatrix(pointsArr.Length);
+                Generator.BuildPortait(ref matrix1, pointsArr.Length, elemsArr);
+                Generator.FillMatrix(ref matrix1, pointsArr, elemsArr, TypeOfMatrixM.Mrr);
+                Generator.ConsiderBoundaryConditions(ref matrix1, bordersArr);
 
-                        var matrix1 = new GlobalMatrix(pointsArr.Length);
-                        Generator.BuildPortait(ref matrix1, pointsArr.Length, elemsArr);
-                        Generator.FillMatrix(ref matrix1, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mrr);
-                        
-                        var M = new GlobalMatrix(pointsArr.Length); // ???
-                        Generator.BuildPortait(ref M, pointsArr.Length, elemsArr);
-                        Generator.FillMatrix(ref M, pointsArr, elemsArr, bordersArr, TypeOfMatrixM.Mr);
-                        
-                        Matrix = (tau0 * M) + matrix1;
-                        Generator.ConsiderBoundaryConditions(ref Matrix, bordersArr);
+                var M = new GlobalMatrix(pointsArr.Length); // ???
+                Generator.BuildPortait(ref M, pointsArr.Length, elemsArr);
+                Generator.FillMatrix(ref M, pointsArr, elemsArr, TypeOfMatrixM.Mr);
+                Generator.ConsiderBoundaryConditions(ref M, bordersArr);
 
-                        var bi = new GlobalVector(pointsArr, bordersArr, timeMesh[i]);
-                        Vector = bi - (tau2 * M * Solutions[i - 2]) + (tau1 * M * Solutions[i - 1]);
-                        Generator.ConsiderBoundaryConditions(ref Vector, bordersArr, pointsArr, timeMesh[i]);
-                        
-                        (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
-                    }
-                }
-            break;
+                Matrix = (tau0 * M) + matrix1;
+                Generator.ConsiderBoundaryConditions(ref Matrix, bordersArr);
+
+                var bi = new GlobalVector(pointsArr.Length);
+                Vector = bi - (tau2 * (M * Solutions[i - 2])) + (tau1 * (M * Solutions[i - 1]));
+                Generator.ConsiderBoundaryConditions(ref Vector, bordersArr, pointsArr, timeMesh[i]);
+                
+                (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
+            }
         }
         A_phi = Solutions;
         Debug.WriteLine("Lin eq solved");

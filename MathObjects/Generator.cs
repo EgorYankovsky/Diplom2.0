@@ -52,16 +52,13 @@ public static class Generator
         }
     }
 
-    public static void FillMatrix(ref GlobalMatrix m, ArrayOfPoints arrPt, ArrayOfElems arrEl, ArrayOfBorders arrBd, TypeOfMatrixM typeOfMatrixM)
+    public static void FillMatrix(ref GlobalMatrix m, ArrayOfPoints arrPt, ArrayOfElems arrEl, TypeOfMatrixM typeOfMatrixM)
     {    
         m._al = new double[m._jg.Count];
         m._au = new double[m._jg.Count];
 
         for (int i = 0; i < arrEl.Length; i++)
-        {
-            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], arrEl.mui[i]), ref m, arrEl[i]);
-        }
-        //ConsiderBoundaryConditions(ref m, arrBd);
+            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], arrEl.sigmai[i]), ref m, arrEl[i]);
     }
 
     private static void Add(LocalMatrix lm, ref GlobalMatrix gm, List<int> elem)
@@ -138,9 +135,20 @@ public static class Generator
         }
     }
 
-    public static void FillVector(ref GlobalVector v, ArrayOfPoints arrPt, ArrayOfElems arrEl, ArrayOfBorders arrBd)
+    public static void FillVector(ref GlobalVector v, ArrayOfPoints arrPt, ArrayOfElems arrEl, double t)
     {
+        for (int i = 0; i < arrEl.Length; i++)
+        {
+            if (arrPt[arrEl[i][0]].R <= 10.0D && 10.0D <= arrPt[arrEl[i][3]].R &&
+                arrPt[arrEl[i][0]].Z <= 0.0D && 0.0D <= arrPt[arrEl[i][3]].Z && t < 1.0D)
+                Add(new LocalVector(arrEl[i], arrPt, t), ref v, arrEl[i]);
+        }
+    }
 
+    public static void Add(LocalVector lv, ref GlobalVector gv, List<int> elem)
+    {
+        for (int i = 0; i < lv.Size; i++)
+            gv[elem[i]] += lv[i];
     }
 
     public static void ConsiderBoundaryConditions(ref GlobalVector v, ArrayOfBorders arrBrd, ArrayOfPoints arrp, double t)

@@ -1,3 +1,4 @@
+using System.Drawing;
 using DataStructs;
 using Functions;
 
@@ -19,6 +20,8 @@ public class LocalVector : Vector
     private readonly double _hz;
 
     private readonly double _t;
+
+    public override int Size => 4;
 
     private readonly double[,] _M2R = {{1.0D, 1.0D},
                                        {1.0D, 3.0D}};    

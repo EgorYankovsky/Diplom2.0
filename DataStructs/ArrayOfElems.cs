@@ -8,6 +8,8 @@ public class ArrayOfElems
     
     public List<double> mui;
 
+    public List<double> sigmai;
+
     public int Length { get; set; }
 
     public MyEnumerator GetEnumerator() => new(this);
@@ -37,6 +39,7 @@ public class ArrayOfElems
     {
         Arr = new();
         mui = new();
+        sigmai = new();
         using var sr = new StreamReader(_path);
         Length = int.Parse(sr.ReadLine() ?? "0");
         for (int i = 0; i < Length; i++)
@@ -44,6 +47,7 @@ public class ArrayOfElems
             var info = sr.ReadLine().Split().ToList();
             Arr.Add(new List<int> {int.Parse(info[0]), int.Parse(info[1]), int.Parse(info[2]), int.Parse(info[3])});
             mui.Add(double.Parse(info[4]));
+            sigmai.Add(double.Parse(info[5]));
         }
     }
 

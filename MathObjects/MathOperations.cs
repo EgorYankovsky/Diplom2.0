@@ -58,10 +58,6 @@ public static class MathOperations
             }
             ans[i] += _gm._diag[i] * _gv[i];
         }
-
-        //for (int i = 0; i < _gm.Size; i++)
-        //    for (int j = 0; j < _gm.Size; j++)
-        //        ans[i] += _gm[i, j] * _gv[j];
         return ans;
     }
 

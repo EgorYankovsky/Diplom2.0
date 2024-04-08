@@ -140,12 +140,40 @@ public static class MeshGenerator
 
     public static ArrayOfPoints GenerateListOfPoints(Mesh mesh)
     {
+        if (mesh.nodesX is null) throw new ArgumentNullException("nodesX is null");
+        if (mesh.nodesY is null) throw new ArgumentNullException("nodesY is null");
+        if (mesh.nodesZ is null) throw new ArgumentNullException("nodesZ is null");
+        
         var arr = new ArrayOfPoints(mesh.NodesAmountTotal);
         foreach (var Z in mesh.nodesZ)
             foreach (var Y in mesh.nodesY)
                 foreach(var X in mesh.nodesX)
-                    arr.Append(new Point(X, Y, Z));
+                    arr.Append(SetPointType3D(new Point(X, Y, Z), mesh));
         return arr;
+    }
+
+    // ! Топорный метод.
+    private static Point SetPointType3D(Point pnt, Mesh mesh)
+    {
+        if (mesh.nodesX is null) throw new ArgumentNullException("nodesX is null");
+        if (mesh.nodesY is null) throw new ArgumentNullException("nodesY is null");
+        if (mesh.nodesZ is null) throw new ArgumentNullException("nodesZ is null");
+
+        double xMin = mesh.nodesX[0];
+        double xMax = mesh.nodesX[^1];
+        double yMin = mesh.nodesY[0];
+        double yMax = mesh.nodesY[^1];
+        double zMin = mesh.nodesZ[0];
+        double zMax = mesh.nodesZ[^1];
+
+        if (pnt.Z == zMax)
+            pnt.Type = Location.BoundaryII;
+        else if (pnt.Z == zMin || pnt.X == xMin ||pnt.X == xMax || pnt.Y == yMin || pnt.Y == yMax)
+            pnt.Type = Location.BoundaryI;
+        else
+            pnt.Type = Location.Inside;
+    
+        return pnt;
     }
 
     public static ArrayOfElems GenerateListOfElems(Mesh mesh)
@@ -203,6 +231,51 @@ public static class MeshGenerator
                 arr.Arr.Add(new List<int> {2, 1, (mesh.NodesAmountZ - 1) * j * mesh.NodesAmountX + i, (mesh.NodesAmountZ - 1) * j * mesh.NodesAmountX + i + 1,
                                                  (mesh.NodesAmountZ - 1) * (j + 1) * mesh.NodesAmountX + i, (mesh.NodesAmountZ - 1) * (j + 1) * mesh.NodesAmountX + i + 1});
         
+        return arr;
+    }
+
+    public static ArrayOfRibs GenerateListOfRibs(Mesh mesh, ArrayOfPoints arrPt)
+    {
+        if (arrPt is null) throw new ArgumentNullException("arrPt is null");
+
+        int nx = mesh.NodesAmountX;
+        int ny = mesh.NodesAmountY;
+        int nz = mesh.NodesAmountZ;
+        int nxny = nx * ny;
+
+        ArrayOfRibs arr = new(3 * nx * ny * nz - nx * ny - nx * nz - ny * nz);
+
+        // Генерируем список всех ребер.
+        for (int k = 0; k < nz; k++)
+        {
+            for (int j = 0; j < ny; j++)
+            {
+                for (int i = 0; i < nx - 1; i++) 
+                    arr.Add(new Rib(arrPt[k * nxny + nx * j + i], arrPt[k * nxny + nx * j + i + 1]));
+                if (j != ny - 1)
+                    for (int i = 0; i < nx; i++)
+                        arr.Add(new Rib(arrPt[k * nxny + nx * j + i], arrPt[k * nxny + nx * (j + 1) + i]));
+            }
+            if (k != nz - 1)
+                for (int j = 0; j < ny; j++)
+                    for (int i = 0; i < nx; i++)
+                        arr.Add(new Rib(arrPt[k * nxny + nx * j + i], arrPt[(k + 1) * nxny + nx * j + i]));
+        }
+
+        // Убираем все ребра с 1ку
+        /*
+        int ii = 0;
+        while (ii < arr.Count)
+        {
+            if (arr[ii].typeOfRib == TypeOfRib.BoundaryI)
+            {
+                Console.WriteLine($"({arr[ii].a.X} {arr[ii].a.Y} {arr[ii].a.Z})\t({arr[ii].b.X} {arr[ii].b.Y} {arr[ii].b.Z})");
+                arr.Remove(ii);
+            }
+            else
+                ii++;
+        }
+        */
         return arr;
     }
 
