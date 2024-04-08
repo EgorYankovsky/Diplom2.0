@@ -188,9 +188,12 @@ public class FEM3D : FEM
         pointsArr = MeshGenerator.GenerateListOfPoints(mesh);
         ribsArr = MeshGenerator.GenerateListOfRibs(mesh, pointsArr);
         elemsArr = MeshGenerator.GenerateListOfElems(mesh);
+        MeshGenerator.SelectRibs(ref ribsArr, ref elemsArr);
         // ! А надо ли?
         //bordersArr = MeshGenerator.GenerateListOfBorders(mesh);
     }
+
+
 
     public void AddField(Mesh3Dim mesh)
     {

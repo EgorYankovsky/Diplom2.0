@@ -176,18 +176,74 @@ public static class MeshGenerator
         return pnt;
     }
 
+    // ! Костыль вселенских масштабов.
     public static ArrayOfElems GenerateListOfElems(Mesh mesh)
     {
         var arr = new ArrayOfElems(mesh.ElemsAmount);
-        for (int k = 0; k < mesh.NodesAmountZ - 1; k++)
-            for (int j = 0; j < mesh.NodesAmountY - 1; j++)
-                for (int i = 0; i < mesh.NodesAmountX - 1; i++)
-                    arr.Add(new List<int>{k * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + i, k * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + i + 1,
-                                          k * mesh.NodesAmountY * mesh.NodesAmountX + (j + 1) * mesh.NodesAmountX + i, k * mesh.NodesAmountY * mesh.NodesAmountX + (j + 1) * mesh.NodesAmountX + i + 1,
-                                          (k + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + i, (k + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + i + 1,
-                                          (k + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (j + 1) * mesh.NodesAmountX + i, (k + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (j + 1) * mesh.NodesAmountX + i + 1});
         
+        int rx = mesh.NodesAmountX - 1;
+        int ry = mesh.NodesAmountY - 1;
+        
+        int nx = mesh.NodesAmountX;
+        int ny = mesh.NodesAmountY;
+
+        int rxy = rx * ny + ry * nx;
+        int nxy = nx * ny;
+        int nz = mesh.NodesAmountZ;
+        int ramount = 3 * nx * ny * nz - nx * ny - nx * nz - ny * nz;
+
+        int j = 0;
+        int k = 0;
+        for (int i = 0; i < 4 * 4 * 3; i++)
+        {
+            if (i + ry * j + rxy * k + rxy + nxy + rx + nx > ramount) 
+                break;
+
+            if (i % (nx * ry - 1 + k * nx * ny) == 0 && i != 0)
+            {
+                i += nx;
+                k++;
+                j = 0;
+            }
+            else if (i % nx == nx - 1)
+                j++;
+            else
+            {
+                int fst = i + ry * j + rxy * k; 
+                arr.Add([i + ry * j + rxy * k, i + rx + ry * j + rxy * k, i + rx + 1 + ry * j + rxy * k, i + rx + nx + ry * j + rxy * k,
+                        i + rxy * (k + 1), i + rxy * (k + 1) + 1, i + rxy * (k + 1) + rx + 1, i + rxy * (k + 1) + rx + 1 + 1,
+                        fst + rxy + nxy, fst + rxy + nxy + rx, fst + rxy + nxy + rx + 1, fst + rxy + nxy + rx + nx]);          
+            }
+        }
         return arr;
+    }
+
+    public static void SelectRibs(ref ArrayOfRibs arrRibs, ref ArrayOfElems arrEl)
+    {
+        int ii = 0;
+        while (ii < arrRibs.Count)
+        {
+            if (arrRibs[ii].typeOfRib == TypeOfRib.BoundaryI)
+            {
+                foreach (var elem in arrEl)
+                    foreach (var item in elem)
+                    {
+                        if (item > ii) break;
+                        if (item == ii)
+                        {
+                            elem.Remove(item);
+                            break;
+                        }
+                    }
+                arrRibs.Remove(ii);
+                for (int i = 0; i < arrEl.Length; i++)
+                    for (int j = 0; j < arrEl[i].Count; j++) 
+                        if (arrEl[i][j] > ii)
+                            arrEl[i][j] -= 1;
+            }
+            else
+                ii++;
+        }
     }
 
     public static ArrayOfBorders GenerateListOfBorders(Mesh mesh)

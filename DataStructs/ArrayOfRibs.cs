@@ -58,7 +58,7 @@ public class ArrayOfRibs : IEnumerable
 
     public void Remove(int i)
     {
-        if (i >= _ribs.Count) throw new ArgumentOutOfRangeException("Out of range ArrayOfRibs");
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(i, _ribs.Count);
         _ribs.RemoveAt(i);
     }
 

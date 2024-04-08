@@ -10,7 +10,7 @@ public class ArrayOfElems
 
     public List<double> sigmai;
 
-    public int Length { get; set; }
+    public int Length { get => Arr.Count; set {} }
 
     public MyEnumerator GetEnumerator() => new(this);
 

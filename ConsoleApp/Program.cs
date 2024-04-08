@@ -86,13 +86,63 @@ for (int k = 0; k < nz; k++)
                 arr.Add(new Rib(arrpnt[k * nxny + nx * j + i], arrpnt[(k + 1) * nxny + nx * j + i]));
 }
 
+//return 0;
+
+
+var arre = new ArrayOfElems(3 * 3 * 2);
+        
+int rx = 4 - 1;
+int ry = 4 - 1;
+
+int rxy = rx * ny + ry * nx;
+int nxy = nx * ny;
+int rz = 3 - 1;
+int ramount = 3 * nx * ny * nz - nx * ny - nx * nz - ny * nz;
+
+int jj = 0;
+int kk = 0;
+for (int i = 0; i < 4 * 4 * 3; i++)
+{
+    if (i + ry * jj + rxy * kk + rxy + nxy + rx + nx > ramount) 
+        break;
+
+    if (i % (nx * ry - 1 + kk * nx * ny) == 0 && i != 0)
+    {
+        i += nx;
+        kk++;
+        jj = 0;
+    }
+    else if (i % nx == nx - 1)
+        jj++;
+    else
+    {
+        int fst = i + ry * jj + rxy * kk; 
+        arre.Add([i + ry * jj + rxy * kk, i + rx + ry * jj + rxy * kk, i + rx + 1 + ry * jj + rxy * kk, i + rx + nx + ry * jj + rxy * kk,
+                  i + rxy * (kk + 1), i + rxy * (kk + 1) + 1, i + rxy * (kk + 1) + rx + 1, i + rxy * (kk + 1) + rx + 1 + 1,
+                  fst + rxy + nxy, fst + rxy + nxy + rx, fst + rxy + nxy + rx + 1, fst + rxy + nxy + rx + nx]);          
+    }
+}
+
 int ii = 0;
 while (ii < arr.Count)
 {
     if (arr[ii].typeOfRib == TypeOfRib.BoundaryI)
     {
-        Console.WriteLine($"({arr[ii].a.X} {arr[ii].a.Y} {arr[ii].a.Z})\t({arr[ii].b.X} {arr[ii].b.Y} {arr[ii].b.Z})");
+        foreach (var elem in arre)
+            foreach (var item in elem)
+            {
+                if (item > ii) break;
+                if (item == ii)
+                {
+                    elem.Remove(item);
+                    break;
+                }
+            }
         arr.Remove(ii);
+        for (int i = 0; i < arre.Length; i++)
+            for (int j = 0; j < arre[i].Count; j++) 
+                if (arre[i][j] > ii)
+                    arre[i][j] -= 1;
     }
     else
         ii++;
@@ -100,6 +150,7 @@ while (ii < arr.Count)
 
 return 0;
 */
+
 
 // Main process of 2-dim task.
 FEM2D myFEM2D = new();
