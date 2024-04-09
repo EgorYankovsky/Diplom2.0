@@ -110,7 +110,7 @@ public class GlobalMatrix : Matrix
 
     public GlobalMatrix(int arrOfPntLen)
     {        
-        _jg = new();
+        _jg = [];
         _ig = new int[arrOfPntLen + 1];
         _diag = new double[arrOfPntLen];
     }

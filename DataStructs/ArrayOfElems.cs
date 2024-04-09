@@ -37,15 +37,15 @@ public class ArrayOfElems
 
     public ArrayOfElems()
     {
-        Arr = new();
-        mui = new();
-        sigmai = new();
+        Arr = [];
+        mui = [];
+        sigmai = [];
         using var sr = new StreamReader(_path);
-        Length = int.Parse(sr.ReadLine() ?? "0");
-        for (int i = 0; i < Length; i++)
+        int length = int.Parse(sr.ReadLine() ?? "0");
+        for (int i = 0; i < length; i++)
         {
             var info = sr.ReadLine().Split().ToList();
-            Arr.Add(new List<int> {int.Parse(info[0]), int.Parse(info[1]), int.Parse(info[2]), int.Parse(info[3])});
+            Arr.Add([int.Parse(info[0]), int.Parse(info[1]), int.Parse(info[2]), int.Parse(info[3])]);
             mui.Add(double.Parse(info[4]));
             sigmai.Add(double.Parse(info[5]));
         }
@@ -60,5 +60,6 @@ public class ArrayOfElems
     {
         Arr = new(elemsAmount);
         mui = new();
+        sigmai = new();
     }
 }

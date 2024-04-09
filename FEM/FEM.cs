@@ -37,9 +37,9 @@ public abstract class FEM
 
     public ArrayOfBorders? bordersArr; 
 
-    protected List<double>? mu0;
+    internal List<double>? mu0;
 
-    protected List<double>? sigma;
+    internal List<double>? sigma;
 
     public GlobalMatrix? Matrix;
 
@@ -84,5 +84,11 @@ public abstract class FEM
         timeMesh[^1] = t1;
         equationType = EquationType.Parabolic;
         Debug.WriteLine("Time mesh built correctly!");
+    }
+
+    public void SetSolver(ISolver solver)
+    {
+        this.solver = solver;
+        Debug.WriteLine("Solvet set");
     }
 }

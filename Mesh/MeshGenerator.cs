@@ -194,8 +194,9 @@ public static class MeshGenerator
 
         int j = 0;
         int k = 0;
-        for (int i = 0; i < 4 * 4 * 3; i++)
+        for (int i = 0; i < nx * ny * nz; i++)
         {
+            //Console.WriteLine($"{i} | {nx * ny * nz}");
             if (i + ry * j + rxy * k + rxy + nxy + rx + nx > ramount) 
                 break;
 
@@ -212,7 +213,9 @@ public static class MeshGenerator
                 int fst = i + ry * j + rxy * k; 
                 arr.Add([i + ry * j + rxy * k, i + rx + ry * j + rxy * k, i + rx + 1 + ry * j + rxy * k, i + rx + nx + ry * j + rxy * k,
                         i + rxy * (k + 1), i + rxy * (k + 1) + 1, i + rxy * (k + 1) + rx + 1, i + rxy * (k + 1) + rx + 1 + 1,
-                        fst + rxy + nxy, fst + rxy + nxy + rx, fst + rxy + nxy + rx + 1, fst + rxy + nxy + rx + nx]);          
+                        fst + rxy + nxy, fst + rxy + nxy + rx, fst + rxy + nxy + rx + 1, fst + rxy + nxy + rx + nx]);
+                arr.mui.Add(mesh.mu0[0]);
+                arr.sigmai.Add(mesh.nodesZ[i / (nx * ny)] <= 0.0D ? mesh.sigma[0] : mesh.sigma[^1]);
             }
         }
         return arr;
@@ -223,6 +226,7 @@ public static class MeshGenerator
         int ii = 0;
         while (ii < arrRibs.Count)
         {
+            Console.WriteLine($"{ii * 100.0D / arrRibs.Count:E5}\r");
             if (arrRibs[ii].typeOfRib == TypeOfRib.BoundaryI)
             {
                 foreach (var elem in arrEl)
@@ -253,39 +257,39 @@ public static class MeshGenerator
         // XY0
         for (int j = 0; j < mesh.NodesAmountY - 1; j++)
             for (int i = 0; i < mesh.NodesAmountX - 1; i++)
-                arr.Arr.Add(new List<int> {1, 1, j * mesh.NodesAmountX + i, j * mesh.NodesAmountX + i + 1,
-                                                (j + 1) * mesh.NodesAmountX + i, (j + 1) * mesh.NodesAmountX + i + 1});
+                arr.Arr.Add([1, 1, j * mesh.NodesAmountX + i, j * mesh.NodesAmountX + i + 1,
+                                  (j + 1) * mesh.NodesAmountX + i, (j + 1) * mesh.NodesAmountX + i + 1]);
         
         // X0Z
         for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
             for (int i = 0; i < mesh.NodesAmountX - 1; i++)
-                arr.Arr.Add(new List<int> {1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i, j * mesh.NodesAmountY * mesh.NodesAmountX + i + 1,
-                                                (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + i, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + i + 1});
+                arr.Arr.Add([1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i, j * mesh.NodesAmountY * mesh.NodesAmountX + i + 1,
+                                  (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + i, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + i + 1]);
         
         // X1Z
         for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
             for (int i = 0; i < mesh.NodesAmountX - 1; i++)
-                arr.Arr.Add(new List<int> {1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i, j * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i + 1,
-                                                (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i + 1});
+                arr.Arr.Add([1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i, j * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i + 1,
+                                  (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i + 1]);
         // 0YZ
         for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
             for (int i = 0; i < mesh.NodesAmountY - 1; i++)
-                arr.Arr.Add(new List<int> {1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i * mesh.NodesAmountX, j * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX, 
-                                                (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX});
+                arr.Arr.Add([1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i * mesh.NodesAmountX, j * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX, 
+                                  (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX]);
         
         // 1YZ
         for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
             for (int i = 0; i < mesh.NodesAmountY - 1; i++)
-                arr.Arr.Add(new List<int> {1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i * mesh.NodesAmountX + mesh.NodesAmountX - 1,
-                                                 j * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX + mesh.NodesAmountX - 1, 
-                                                (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + mesh.NodesAmountX - 1,
-                                                (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX + mesh.NodesAmountX - 1});
+                arr.Arr.Add([1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i * mesh.NodesAmountX + mesh.NodesAmountX - 1,
+                                   j * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX + mesh.NodesAmountX - 1, 
+                                  (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + mesh.NodesAmountX - 1,
+                                  (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX + mesh.NodesAmountX - 1]);
         
         // XY1
         for (int j = 0; j < mesh.NodesAmountY - 1; j++)
             for (int i = 0; i < mesh.NodesAmountX - 1; i++)
-                arr.Arr.Add(new List<int> {2, 1, (mesh.NodesAmountZ - 1) * j * mesh.NodesAmountX + i, (mesh.NodesAmountZ - 1) * j * mesh.NodesAmountX + i + 1,
-                                                 (mesh.NodesAmountZ - 1) * (j + 1) * mesh.NodesAmountX + i, (mesh.NodesAmountZ - 1) * (j + 1) * mesh.NodesAmountX + i + 1});
+                arr.Arr.Add([2, 1, (mesh.NodesAmountZ - 1) * j * mesh.NodesAmountX + i, (mesh.NodesAmountZ - 1) * j * mesh.NodesAmountX + i + 1,
+                                   (mesh.NodesAmountZ - 1) * (j + 1) * mesh.NodesAmountX + i, (mesh.NodesAmountZ - 1) * (j + 1) * mesh.NodesAmountX + i + 1]);
         
         return arr;
     }
@@ -317,21 +321,6 @@ public static class MeshGenerator
                     for (int i = 0; i < nx; i++)
                         arr.Add(new Rib(arrPt[k * nxny + nx * j + i], arrPt[(k + 1) * nxny + nx * j + i]));
         }
-
-        // Убираем все ребра с 1ку
-        /*
-        int ii = 0;
-        while (ii < arr.Count)
-        {
-            if (arr[ii].typeOfRib == TypeOfRib.BoundaryI)
-            {
-                Console.WriteLine($"({arr[ii].a.X} {arr[ii].a.Y} {arr[ii].a.Z})\t({arr[ii].b.X} {arr[ii].b.Y} {arr[ii].b.Z})");
-                arr.Remove(ii);
-            }
-            else
-                ii++;
-        }
-        */
         return arr;
     }
 

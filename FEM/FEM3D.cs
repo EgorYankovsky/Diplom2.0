@@ -27,24 +27,23 @@ public class FEM3D : FEM
 
     public ArrayOfRibs ribsArr;
 
-
     // Maybe private?
-    public List<Mesh3Dim> Layers;
+    public List<Layer> Layers;
 
     public FEM3D(FEM2D fem2d)
     {
-        Ax_3D = new();
-        Ay_3D = new();
-        Az_3D = new();
-        Ex_3D = new();
-        Ey_3D = new();
-        Ez_3D = new();
-        Layers = new();
+        Ax_3D = [];
+        Ay_3D = [];
+        Az_3D = [];
+        Ex_3D = [];
+        Ey_3D = [];
+        Ez_3D = [];
+        Layers = [];
         mesh = new Mesh3Dim
         {
-            nodesX = new(),
-            nodesY = new(),
-            nodesZ = new()
+            nodesX = [],
+            nodesY = [],
+            nodesZ = []
         };
         equationType = fem2d.equationType;
     }
@@ -70,16 +69,27 @@ public class FEM3D : FEM
             mesh.nodesY.Insert(0, -1.0D * mesh.nodesY[i]);
         }
 
+        mesh.mu0 = fem2d.mu0;
+        mesh.sigma = fem2d.sigma;
+
         mesh.nodesZ = fem2d.Mesh2D.nodesZ;
         timeMesh = fem2d.timeMesh;
     }
 
     public void ConvertResultTo3Dim(FEM2D fem2d)
     {
+        #if NOSOLVE2DIM
+        ReadAnswers();
+        #endif
         Task TaskGenerationAxyz = Task.Run(() => GenerateAxyz(fem2d));
         Task TaskGenerationExyz = Task.Run(() => GenerateExyz(fem2d));
         TaskGenerationAxyz.Wait();
         TaskGenerationExyz.Wait();
+    }
+
+    private void ReadAnswers()
+    {
+
     }
 
     private void GenerateAxyz(FEM2D fem2d)
@@ -188,15 +198,38 @@ public class FEM3D : FEM
         pointsArr = MeshGenerator.GenerateListOfPoints(mesh);
         ribsArr = MeshGenerator.GenerateListOfRibs(mesh, pointsArr);
         elemsArr = MeshGenerator.GenerateListOfElems(mesh);
-        MeshGenerator.SelectRibs(ref ribsArr, ref elemsArr);
+        //MeshGenerator.SelectRibs(ref ribsArr, ref elemsArr);
         // ! А надо ли?
         //bordersArr = MeshGenerator.GenerateListOfBorders(mesh);
     }
 
-
-
-    public void AddField(Mesh3Dim mesh)
+    public void AddField(Layer layer)
     {
+        ArgumentNullException.ThrowIfNull(layer);
+        Layers.Add(layer);
+    }
+
+    public void CommitFields()
+    {
+        if (elemsArr is null) throw new ArgumentNullException("elemsArr is null");
+
+        foreach (var layer in Layers)
+        {
+            for (int i = 0; i < elemsArr.Length; i++)
+            {
+                double minz = Math.Min(ribsArr[elemsArr[i][^1]].a.Z, ribsArr[elemsArr[i][^1]].b.Z);
+                double maxz = Math.Max(ribsArr[elemsArr[i][^1]].a.Z, ribsArr[elemsArr[i][^1]].b.Z);
+                if (layer.z0 <= minz && maxz <= layer.z1)
+                    elemsArr.sigmai[i] = layer.sigma;
+            }
+        }
+    }
+
+    public void ConstructMatrixAndVector()
+    {
+        if (elemsArr is null) throw new ArgumentNullException("elemsArr is null");
+        var sparceMatrix = new GlobalMatrix(ribsArr.Count);
+        Generator.BuildPortait(ref sparceMatrix, ribsArr.Count, elemsArr);
         
     }
 }

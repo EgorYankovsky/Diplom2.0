@@ -48,12 +48,6 @@ public class FEM2D : FEM
         Debug.WriteLine("Generated data submited");
     }
 
-    public void SetSolver(ISolver solver)
-    {
-        this.solver = solver;
-        Debug.WriteLine("Solvet set");
-    }
-
     public void Solve()
     {
         if (pointsArr is null) throw new ArgumentNullException("points array is null !");
@@ -260,6 +254,24 @@ public class FEM2D : FEM
         if (timeMesh is null) throw new NullReferenceException("timeMesh is null");
         
         E_phi2D = new GlobalVector[A_phi.Length];
+        
+        for (int i = 0; i < E_phi2D.Length; i++)
+        {
+            if (i == 0)
+                E_phi2D[i] = (-1.0 / (timeMesh[i + 1] - timeMesh[i])) * (A_phi[i + 1] - A_phi[i]);
+            else if (i == 1)
+                E_phi2D[i] = (-1.0 / (timeMesh[i + 1] - timeMesh[i - 1])) * (A_phi[i + 1] - A_phi[i - 1]);
+            else
+            {
+                double ti = timeMesh[i];
+                double ti_1 = timeMesh[i - 1];
+                double ti_2 = timeMesh[i - 2];
+                E_phi2D[i] = 1.0D / (ti_1 - ti_2) * A_phi[i - 2] - (ti - ti_2) / ((ti_1 - ti_2) * (ti - ti_1)) * A_phi[i - 1] + 
+                (2 * ti - ti_1 - ti_2) / ((ti - ti_2) * (ti - ti_1)) * A_phi[i];
+            }
+        }
+        
+        /*
         for (int i = 0; i < E_phi2D.Length; i++)
         {
             if (i == 0)
@@ -269,6 +281,7 @@ public class FEM2D : FEM
             else
                 E_phi2D[i] = (-1.0 / (timeMesh[i + 1] - timeMesh[i - 1])) * (A_phi[i + 1] - A_phi[i - 1]);
         }
+        */
     }
 
     internal List<int> GetE_phi(double r, double z, double t)

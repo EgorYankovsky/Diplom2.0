@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
+using DataStructs;
 using System.Reflection.Metadata;
 
 namespace Grid;
@@ -35,9 +36,9 @@ public static class MeshReader
                     string[] str = sr.ReadLine().Split();
                     mesh.mu0.Add(mu0);
                     mesh.sigma.Add(double.Parse(str[6]));
-                    mesh.Elems.Add(new List<int> {int.Parse(str[0]), int.Parse(str[1]),
-                                             int.Parse(str[2]), int.Parse(str[3]), 
-                                             int.Parse(str[4])});
+                    mesh.Elems.Add([int.Parse(str[0]), int.Parse(str[1]),
+                                    int.Parse(str[2]), int.Parse(str[3]), 
+                                    int.Parse(str[4])]);
             
                 }
             }
@@ -62,6 +63,24 @@ public static class MeshReader
             Console.WriteLine($"Error during reading {_currPath} file: {ex}");
             throw new IOException();
         }
+    }
+
+    public static Layer ReadField(string path)
+    {
+        using var sr = new StreamReader(path);
+        double z0;
+        double z1;
+        double mu;
+        double sigma;
+
+        var arr = sr.ReadLine().Split().Select(double.Parse).ToList();
+        z0 = arr[0];
+        z1 = arr[1];
+        
+        arr = sr.ReadLine().Split().Select(double.Parse).ToList();
+        mu = arr[0];
+        sigma = arr[1];
+        return new Layer(z0, z1, mu, sigma);
     }
 
     public static Mesh3Dim ReadMesh(string path)
