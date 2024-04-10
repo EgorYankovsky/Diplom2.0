@@ -11,6 +11,9 @@ public class LocalMatrix : Matrix
 
     private readonly double _gamma;
 
+
+    private readonly double _sigma;
+
     private readonly double _rk;
 
     private readonly double _hr;
@@ -49,8 +52,6 @@ public class LocalMatrix : Matrix
     private readonly double[,] _Mr2 = {{-3.0D, 1.0D},
                                        { 1.0D, 1.0D}};
 
-
-    // To delete.
     private readonly double[,] _Gr = new double[2, 2];
     private readonly double[,] _Mr = new double[2, 2];
     private readonly double[,] _Gz = new double[2, 2];
@@ -97,6 +98,8 @@ public class LocalMatrix : Matrix
             for (int j = 0; j < 4; j++)
             {
                 Console.Write($"{this[i, j]:E3} ");
+                matr[i, j] = (1.0D / _mu0) * (_Gr[i % 2, j % 2] * _Mz[i / 2, j / 2] + _Mr[i % 2, j % 2] * _Gz[i / 2, j / 2]) + 
+                (1.0D / _mu0) * (_Mrr[i % 2, j % 2] * _Mz[i / 2, j / 2]);
             }   
             Console.WriteLine();
         }

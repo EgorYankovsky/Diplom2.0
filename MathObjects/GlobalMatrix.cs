@@ -11,20 +11,16 @@ public enum TypeOfMatrixM
 public class GlobalMatrix : Matrix
 {
     #region Компоненты матрицы.
-    // Массив индексов по i.
-    internal readonly int[]? _ig;
+    
+    public readonly int[]? _ig;
 
-    // Массив индексов по j.
-    internal readonly List<int> _jg;
+    public readonly List<int> _jg;
 
-    // Диагональные элементы.
-    internal readonly double[]? _diag;
+    public readonly double[]? _diag;
 
-    // Элементы матрицы нижнего треугольника .
-    internal double[]? _al;
+    public double[]? _al;
 
-    // Элементы матрицы верхнего треугольника.
-    internal double[]? _au;
+    public double[]? _au;
     #endregion
 
     #region Переопределение математических операций
@@ -114,7 +110,7 @@ public class GlobalMatrix : Matrix
 
     public GlobalMatrix(int arrOfPntLen)
     {        
-        _jg = new();
+        _jg = [];
         _ig = new int[arrOfPntLen + 1];
         _diag = new double[arrOfPntLen];
     }

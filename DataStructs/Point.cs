@@ -32,18 +32,8 @@ public class Point
     // Координата по Z.
     public double Z { get; init; }
 
-    /// <summary>
-    /// Метод, возвращающий содержимое точки в формате строки.
-    /// </summary>
-    /// <returns>Форматированная строка.</returns>
     public override string ToString() => $"{R.ToString("E15", CultureInfo.InvariantCulture)} {Z.ToString("E15", CultureInfo.InvariantCulture)} {SubElemNum} {Type}";
 
-    /// <summary>
-    /// Конструктор класса Point.
-    /// </summary>
-    /// <param name="X">Координата по оси X.</param>
-    /// <param name="Y">Координата по оси Y.</param>
-    /// <param name="Z">Координата по оси Z.</param>
     public Point(double X, double Y, double Z)
     {
         this.X = X;
@@ -52,11 +42,6 @@ public class Point
         Type = Location.NotStated;
     }
 
-    /// <summary>
-    /// Конструктор класса Point.
-    /// </summary>
-    /// <param name="R">Координата по оси R.</param>
-    /// <param name="Z">Координата по оси Z.</param>
     public Point(double R, double Z)
     {
         this.R = R;
@@ -64,11 +49,6 @@ public class Point
         Type = Location.NotStated;
     }
 
-    /// <summary>
-    /// Конструктор класса Point
-    /// </summary>
-    /// <param name="arr">Массив с информацией.</param>
-    /// <exception cref="Exception"></exception>
     public Point(List<string> arr)
     {
         // TODO: Придумать что-нибудь интереснее.

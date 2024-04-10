@@ -62,4 +62,9 @@ public class ArrayOfBorders
             Arr.Add(sr.ReadLine().Split().Select(int.Parse).ToList());
         SortList();
     }
+
+    public ArrayOfBorders(object o)
+    {
+        Arr = new();
+    }
 }

@@ -2,7 +2,7 @@ namespace MathObjects;
 
 public abstract class Vector : IMathObject
 {
-    protected double[]? _values;
+    public double[]? _values;
 
     public virtual double this[int i]
     {
@@ -10,6 +10,6 @@ public abstract class Vector : IMathObject
         set => _values[i] = value;
     }
 
-    public int Size => _values.Length;
+    public virtual int Size => _values.Length;
 
 }

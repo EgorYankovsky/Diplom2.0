@@ -25,6 +25,11 @@ public class GlobalVector : Vector
         return Math.Sqrt(ans);
     }
 
+    public GlobalVector(GlobalVector gv)
+    {
+        _values = gv._values;
+    }
+
     // ? Нужен ли public?
     public GlobalVector(int size)
     {
