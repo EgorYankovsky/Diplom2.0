@@ -4,26 +4,38 @@ namespace MathObjects;
 
 public static class Generator
 {
-    public static void FillMatrixG(ref GlobalMatrix m, ArrayOfPoints arrPt, ArrayOfElems arrEl, ArrayOfBorders arrBd, TypeOfMatrixM typeOfMatrixM)
+    public static void FillMatrixG(ref GlobalMatrix m, ArrayOfRibs arrRibs, ArrayOfElems arrEl)
     {
         m._al = new double[m._jg.Count];
         m._au = new double[m._jg.Count];
 
         for (int i = 0; i < arrEl.Length; i++)
-            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], 0.0), ref m, arrEl[i]);
-        
-        ConsiderBoundaryConditions(ref m, arrBd);
+        {
+            double hx = arrRibs[arrEl[i][0]].Length;
+            double hy = arrRibs[arrEl[i][1]].Length;
+            double hz = arrRibs[arrEl[i][4]].Length;
+
+            var lm = new LocalMatrixG3D(arrEl.mui[i], hx, hy, hz);
+            Add(lm, ref m, arrEl[i]);
+        }
+        //ConsiderBoundaryConditions(ref m, arrBd);
     }
 
-    public static void FillMatrixM(ref GlobalMatrix m, ArrayOfPoints arrPt, ArrayOfElems arrEl, ArrayOfBorders arrBd, TypeOfMatrixM typeOfMatrixM)
+    public static void FillMatrixM(ref GlobalMatrix m, ArrayOfRibs arrRibs, ArrayOfElems arrEl)
     {
         m._al = new double[m._jg.Count];
         m._au = new double[m._jg.Count];
 
         for (int i = 0; i < arrEl.Length; i++)
-            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, 0.0, arrEl.mui[i]), ref m, arrEl[i]);
+        {
+            double hx = arrRibs[arrEl[i][0]].Length;
+            double hy = arrRibs[arrEl[i][1]].Length;
+            double hz = arrRibs[arrEl[i][4]].Length;
 
-        ConsiderBoundaryConditions(ref m, arrBd);
+            var lm = new LocalMatrixG3D(arrEl.mui[i], hx, hy, hz);
+            Add(lm, ref m, arrEl[i]);
+        }
+        //ConsiderBoundaryConditions(ref m, arrBd);
     }
 
 
@@ -62,6 +74,49 @@ public static class Generator
     }
 
     private static void Add(LocalMatrix lm, ref GlobalMatrix gm, List<int> elem)
+    {
+        if (gm._diag is null) throw new Exception("_diag isn't initialized");
+        if (gm._ig is null) throw new Exception("_ig isn't initialized");
+        if (gm._au is null) throw new Exception("_au isn't initialized");
+        if (gm._al is null) throw new Exception("_au isn't initialized");
+        
+        
+        int ii = 0;
+        foreach (var i in elem)
+        {
+            int jj = 0;
+            foreach (var j in elem)
+            {
+                int ind = 0;
+                double val = 0.0D;
+                switch(i - j)
+                {
+                    case 0:
+                        val = lm[ii, jj];
+                        gm._diag[i] += lm[ii, jj];
+                        break;
+                    case < 0:
+                        ind = gm._ig[j];
+                        for (; ind <= gm._ig[j + 1] - 1; ind++)
+                            if (gm._jg[ind] == i) break;
+                        val = lm[ii, jj];
+                        gm._au[ind] += lm[ii, jj];
+                        break;
+                    case > 0:
+                        ind = gm._ig[i];
+                        for (; ind <= gm._ig[i + 1] - 1; ind++)
+                            if (gm._jg[ind] == j) break;
+                        val = lm[ii, jj];
+                        gm._al[ind] += lm[ii, jj];
+                        break;
+                }
+                jj++;
+            }
+            ii++;
+        }
+    }
+
+    private static void Add(LocalMatrixG3D lm, ref GlobalMatrix gm, List<int> elem)
     {
         if (gm._diag is null) throw new Exception("_diag isn't initialized");
         if (gm._ig is null) throw new Exception("_ig isn't initialized");

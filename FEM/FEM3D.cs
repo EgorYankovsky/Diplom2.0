@@ -48,6 +48,11 @@ public class FEM3D : FEM
         equationType = fem2d.equationType;
     }
 
+    public void ConstructMesh()
+    {
+
+    }
+
     public void ConstructMesh(FEM2D fem2d)
     {   
         if (fem2d.Mesh2D.nodesR is null) throw new ArgumentNullException("null object");
@@ -78,18 +83,10 @@ public class FEM3D : FEM
 
     public void ConvertResultTo3Dim(FEM2D fem2d)
     {
-        #if NOSOLVE2DIM
-        ReadAnswers();
-        #endif
         Task TaskGenerationAxyz = Task.Run(() => GenerateAxyz(fem2d));
         Task TaskGenerationExyz = Task.Run(() => GenerateExyz(fem2d));
         TaskGenerationAxyz.Wait();
         TaskGenerationExyz.Wait();
-    }
-
-    private void ReadAnswers()
-    {
-
     }
 
     private void GenerateAxyz(FEM2D fem2d)
@@ -230,6 +227,14 @@ public class FEM3D : FEM
         if (elemsArr is null) throw new ArgumentNullException("elemsArr is null");
         var sparceMatrix = new GlobalMatrix(ribsArr.Count);
         Generator.BuildPortait(ref sparceMatrix, ribsArr.Count, elemsArr);
+
+        var G = new GlobalMatrix(sparceMatrix);
+
+        Generator.FillMatrixG(ref G, ribsArr, elemsArr);
+        //Generator.ConsiderBoundaryConditions(ref m, arrBd);
         
+
+        var M = new GlobalMatrix(sparceMatrix);
+        Generator.FillMatrixM(ref M, ribsArr, elemsArr);
     }
 }
