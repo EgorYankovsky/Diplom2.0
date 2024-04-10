@@ -167,7 +167,7 @@ myFEM2D.SubmitGeneratedData();
 #if SOLVE2DIM
 myFEM2D.SetSolver(new LOS());
 myFEM2D.Solve();
-//myFEM2D.GenerateVectorEphi();
+myFEM2D.GenerateVectorEphi();
 myFEM2D.WriteData(AnswerPath);
 #endif
 
