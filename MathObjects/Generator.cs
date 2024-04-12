@@ -20,7 +20,6 @@ public static class Generator
             var lm = new LocalMatrixG3D(arrEl.mui[i], hx, hy, hz);
             Add(lm, ref m, arrEl[i]);
         }
-        //ConsiderBoundaryConditions(ref m, arrBd);
     }
 
     public static void FillMatrixM(ref GlobalMatrix m, ArrayOfRibs arrRibs, ArrayOfElems arrEl)
@@ -37,7 +36,35 @@ public static class Generator
             var lm = new LocalMatrixG3D(arrEl.mui[i], hx, hy, hz);
             Add(lm, ref m, arrEl[i]);
         }
-        //ConsiderBoundaryConditions(ref m, arrBd);
+    }
+
+    public static void FillVector3D(ref GlobalVector v, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
+    {
+        for (int i = 0; i < arrEl.Length; i++)
+        {
+            var lv = new LocalVector3D(arrRibs[arrEl[i][0]].a.X, arrRibs[arrEl[i][0]].b.X,
+                                       arrRibs[arrEl[i][1]].a.Y, arrRibs[arrEl[i][1]].b.Y,
+                                       arrRibs[arrEl[i][4]].a.Z, arrRibs[arrEl[i][4]].b.Z, t);
+            Add(lv, ref v, arrEl[i]);
+        }
+    }
+
+    private static void Add(LocalVector3D lv, ref GlobalVector v, List<int> elem)
+    {
+        v[elem[0]] += lv[4];
+        v[elem[1]] += lv[0];
+        v[elem[2]] += lv[1];
+        v[elem[3]] += lv[5];
+
+        v[elem[4]] += lv[8];
+        v[elem[5]] += lv[9];
+        v[elem[6]] += lv[10];
+        v[elem[7]] += lv[11];
+        
+        v[elem[8]] += lv[6];
+        v[elem[9]] += lv[2];
+        v[elem[10]] += lv[3];
+        v[elem[11]] += lv[7];
     }
 
     public static void BuildPortait(ref GlobalMatrix m, int arrPtLen, ArrayOfElems arrEl)
@@ -63,6 +90,8 @@ public static class Generator
             m._ig[i + 1] = m._ig[i] + arr[i].Count;
             m._jg.AddRange(arr[i]);
         }
+        m._al = new double[m._jg.Count];
+        m._au = new double[m._jg.Count];
     }
 
     public static void FillMatrix(ref GlobalMatrix m, ArrayOfPoints arrPt, ArrayOfElems arrEl, TypeOfMatrixM typeOfMatrixM)
@@ -71,13 +100,8 @@ public static class Generator
         m._au = new double[m._jg.Count];
 
         for (int i = 0; i < arrEl.Length; i++)
-            Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], arrEl.sigmai[i]), ref m, arrEl[i]);
-        {
-            if (typeOfMatrixM == TypeOfMatrixM.Mrr)
-                Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mu0i[i], arrEl.mu0i[i]), ref m, arrEl[i]);
-            if (typeOfMatrixM == TypeOfMatrixM.Mr)
-                Add(new LocalMatrix(arrEl[i], arrPt, typeOfMatrixM, arrEl.mu0i[i], arrEl.mu0i[i]), ref m, arrEl[i]);
-        }
+            Add(new LocalMatrixNum(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], arrEl.sigmai[i]), ref m, arrEl[i]);
+            //Add(new LocalMatrixNum(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], arrEl.sigmai[i]), ref m, arrEl[i]);
 /*
         for (int ii = 0; ii < 9; ii++)
         {
@@ -92,7 +116,7 @@ public static class Generator
         //ConsiderBoundaryConditions(ref m, arrBd);
     }
 
-    private static void Add(LocalMatrix lm, ref GlobalMatrix gm, List<int> elem)
+    private static void Add(LocalMatrixNum lm, ref GlobalMatrix gm, List<int> elem)
     {
         if (gm._diag is null) throw new Exception("_diag isn't initialized");
         if (gm._ig is null) throw new Exception("_ig isn't initialized");
@@ -179,7 +203,6 @@ public static class Generator
     }
 
     public static void ConsiderBoundaryConditions(ref GlobalMatrix m, ArrayOfBorders arrBd)
-    public static void ConsiderBoundaryConditions(ref GlobalMatrix m, ArrayOfBorders arrBd)
     {
         if (m._ig is null) throw new Exception("_ig is null.");
         if (m._al is null) throw new Exception("_al is null.");
@@ -195,11 +218,19 @@ public static class Generator
                     for (int i = 2; i < 4; i++)
                     {
                         for (int j = m._ig[border[i]]; j < m._ig[border[i] + 1]; j++)
-                            m._al[j] = 0;
+                            m._al[j] = 0.0D;
                         m._diag[border[i]] = 1;
                         for (int j = 0; j < m._jg.Count; j++)
                             if (m._jg[j] == border[i])
-                                m._au[j] = 0;
+                                m._au[j] = 0.0D;
+
+                        // Гаусс для симметрии:
+                        for (int j = 0; j < m._jg.Count; j++)
+                            if (m._jg[j] == border[i])
+                                m._al[j] = 0.0D;
+
+                        for (int j = m._ig[border[i]]; j < m._ig[border[i] + 1]; j++)
+                            m._au[j] = 0.0D;
                     }
                     break;
                 }
@@ -210,7 +241,7 @@ public static class Generator
         }
     }
 
-    public static void FillVector(ref GlobalVector v, ArrayOfPoints arrPt, ArrayOfElems arrEl, ArrayOfBorders arrBd, double t)
+    public static void FillVector(ref GlobalVector v, ArrayOfPoints arrPt, ArrayOfElems arrEl, double t)
     {
         for (int i = 0; i < arrEl.Length; i++)
         {
@@ -227,6 +258,85 @@ public static class Generator
         }
     }
 
+    public static void ConsiderBoundaryConditions(ref GlobalMatrix gm, ref GlobalVector gv, ArrayOfPoints arrp, ArrayOfBorders arrBd, double t)
+    {
+        foreach (var border in arrBd)
+        {
+            switch (border[0])
+            {
+                // КУ - I-го рода
+                case 1:
+                for (int i = 2; i < 4; i++)
+                {
+                    for (int j = gm._ig[border[i]]; j < gm._ig[border[i] + 1]; j++)
+                        gm._al[j] = 0.0D;
+                    gm._diag[border[i]] = 1.0D;
+                    for (int j = 0; j < gm._jg.Count; j++)
+                        if (gm._jg[j] == border[i])
+                            gm._au[j] = 0.0D;
+                }
+
+            /*
+            // Гаусс для симметрии:
+            if (border[0] == 1)
+            {
+                for (int i = 2; i < 4; i ++)
+                {
+                    for (int j = gm._ig[border[i]]; j < gm._ig[border[i] + 1]; j++)
+                    {
+                        var k = gm._au[j];
+                        var f = -1.0D * k * gv[border[i]];
+                        gv[gm._jg[j]] += f;
+                        gm._au[j] = 0.0D;
+                    }
+
+                    for (int j = 0; j < gm._jg.Count; j++)
+                        if (gm._jg[j] == border[i])
+                        {
+                            var k = gm._al[j];
+                            var f = -1.0D * k * gv[border[i]];
+                            gv[gm._jg[j]] += f;
+                            gm._al[j] = 0.0D;
+                        }
+                }
+            }
+            */
+                switch (border[1])
+                {
+                    case 1:
+                    for (int i = 2; i < 4; i++)
+                        gv[border[i]] = Function.U1_1(arrp[border[i]], t);
+                    break;
+                    
+                    case 2:
+                    for (int i = 2; i < 4; i++)
+                        gv[border[i]] = Function.U1_2(arrp[border[i]], t);
+                    break;
+
+                    case 3:
+                    for (int i = 2; i < 4; i++)
+                        gv[border[i]] = Function.U1_3(arrp[border[i]], t);
+                    break;
+                    
+                    case 4:
+                    for (int i = 2; i < 4; i++)
+                        gv[border[i]] = Function.U1_4(arrp[border[i]], t);
+                    break;
+                    
+                    default:
+                    throw new Exception("No such bord");
+                }
+                break;
+                // КУ - II-го рода
+                case 2:
+                    for (int i = 2; i < 4; i++)
+                        gv[border[i]] += 0.0D;
+                    break;
+                // КУ - III-го рода
+                case 3: throw new ArgumentException("Пока нет возможности учитывать КУ III-го рода");
+            }
+        }
+    }
     public static void ConsiderBoundaryConditions(ref GlobalVector v, ArrayOfPoints arrp, ArrayOfBorders arrBd, double t)
     {
         foreach (var border in arrBd)

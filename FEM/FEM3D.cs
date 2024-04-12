@@ -48,9 +48,29 @@ public class FEM3D : FEM
         equationType = fem2d.equationType;
     }
 
+    public FEM3D()
+    {
+        Ax_3D = [];
+        Ay_3D = [];
+        Az_3D = [];
+        Ex_3D = [];
+        Ey_3D = [];
+        Ez_3D = [];
+        Layers = [];
+        mesh = new Mesh3Dim
+        {
+            nodesX = [],
+            nodesY = [],
+            nodesZ = []
+        };
+    }
+
     public void ConstructMesh()
     {
-
+        if (mesh == null) throw new ArgumentNullException("Mesh is null");
+        mesh.nodesX = [0.0D, 1.0D, 2.0D, 3.0D];
+        mesh.nodesY = [0.0D, 1.0D, 2.0D, 3.0D];
+        mesh.nodesZ = [0.0D, 1.0D, 2.0D];
     }
 
     public void ConstructMesh(FEM2D fem2d)
@@ -68,11 +88,14 @@ public class FEM3D : FEM
         
         int amount = 2 * mesh.nodesX.Count - 2;
 
-        for (int i = 1; i < amount; i += 2)
+        for (int i = 0; i < amount; i += 2)
         {
             mesh.nodesX.Insert(0, -1.0D * mesh.nodesX[i]);
             mesh.nodesY.Insert(0, -1.0D * mesh.nodesY[i]);
         }
+
+        mesh.nodesX.Insert(0, -1.0D * mesh.nodesX[^1]);
+        mesh.nodesY.Insert(0, -1.0D * mesh.nodesY[^1]);
 
         mesh.mu0 = fem2d.mu0;
         mesh.sigma = fem2d.sigma;
@@ -89,7 +112,7 @@ public class FEM3D : FEM
         TaskGenerationExyz.Wait();
     }
 
-    private void GenerateAxyz(FEM2D fem2d)
+    public void GenerateAxyz(FEM2D fem2d)
     {
         if (timeMesh is null) throw new ArgumentNullException();
         if (mesh is null) throw new ArgumentNullException();
@@ -112,7 +135,7 @@ public class FEM3D : FEM
                 {
                     foreach (var X in mesh.nodesX)
                     {
-                        var elem = fem2d.GetE_phi(Math.Sqrt(X * X + Y * Y), Z, t);
+                        var elem = fem2d.GetE_phi(Math.Sqrt(X * X + Y * Y), Z);
 
                         Ax_3D[i][j] = -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * 
                             BasisFunctions2D.GetValue(
@@ -151,8 +174,6 @@ public class FEM3D : FEM
         
         foreach (var t in timeMesh)
         {
-            if (t == timeMesh.Last())
-                continue;
             int j = 0;
             Ex_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
             Ey_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
@@ -163,7 +184,7 @@ public class FEM3D : FEM
                 {
                     foreach (var X in mesh.nodesX)
                     {
-                        var elem = fem2d.GetE_phi(Math.Sqrt(X * X + Y * Y), Z, t);
+                        var elem = fem2d.GetE_phi(Math.Sqrt(X * X + Y * Y), Z);
 
                         Ex_3D[i][j] = -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * 
                             BasisFunctions2D.GetValue(
@@ -195,9 +216,8 @@ public class FEM3D : FEM
         pointsArr = MeshGenerator.GenerateListOfPoints(mesh);
         ribsArr = MeshGenerator.GenerateListOfRibs(mesh, pointsArr);
         elemsArr = MeshGenerator.GenerateListOfElems(mesh);
+        bordersArr = MeshGenerator.GenerateListOfBorders(mesh);
         //MeshGenerator.SelectRibs(ref ribsArr, ref elemsArr);
-        // ! А надо ли?
-        //bordersArr = MeshGenerator.GenerateListOfBorders(mesh);
     }
 
     public void AddField(Layer layer)
@@ -232,9 +252,15 @@ public class FEM3D : FEM
 
         Generator.FillMatrixG(ref G, ribsArr, elemsArr);
         //Generator.ConsiderBoundaryConditions(ref m, arrBd);
-        
-
         var M = new GlobalMatrix(sparceMatrix);
         Generator.FillMatrixM(ref M, ribsArr, elemsArr);
+        Matrix = G + M;
+
+        var b = new GlobalVector(ribsArr.Count);
+        Generator.FillVector3D(ref b, ribsArr, elemsArr, 0.0);
+        Vector = b;
+        //Generator.ConsiderBoundaryConditions();
+
+        (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
     }
 }

@@ -1,13 +1,14 @@
 ﻿﻿#define TESTING
 // RELEASE
 // TESTING
-﻿#define NODRAWING
+#define NODRAWING
 #define SOLVE2DIM
 using Project;
 using System.Globalization;
 using Dumpify;
 using Solver;
 using Manager;
+using System.Numerics;
 using Processor;
 using Solution;
 using MathObjects;
@@ -39,6 +40,7 @@ FolderManager.ClearFolder(AnswerPath + "/A_phi/Discrepancy/");
 FolderManager.ClearFolder(PicturesPath + "/A_phi/");
 FolderManager.ClearFolder(PicturesPath + "/E_phi/");
 FolderManager.ClearFolder(SubtotalsPath);
+
 
 /*
 int nx = 4;
@@ -159,6 +161,16 @@ return 0;
 */
 
 
+FEM3D myFEM3D_test = new();
+myFEM3D_test.ConstructMesh();
+myFEM3D_test.GenerateArrays();
+myFEM3D_test.ConstructMatrixAndVector();
+
+myFEM3D_test.SetSolver(new LOS());
+
+return 0;
+
+
 // Main process of 2-dim task.
 FEM2D myFEM2D = new();
 myFEM2D.ReadData(Calculation2dimArea, BordersInfo, TimePath);
@@ -167,8 +179,9 @@ myFEM2D.SubmitGeneratedData();
 #if SOLVE2DIM
 myFEM2D.SetSolver(new LOS());
 myFEM2D.Solve();
-myFEM2D.GenerateVectorEphi();
+//myFEM2D.GenerateVectorEphi();
 myFEM2D.WriteData(AnswerPath);
+myFEM2D.WriteDiscrepancy(AnswerPath);
 #endif
 
 // Post-processor of zero-layer. Drawing A_phi and E_phi.
@@ -180,7 +193,7 @@ Console.WriteLine($"Drawing A_phi finished with code: {a}\n" +
 #endif
 
 
-//return 0;
+return 0;
 
 // Converting 2-dim results into 3-dim form
 

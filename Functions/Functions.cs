@@ -1,15 +1,24 @@
 using DataStructs;
+using System.Numerics;
 
 namespace Functions;
 
 public static class Function
 {
     // Функция правой части.
-    public static double F(double r, double z, double t) => t * t / (r * r) + 2.0D * t;
+    public static double F(double r, double z, double t) => -8.0D * r - 6.0D * z + z * z * z / (r * r);
+
+    public static (double, double, double) F(double x, double y, double z, double t) => (x * y * z - y + z,
+                                                                                         x * y * z + x + z,
+                                                                                         x * y * z - x + y);
+
 
     // Тестируемая функция.
-    public static double U(double r, double z, double t) => t * t;
+    public static double U(double r, double z, double t) => r * r * r + z * z * z;
 
+    public static (double, double, double) A(double x, double y, double z, double t) => (x * y * z,
+                                                                                         x * y * z,
+                                                                                         x * y * z);
 
 /*
                     3
@@ -27,13 +36,13 @@ public static class Function
 
     #region Первые краевые условия.
 
-    public static double U1_1(Point p, double t) => t * t;
+    public static double U1_1(Point p, double t) => p.R * p.R * p.R + 1.0D;
 
-    public static double U1_2(Point p, double t) => t * t;
+    public static double U1_2(Point p, double t) => 8.0D + p.Z * p.Z * p.Z;
 
-    public static double U1_3(Point p, double t) => t * t;
+    public static double U1_3(Point p, double t) => p.R * p.R * p.R + 8.0D;
 
-    public static double U1_4(Point p, double t) => t * t;
+    public static double U1_4(Point p, double t) => 1.0D + p.Z * p.Z * p.Z;
 
     #endregion
 

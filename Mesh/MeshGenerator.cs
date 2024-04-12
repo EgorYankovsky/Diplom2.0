@@ -167,7 +167,7 @@ public static class MeshGenerator
         double zMax = mesh.nodesZ[^1];
 
         if (pnt.Z == zMax)
-            pnt.Type = Location.BoundaryII;
+            pnt.Type = Location.BoundaryI;
         else if (pnt.Z == zMin || pnt.X == xMin ||pnt.X == xMax || pnt.Y == yMin || pnt.Y == yMax)
             pnt.Type = Location.BoundaryI;
         else
@@ -214,8 +214,10 @@ public static class MeshGenerator
                 arr.Add([i + ry * j + rxy * k, i + rx + ry * j + rxy * k, i + rx + 1 + ry * j + rxy * k, i + rx + nx + ry * j + rxy * k,
                         i + rxy * (k + 1), i + rxy * (k + 1) + 1, i + rxy * (k + 1) + rx + 1, i + rxy * (k + 1) + rx + 1 + 1,
                         fst + rxy + nxy, fst + rxy + nxy + rx, fst + rxy + nxy + rx + 1, fst + rxy + nxy + rx + nx]);
-                arr.mui.Add(mesh.mu0[0]);
-                arr.sigmai.Add(mesh.nodesZ[i / (nx * ny)] <= 0.0D ? mesh.sigma[0] : mesh.sigma[^1]);
+                //arr.mui.Add(mesh.mu0[0]);
+                //arr.sigmai.Add(mesh.nodesZ[i / (nx * ny)] <= 0.0D ? mesh.sigma[0] : mesh.sigma[^1]);
+                arr.mui.Add(1.0D);
+                arr.sigmai.Add(1.0D);
             }
         }
         return arr;
@@ -254,49 +256,70 @@ public static class MeshGenerator
     {
         var arr = new ArrayOfBorders(null);
 
+        int nx = mesh.NodesAmountX;
+        int ny = mesh.NodesAmountY;
+        int nz = mesh.NodesAmountZ;
+
+        int nxny = nx * ny;
+        int rxy = (nx - 1) * ny + (ny - 1) * nx;
+        
         // XY0
-        for (int j = 0; j < mesh.NodesAmountY - 1; j++)
-            for (int i = 0; i < mesh.NodesAmountX - 1; i++)
-                arr.Arr.Add([1, 1, j * mesh.NodesAmountX + i, j * mesh.NodesAmountX + i + 1,
-                                  (j + 1) * mesh.NodesAmountX + i, (j + 1) * mesh.NodesAmountX + i + 1]);
+        for (int i = 0; i < ny - 1; i++)
+            for (int j = 0; j < nx - 1; j++)
+                arr.Add([1, 1, i * (2 * nx - 1) + j, 
+                               i * (2 * nx - 1) + j + nx - 1,
+                               i * (2 * nx - 1) + j + nx,
+                               i * (2 * nx - 1) + j + nx + nx - 1]);
+        
         
         // X0Z
-        for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
-            for (int i = 0; i < mesh.NodesAmountX - 1; i++)
-                arr.Arr.Add([1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i, j * mesh.NodesAmountY * mesh.NodesAmountX + i + 1,
-                                  (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + i, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + i + 1]);
+        for (int i = 0; i < nz - 1; i++)
+            for (int j = 0; j < nx - 1; j++)
+                arr.Add([1, 2, i * (rxy + nxny) + j, 
+                               i * (rxy + nxny) + j + rxy,
+                               i * (rxy + nxny) + j + rxy + 1,
+                               i * (rxy + nxny) + j + rxy + nxny]);
         
-        // X1Z
-        for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
-            for (int i = 0; i < mesh.NodesAmountX - 1; i++)
-                arr.Arr.Add([1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i, j * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i + 1,
-                                  (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + mesh.NodesAmountY + i + 1]);
+        
         // 0YZ
-        for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
-            for (int i = 0; i < mesh.NodesAmountY - 1; i++)
-                arr.Arr.Add([1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i * mesh.NodesAmountX, j * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX, 
-                                  (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX, (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX]);
-        
-        // 1YZ
-        for (int j = 0; j < mesh.NodesAmountZ - 1; j++)
-            for (int i = 0; i < mesh.NodesAmountY - 1; i++)
-                arr.Arr.Add([1, 1, j * mesh.NodesAmountY * mesh.NodesAmountX + i * mesh.NodesAmountX + mesh.NodesAmountX - 1,
-                                   j * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX + mesh.NodesAmountX - 1, 
-                                  (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + j * mesh.NodesAmountX + mesh.NodesAmountX - 1,
-                                  (j + 1) * mesh.NodesAmountY * mesh.NodesAmountX + (i + 1) * mesh.NodesAmountX + mesh.NodesAmountX - 1]);
+        for (int i = 0; i < nz - 1; i++)
+            for (int j = 0; j < nx - 1; j++)
+                arr.Add([1, 3, nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1), 
+                               rxy + i * (rxy + nxny) + j * nx,
+                               rxy + nx + i * (rxy + nxny) + j * nx,
+                               rxy + nxny + nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1)]);
         
         // XY1
-        for (int j = 0; j < mesh.NodesAmountY - 1; j++)
-            for (int i = 0; i < mesh.NodesAmountX - 1; i++)
-                arr.Arr.Add([2, 1, (mesh.NodesAmountZ - 1) * j * mesh.NodesAmountX + i, (mesh.NodesAmountZ - 1) * j * mesh.NodesAmountX + i + 1,
-                                   (mesh.NodesAmountZ - 1) * (j + 1) * mesh.NodesAmountX + i, (mesh.NodesAmountZ - 1) * (j + 1) * mesh.NodesAmountX + i + 1]);
+        for (int i = 0; i < ny - 1; i++)
+            for (int j = 0; j < nx - 1; j++)
+                arr.Add([1, 4, (nz - 1) * (rxy + nxny) + j + i * (2 * nx - 1),
+                               (nz - 1) * (rxy + nxny) + nx - 1 + j + i * (2 * nx - 1),
+                               (nz - 1) * (rxy + nxny) + nx + j + i * (2 * nx - 1),
+                               (nz - 1) * (rxy + nxny) + nx + nx - 1 + j + i * (2 * nx - 1)]);
         
+        // X1Z
+        for (int i = 0; i < nz - 1; i++)
+            for (int j = 0; j < nx - 1; j++)
+                arr.Add([1, 5, (ny - 1) * nx + (ny - 1) * (nx - 1) + j + i * (rxy + nxny),
+                               (ny - 1) * nx + (ny - 1) * (nx - 1) + nxny - 1 + j + i * (rxy + nxny),
+                               (ny - 1) * nx + (ny - 1) * (nx - 1) + nxny + j + i * (rxy + nxny),
+                               (ny - 1) * nx + (ny - 1) * (nx - 1) + nxny + j + rxy + i * (rxy + nxny)]);
+
+        // 1YZ
+        for (int i = 0; i < nz - 1; i++)
+            for (int j = 0; j < nx - 1; j++)
+                arr.Add([1, 6, nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1) + nx - 1, 
+                               rxy + i * (rxy + nxny) + j * nx + nx - 1,
+                               rxy + nx + i * (rxy + nxny) + j * nx + nx - 1,
+                               rxy + nxny + nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1) + nx - 1]);
+        
+
         return arr;
     }
 
     public static ArrayOfRibs GenerateListOfRibs(Mesh mesh, ArrayOfPoints arrPt)
     {
-        if (arrPt is null) throw new ArgumentNullException("arrPt is null");
+        ArgumentNullException.ThrowIfNull(arrPt);
 
         int nx = mesh.NodesAmountX;
         int ny = mesh.NodesAmountY;
@@ -333,11 +356,11 @@ public static class MeshGenerator
         else if (mesh.NodesZWithoutFragmentation[1] <= a.Z && d.Z <= mesh.NodesZWithoutFragmentation[2])
             index = 1;
         else if (mesh.NodesZWithoutFragmentation[2] <= a.Z && d.Z <= mesh.NodesZWithoutFragmentation[3])
-            index = 2;
+            index = 1;
         else if (mesh.NodesZWithoutFragmentation[3] <= a.Z && d.Z <= mesh.NodesZWithoutFragmentation[4])
-            index = 3;
+            index = 1;
         else if (mesh.NodesZWithoutFragmentation[4] <= a.Z && d.Z <= mesh.NodesZWithoutFragmentation[5])
-            index = 4;
+            index = 1;
         else
             throw new Exception("Out of boundary!");
         return $"{mesh.mu0[index]} {mesh.sigma[index]}";

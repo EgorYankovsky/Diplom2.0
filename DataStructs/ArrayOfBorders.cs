@@ -63,6 +63,11 @@ public class ArrayOfBorders
         SortList();
     }
 
+    public void Add(List<int> borders)
+    {
+        Arr.Add(borders);
+    }
+
     public ArrayOfBorders(object o)
     {
         Arr = new();

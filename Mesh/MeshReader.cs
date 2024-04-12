@@ -34,7 +34,7 @@ public static class MeshReader
                 for (int i = 0; i < elemsAmount; i++)
                 {
                     string[] str = sr.ReadLine().Split();
-                    mesh.mu0.Add(mu0);
+                    mesh.mu0.Add(double.Parse(str[5]));
                     mesh.sigma.Add(double.Parse(str[6]));
                     mesh.Elems.Add([int.Parse(str[0]), int.Parse(str[1]),
                                     int.Parse(str[2]), int.Parse(str[3]), 
