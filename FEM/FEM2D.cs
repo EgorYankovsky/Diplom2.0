@@ -11,8 +11,8 @@ public class FEM2D : FEM
     public FEM2D()
     {
         Mesh2D = new();
-        mu0 = new List<double>();
-        sigma = new List<double>();
+        mu0 = [];
+        sigma = [];
     }
 
     public Mesh2Dim Mesh2D; 
@@ -48,13 +48,7 @@ public class FEM2D : FEM
         Debug.WriteLine("Generated data submited");
     }
 
-    public void 
-    
-    
-    
-    
-    
-    Solve()
+    public void Solve()
     {
         if (pointsArr is null) throw new ArgumentNullException("points array is null !");
         if (elemsArr is null) throw new ArgumentNullException("elems array is null !");

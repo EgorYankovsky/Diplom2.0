@@ -50,13 +50,38 @@ public class GlobalMatrix : Matrix
             switch (i - j)
             {
                 case 0: return _diag[i];
-                case < 0: return ReturanValueAU(j, i);
-                case > 0: return ReturanValueAL(i, j);
+                case < 0: return ReturnValueAU(j, i);
+                case > 0: return ReturnValueAL(i, j);
+            }
+        }
+        set
+        {
+            if (i > _diag.Length || j > _diag.Length)
+                throw new Exception("Index ran out of matrix.");
+            switch (i - j)
+            {
+                case 0: _diag[i] = value; break;
+                case < 0: SetValueAU(j, i, value); break;
+                case > 0: SetValueAL(i, j, value); break;
             }
         }
     }
 
-    private double ReturanValueAL(int i, int j)
+    private void SetValueAL(int i, int j, double val)
+    {
+        for (int ii = 0; ii < _ig[i + 1] - _ig[i]; ii++)
+            if (_jg[_ig[i] + ii] == j)
+                _al[_ig[i] + ii] = val;
+    }
+
+    private void SetValueAU(int i, int j, double val)
+    {
+        for (int ii = 0; ii < _ig[i + 1] - _ig[i]; ii++)
+            if (_jg[_ig[i] + ii] == j)
+                _au[_ig[i] + ii] = val;
+    }
+    
+    private double ReturnValueAL(int i, int j)
     {
         for (int ii = 0; ii < _ig[i + 1] - _ig[i]; ii++)
             if (_jg[_ig[i] + ii] == j)
@@ -64,7 +89,7 @@ public class GlobalMatrix : Matrix
         return 0.0D;  
     }
 
-    private double ReturanValueAU(int i, int j)
+    private double ReturnValueAU(int i, int j)
     {
         for (int ii = 0; ii < _ig[i + 1] - _ig[i]; ii++)
             if (_jg[_ig[i] + ii] == j)

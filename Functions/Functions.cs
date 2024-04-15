@@ -8,17 +8,17 @@ public static class Function
     // Функция правой части.
     public static double F(double r, double z, double t) => -8.0D * r - 6.0D * z + z * z * z / (r * r);
 
-    public static (double, double, double) F(double x, double y, double z, double t) => (x * y * z - y + z,
-                                                                                         x * y * z + x + z,
-                                                                                         x * y * z - x + y);
+    public static (double, double, double) F(double x, double y, double z, double t) => (y * y * z * z - 2.0D * (y * y + z * z),
+                                                                                         x * x * z * z - 2.0D * (x * x + z * z),
+                                                                                         x * x * y * y - 2.0D * (x * x + y * y));
 
 
     // Тестируемая функция.
     public static double U(double r, double z, double t) => r * r * r + z * z * z;
 
-    public static (double, double, double) A(double x, double y, double z, double t) => (x * y * z,
-                                                                                         x * y * z,
-                                                                                         x * y * z);
+    public static (double, double, double) A(double x, double y, double z, double t) => (y * y * z * z,
+                                                                                         x * x * z * z,
+                                                                                         x * x * y * y);
 
 /*
                     3

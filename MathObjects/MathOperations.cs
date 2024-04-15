@@ -79,7 +79,6 @@ public static class MathOperations
     public static GlobalMatrix Sum(GlobalMatrix gm1, GlobalMatrix gm2)
     {
         if (!gm1.CheckPortrait(gm2)) throw new ArgumentException("Different matrixes portrait!");
-
         GlobalMatrix ans = new(gm1);
         for (int i = 0; i < ans.Size; i++)
         {

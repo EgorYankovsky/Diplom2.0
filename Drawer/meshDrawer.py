@@ -1,17 +1,24 @@
 import matplotlib.pyplot as plt
 import numpy as np
-plt.figure(figsize=(6, 5))
+from matplotlib.patches import Rectangle
 
-plt.plot([1.0, 2.0], [1.0, 1.0], 'black', linewidth = 1.8)
-plt.plot([2.0, 2.0], [1.0, 2.0], 'black', linewidth = 1.8)
-plt.plot([1.0, 2.0], [2.0, 2.0], 'black', linewidth = 1.8)
-plt.plot([1.0, 1.0], [1.0, 2.0], 'black', linewidth = 1.8)
+plt.figure(figsize=(19.80, 10.80))
+fig, ax = plt.subplots()
+#ax.plot([0.001, 10000], [0.0, 0.0], color = 'black', linewidth=2.0)
 
-plt.plot([1.0, 2.0], [4.0 / 3.0, 4.0 / 3.0], 'black', linewidth = 1.1)
-plt.plot([1.0, 2.0], [5.0 / 3.0, 5.0 / 3.0], 'black', linewidth = 1.1)
+ax.plot([0.001, 10000], [-8000.0, -8000.0], color = 'black', linewidth=2.0)
+ax.plot([0.001, 0.001], [-8000.0, 2000.0], color = 'black', linewidth=2.0)
+ax.plot([10000, 10000], [-8000.0, 2000.0], color = 'black', linewidth=2.0)
+ax.plot([0.001, 10000], [2000.0, 2000.0], color = 'grey', linewidth=2.0)
+ax.plot(10, 0.0, 'ro', color = 'red')
 
-plt.plot([4.0 / 3.0, 4.0 / 3.0], [1.0, 2.0], 'black', linewidth = 1.1)
-plt.plot([5.0 / 3.0, 5.0 / 3.0], [1.0, 2.0], 'black', linewidth = 1.1)
 
+ax.add_patch(Rectangle((0.001, -8000.0), 9999.999, 8000, facecolor = "#b34b06"))
+ax.add_patch(Rectangle((0.001, 0.0), 9999.999, 2000, facecolor = "#1f4af7"))
+
+ax.legend()
+ax.set(
+    xlabel='R [M]',
+    ylabel='Z [M]',)
 
 plt.show()

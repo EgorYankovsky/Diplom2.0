@@ -36,6 +36,7 @@ FolderManager.ClearFolder(AnswerPath + "/A_phi/Answer/");
 FolderManager.ClearFolder(AnswerPath + "/A_phi/Discrepancy/");
 FolderManager.ClearFolder(AnswerPath + "/E_phi/Answer/");
 FolderManager.ClearFolder(AnswerPath + "/A_phi/Discrepancy/");
+FolderManager.ClearFolder(AnswerPath + "/A_phi/Answer3D/");
 #endif
 FolderManager.ClearFolder(PicturesPath + "/A_phi/");
 FolderManager.ClearFolder(PicturesPath + "/E_phi/");
@@ -160,14 +161,15 @@ while (ii < arr.Count)
 return 0;
 */
 
-
+// Для теста узлы:
+// 48 69 70 88 51 52 91 92 55 73 74 95
 FEM3D myFEM3D_test = new();
 myFEM3D_test.ConstructMesh();
 myFEM3D_test.GenerateArrays();
 myFEM3D_test.ConstructMatrixAndVector();
-
 myFEM3D_test.SetSolver(new LOS());
-
+myFEM3D_test.Solve();
+myFEM3D_test.WriteData(AnswerPath);
 return 0;
 
 

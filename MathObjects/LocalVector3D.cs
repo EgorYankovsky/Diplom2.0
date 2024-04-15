@@ -33,20 +33,20 @@ public class LocalVector3D : Vector
 
             // Очень спорно.
             List<double> vect = [
-                ScalarMult(F(x0, ym, z0, t), Divide((0.0D, y1 - y0, 0.0D), Length((0.0D, y1 - y0, 0.0D)))),
-                ScalarMult(F(x1, ym, z0, t), Divide((0.0D, y1 - y0, 0.0D), Length((0.0D, y1 - y0, 0.0D)))),
-                ScalarMult(F(x0, ym, z1, t), Divide((0.0D, y1 - y0, 0.0D), Length((0.0D, y1 - y0, 0.0D)))),
-                ScalarMult(F(x1, ym, z1, t), Divide((0.0D, y1 - y0, 0.0D), Length((0.0D, y1 - y0, 0.0D)))),
+                ScalarMult(F(xm, y0, z0, t), (1.0D, 0.0D, 0.0D)),
+                ScalarMult(F(xm, y1, z0, t), (1.0D, 0.0D, 0.0D)),
+                ScalarMult(F(xm, y0, z1, t), (1.0D, 0.0D, 0.0D)),
+                ScalarMult(F(xm, y1, z1, t), (1.0D, 0.0D, 0.0D)),
                 
-                ScalarMult(F(xm, y0, z0, t), Divide((x1 - x0, 0.0D, 0.0D), Length((x1 - x0, 0.0D, 0.0D)))),
-                ScalarMult(F(xm, y1, z0, t), Divide((x1 - x0, 0.0D, 0.0D), Length((x1 - x0, 0.0D, 0.0D)))),
-                ScalarMult(F(xm, y0, z1, t), Divide((x1 - x0, 0.0D, 0.0D), Length((x1 - x0, 0.0D, 0.0D)))),
-                ScalarMult(F(xm, y1, z1, t), Divide((x1 - x0, 0.0D, 0.0D), Length((x1 - x0, 0.0D, 0.0D)))),
+                ScalarMult(F(x0, ym, z0, t), (0.0D, 1.0D, 0.0D)),
+                ScalarMult(F(x1, ym, z0, t), (0.0D, 1.0D, 0.0D)),
+                ScalarMult(F(x0, ym, z1, t), (0.0D, 1.0D, 0.0D)),
+                ScalarMult(F(x1, ym, z1, t), (0.0D, 1.0D, 0.0D)),
                 
-                ScalarMult(F(x0, y0, zm, t), Divide((0.0D, 0.0D, z1 - z0), Length((0.0D, 0.0D, z1 - z0)))),
-                ScalarMult(F(x1, y0, zm, t), Divide((0.0D, 0.0D, z1 - z0), Length((0.0D, 0.0D, z1 - z0)))),
-                ScalarMult(F(x0, y1, zm, t), Divide((0.0D, 0.0D, z1 - z0), Length((0.0D, 0.0D, z1 - z0)))),
-                ScalarMult(F(x1, y1, zm, t), Divide((0.0D, 0.0D, z1 - z0), Length((0.0D, 0.0D, z1 - z0)))) 
+                ScalarMult(F(x0, y0, zm, t), (0.0D, 0.0D, 1.0D)),
+                ScalarMult(F(x1, y0, zm, t), (0.0D, 0.0D, 1.0D)),
+                ScalarMult(F(x0, y1, zm, t), (0.0D, 0.0D, 1.0D)),
+                ScalarMult(F(x1, y1, zm, t), (0.0D, 0.0D, 1.0D)) 
             ];
             
             double ans = 0.0D;
@@ -69,5 +69,37 @@ public class LocalVector3D : Vector
         ym = 0.5D * (y1 + y0);
         zm = 0.5D * (z1 + z0);
         M = new(1.0, x1 - x0, y1 - y0, z1 - z0);
+        Generate();
+    }
+
+    private void Generate()
+    {
+        double ScalarMult((double, double, double) a, (double, double, double) b) 
+        => a.Item1 * b.Item1 + a.Item2 * b.Item2 + a.Item3 * b.Item3;
+
+        List<double> vect = [
+            ScalarMult(F(xm, y0, z0, t), (1.0D, 0.0D, 0.0D)),
+            ScalarMult(F(xm, y1, z0, t), (1.0D, 0.0D, 0.0D)),
+            ScalarMult(F(xm, y0, z1, t), (1.0D, 0.0D, 0.0D)),
+            ScalarMult(F(xm, y1, z1, t), (1.0D, 0.0D, 0.0D)),
+            
+            ScalarMult(F(x0, ym, z0, t), (0.0D, 1.0D, 0.0D)),
+            ScalarMult(F(x1, ym, z0, t), (0.0D, 1.0D, 0.0D)),
+            ScalarMult(F(x0, ym, z1, t), (0.0D, 1.0D, 0.0D)),
+            ScalarMult(F(x1, ym, z1, t), (0.0D, 1.0D, 0.0D)),
+            
+            ScalarMult(F(x0, y0, zm, t), (0.0D, 0.0D, 1.0D)),
+            ScalarMult(F(x1, y0, zm, t), (0.0D, 0.0D, 1.0D)),
+            ScalarMult(F(x0, y1, zm, t), (0.0D, 0.0D, 1.0D)),
+            ScalarMult(F(x1, y1, zm, t), (0.0D, 0.0D, 1.0D)) 
+        ];
+
+        double ans = 0.0D;
+        for (int i = 0; i < vect.Count; i++)
+        {
+            for (int j = 0; j < vect.Count; j++)
+                ans += M[i, j] * vect[j];
+            ans = 0.0D;
+        }
     }
 }

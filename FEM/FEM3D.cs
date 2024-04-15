@@ -70,7 +70,8 @@ public class FEM3D : FEM
         if (mesh == null) throw new ArgumentNullException("Mesh is null");
         mesh.nodesX = [0.0D, 1.0D, 2.0D, 3.0D];
         mesh.nodesY = [0.0D, 1.0D, 2.0D, 3.0D];
-        mesh.nodesZ = [0.0D, 1.0D, 2.0D];
+        mesh.nodesZ = [0.0D, 1.0D, 2.0D, 3.0D];
+        timeMesh = [0.0D, 1.0D, 2.0D, 3.0D, 4.0D, 5.0D];
     }
 
     public void ConstructMesh(FEM2D fem2d)
@@ -245,22 +246,46 @@ public class FEM3D : FEM
     public void ConstructMatrixAndVector()
     {
         if (elemsArr is null) throw new ArgumentNullException("elemsArr is null");
+        if (bordersArr is null) throw new ArgumentNullException("bordersArr is null");
+        
         var sparceMatrix = new GlobalMatrix(ribsArr.Count);
         Generator.BuildPortait(ref sparceMatrix, ribsArr.Count, elemsArr);
 
         var G = new GlobalMatrix(sparceMatrix);
-
         Generator.FillMatrixG(ref G, ribsArr, elemsArr);
-        //Generator.ConsiderBoundaryConditions(ref m, arrBd);
+        
         var M = new GlobalMatrix(sparceMatrix);
         Generator.FillMatrixM(ref M, ribsArr, elemsArr);
+        
         Matrix = G + M;
 
         var b = new GlobalVector(ribsArr.Count);
         Generator.FillVector3D(ref b, ribsArr, elemsArr, 0.0);
         Vector = b;
-        //Generator.ConsiderBoundaryConditions();
 
+        Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, ribsArr, bordersArr, 0.0D);
+    }
+
+    public void Solve()
+    {
+        if (solver is null) throw new ArgumentNullException("Solver is null");
+        if (Matrix is null) throw new ArgumentNullException("Matrix is null");
+        if (Vector is null) throw new ArgumentNullException("Vector is null");
+        Solutions = new GlobalVector[1];
+        Discrepancy = new GlobalVector[1];
         (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
+    }
+
+    public void WriteData(string path)
+    {
+        if (Solutions is null) throw new ArgumentNullException("No solutions");
+
+        using var sw = new StreamWriter(path + "/A_phi/Answer3D/Answer.txt");
+
+        for (int i = 0; i < Solutions[0].Size; i++)
+            if (i == 48 || i == 69 || i == 70 || i == 88 || i == 51 || i == 52 || i == 91 || i == 92 || i == 55 || i == 73 || i == 74 || i == 95)
+                sw.WriteLine($"{i} {Solutions[0][i]:E8}");
+
+        sw.Close();
     }
 }

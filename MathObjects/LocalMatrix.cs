@@ -35,6 +35,7 @@ public class LocalMatrix : Matrix
                 _ => throw new Exception("Unexpected matrix"),
             };
         }
+        set{}
     }
 
     private readonly double[,] _G =  {{ 1.0, -1.0},
@@ -180,6 +181,7 @@ public class LocalMatrixNum : Matrix
             
             return _typeOfMatrixM == TypeOfMatrixM.Mrr ? _lambda * (Gr * Mz + Mr * Gz + Mrr * Mz) : _gamma * Mr * Mz;
         }
+        set{}
     }    
 
     private TypeOfMatrixM _typeOfMatrixM;

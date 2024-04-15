@@ -210,16 +210,19 @@ public static class MeshGenerator
                 j++;
             else
             {
-                int fst = i + ry * j + rxy * k; 
+                int fst = i + ry * j + rxy * k;
                 arr.Add([i + ry * j + rxy * k, i + rx + ry * j + rxy * k, i + rx + 1 + ry * j + rxy * k, i + rx + nx + ry * j + rxy * k,
-                        i + rxy * (k + 1), i + rxy * (k + 1) + 1, i + rxy * (k + 1) + rx + 1, i + rxy * (k + 1) + rx + 1 + 1,
-                        fst + rxy + nxy, fst + rxy + nxy + rx, fst + rxy + nxy + rx + 1, fst + rxy + nxy + rx + nx]);
+                 i + rxy * (k + 1), i + rxy * (k + 1) + 1, i + rxy * (k + 1) + rx + 1, i + rxy * (k + 1) + rx + 1 + 1,
+                 fst + rxy + nxy, fst + rxy + nxy + rx, fst + rxy + nxy + rx + 1, fst + rxy + nxy + rx + nx]);
                 //arr.mui.Add(mesh.mu0[0]);
                 //arr.sigmai.Add(mesh.nodesZ[i / (nx * ny)] <= 0.0D ? mesh.sigma[0] : mesh.sigma[^1]);
                 arr.mui.Add(1.0D);
                 arr.sigmai.Add(1.0D);
             }
         }
+
+
+
         return arr;
     }
 
