@@ -195,7 +195,7 @@ public static class Generator
         for (int i = 0; i < arrEl.Length; i++)
         {
             if (arrPt[arrEl[i][0]].R <= 10.0D && 10.0D <= arrPt[arrEl[i][3]].R &&
-                arrPt[arrEl[i][0]].Z <= 0.0D && 0.0D <= arrPt[arrEl[i][3]].Z && t < 1.0D)
+                arrPt[arrEl[i][0]].Z <= 0.0D && 0.0D <= arrPt[arrEl[i][3]].Z && t <= 1.0D)
                 Add(new LocalVector(arrEl[i], arrPt, t), ref v, arrEl[i]);
         }
     }

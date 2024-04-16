@@ -257,10 +257,8 @@ public class FEM2D : FEM
         
         for (int i = 0; i < E_phi2D.Length; i++)
         {
-            if (i == 0)
-                E_phi2D[i] = (-1.0 / (timeMesh[i + 1] - timeMesh[i])) * (A_phi[i + 1] - A_phi[i]);
-            else if (i == 1)
-                E_phi2D[i] = (-1.0 / (timeMesh[i + 1] - timeMesh[i - 1])) * (A_phi[i + 1] - A_phi[i - 1]);
+            if (i == 0 || i == 1)
+                E_phi2D[i] = new GlobalVector(A_phi[i].Size);
             else
             {
                 double ti = timeMesh[i];

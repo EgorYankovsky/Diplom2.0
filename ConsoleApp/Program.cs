@@ -1,4 +1,4 @@
-﻿#define NODRAWING
+﻿#define DRAWING
 #define SOLVE2DIM
 using Project;
 using System.Globalization;
@@ -180,7 +180,7 @@ Console.WriteLine($"Drawing A_phi finished with code: {a}\n" +
 
 
 // Converting 2-dim results into 3-dim form
-
+return 0;
 FEM3D myFEM3D = new(myFEM2D);
 myFEM3D.ConstructMesh(myFEM2D);
 myFEM3D.ConvertResultTo3Dim(myFEM2D);
