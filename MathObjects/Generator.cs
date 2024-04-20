@@ -41,7 +41,7 @@ public static class Generator
 
     public static void BuildPortait(ref GlobalMatrix m, int arrPtLen, ArrayOfElems arrEl)
     {
-        List<List<int>> arr = new();
+        List<List<int>> arr = [];
 
         // ! Дерьмодристный момент.
         for(int i = 0; i < arrPtLen; i++)
@@ -249,5 +249,4 @@ public static class Generator
                 case 3: throw new ArgumentException("Пока нет возможности учитывать КУ III-го рода");
             }
     }
-
 }

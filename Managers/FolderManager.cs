@@ -1,4 +1,6 @@
-﻿namespace Manager;
+﻿using System.Collections;
+
+namespace Manager;
 
 public static class FolderManager
 {
@@ -6,6 +8,12 @@ public static class FolderManager
     {
         DirectoryInfo di = new(path);
         foreach (FileInfo file in di.GetFiles())
-            file.Delete(); 
+            file.Delete();
+    }
+
+    public static void ClearFolders(IEnumerable paths)
+    {
+        foreach (string path in paths)
+            ClearFolder(path);
     }
 }

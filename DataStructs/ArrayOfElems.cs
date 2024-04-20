@@ -2,8 +2,6 @@ namespace DataStructs;
 
 public class ArrayOfElems
 {
-    private string _path = Path.GetFullPath("../../../../Data/Subtotals/Elems.dat");
-
     public List<List<int>> Arr;
     
     public List<double> mui;
@@ -35,21 +33,23 @@ public class ArrayOfElems
         public List<int> Current => collection.Arr[nIndex];
     }
 
-    public ArrayOfElems()
+    public ArrayOfElems(string path)
     {
         Arr = [];
         mui = [];
         sigmai = [];
-        using var sr = new StreamReader(_path);
-        int length = int.Parse(sr.ReadLine() ?? "0");
+
+        var data = File.ReadAllText(path).Split("\n");
+        int length = int.Parse(data[0]);
         for (int i = 0; i < length; i++)
         {
-            var info = sr.ReadLine().Split().ToList();
+            var info = data[1 + i].Split(" ");
             Arr.Add([int.Parse(info[0]), int.Parse(info[1]), int.Parse(info[2]), int.Parse(info[3])]);
             mui.Add(double.Parse(info[4]));
             sigmai.Add(double.Parse(info[5]));
         }
     }
+
 
     public void Add(List<int> elem)
     {

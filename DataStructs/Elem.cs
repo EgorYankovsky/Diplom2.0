@@ -1,31 +1,54 @@
 namespace DataStructs;
 
-public class Elem
+public record Border3D(int BorderType, int BorderFormula,
+                       int X0, int X1, int Y0, int Y1,
+                       int Z0, int Z1);
+
+public record Border2D(int BorderType, int BorderFormula,
+                       int R0, int R1, int Z0, int Z1);
+
+
+public record Elem
 {
-    // Массив всех ссылок на элементы.
-    public int[] Arr = new int[8];
+    public int AreaNum;
 
-    /// <summary>
-    /// Метод, возвращающий элемент в строчном формате.
-    /// </summary>
-    /// <returns>Строка в которой перечень номеров узлов в одном элементе.</returns>
-    public override string ToString() => $"{Arr[0]} {Arr[1]} {Arr[2]} {Arr[3]} {Arr[4]} {Arr[5]} {Arr[6]} {Arr[7]}";
+    public int[] Arr;
 
-    /// <summary>
-    /// Конструктор класса Elem.
-    /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <param name="c"></param>
-    /// <param name="d"></param>
-    /// <param name="e"></param>
-    /// <param name="f"></param>
-    /// <param name="g"></param>
-    /// <param name="h"></param>
-    public Elem(int a, int b, int c, int d,
-                int e, int f, int g, int h)
+    public double mu;
+
+    public double sigma;
+
+    public override string ToString()
     {
-        Arr[0] = a; Arr[1] = b; Arr[2] = c; Arr[3] = d;
-        Arr[4] = e; Arr[5] = f; Arr[6] = g; Arr[7] = h;
+        string ans = string.Empty;
+        for (int i = 0; i < Arr.Length; i++)
+            ans += $"{Arr[i]} ";
+        return ans + $"{mu} " + $"{sigma} ";
+    }
+
+    public Elem(int areaNum, int a, int b, int c, int d,
+                int e, int f, int g, int h, double mu,
+                double sigma)
+    {
+        AreaNum = areaNum;
+        Arr = [a, b, c, d, e, f, g, h];
+        this.mu = mu; this.sigma = sigma;
+    }
+
+    public Elem(int areaNum, int a, int b, int c, int d,
+                int e, int f, double mu,
+                double sigma)
+    {
+        AreaNum = areaNum;
+        Arr = [a, b, c, d, e, f];
+        this.mu = mu; this.sigma = sigma;
+    }
+
+    public Elem(int areaNum, int a, int b, int c, int d,
+                double mu, double sigma)
+    {    
+        AreaNum = areaNum;
+        Arr = [a, b, c, d];
+        this.mu = mu; this.sigma = sigma;
     }
 }

@@ -1,5 +1,4 @@
 ﻿using MathObjects;
-using Solver;
 using Grid;
 using System.Diagnostics;
 using Functions;
@@ -8,53 +7,27 @@ namespace Project;
 
 public class FEM2D : FEM
 {
-    public FEM2D()
+    public FEM2D(Mesh2Dim mesh, TimeMesh timeMesh) : base(timeMesh, 2)
     {
-        Mesh2D = new();
-        mu0 = new List<double>();
-        sigma = new List<double>();
-    }
-
-    public Mesh2Dim Mesh2D; 
-
-    public GlobalVector[] A_phi;
-
-    public GlobalVector[] E_phi2D;
-
-    public void ReadData(string infoPath, string bordersPath, string timePath)
-    {
-        MeshReader.ReadMesh(infoPath, bordersPath, ref Mesh2D);
-        using var sr = new StreamReader(timePath);
-        SetTimeMesh(sr.ReadLine() ?? "0 0 1");        
-        Debug.WriteLine("All data read correctly");
-    }
-
-    public void ConstructMesh()
-    {
-        MeshGenerator.GenerateMesh(ref Mesh2D);
-        MeshGenerator.OutputPoints(ref Mesh2D);
-        pointsArr = new();
-        MeshGenerator.GenerateListOfElems(ref Mesh2D, pointsArr);
-        MeshGenerator.GenerateListOfBorders(ref Mesh2D);
-        Debug.WriteLine("Mesh built correctly");
-    }
-
-    public void SubmitGeneratedData()
-    {
-        elemsArr = new();
-        bordersArr = new();
-        mu0 = Mesh2D.mu0;
-        sigma = Mesh2D.sigma;
+        mesh2Dim = mesh;
+        if (timeMesh[0] == timeMesh[^1])
+            equationType = EquationType.Elliptic;
+        else
+            equationType = EquationType.Parabolic;
+        
+        A_phi = new GlobalVector[Time.Count];
+        E_phi = new GlobalVector[Time.Count];
         Debug.WriteLine("Generated data submited");
     }
 
+    private Mesh2Dim mesh2Dim;
+
+    public GlobalVector[] A_phi;
+
+    public GlobalVector[] E_phi;
+
     public void Solve()
     {
-        if (pointsArr is null) throw new ArgumentNullException("points array is null !");
-        if (elemsArr is null) throw new ArgumentNullException("elems array is null !");
-        if (bordersArr is null) throw new ArgumentNullException("borders array is null !");
-        if (Solutions is null) throw new ArgumentNullException("solutions array is null !");
-        if (Discrepancy is null) throw new ArgumentNullException("discrepancy array is null !");
         if (solver is null) throw new ArgumentNullException("solver is null !");
 
         Debug.WriteLine($"\nTime layer: before BC");
@@ -75,14 +48,14 @@ public class FEM2D : FEM
         {
             (Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
 
-            for (int i = 2; i < timeMesh.Length; i++)
+            for (int i = 2; i < Time.Count; i++)
             {
-                Debug.WriteLine($"\nTime layer: {timeMesh[i]}");
+                Debug.WriteLine($"\nTime layer: {Time[i]}");
                 Thread.Sleep(1500);
 
-                double deltT = timeMesh[i] - timeMesh[i - 2];
-                double deltT0 = timeMesh[i] - timeMesh[i - 1];
-                double deltT1 = timeMesh[i - 1] - timeMesh[i - 2];
+                double deltT = Time[i] - Time[i - 2];
+                double deltT0 = Time[i] - Time[i - 1];
+                double deltT1 = Time[i - 1] - Time[i - 2];
 
                 double tau0 = (deltT + deltT0) / (deltT * deltT0);
                 double tau1 = deltT / (deltT1 * deltT0);
@@ -103,7 +76,7 @@ public class FEM2D : FEM
 
                 var bi = new GlobalVector(pointsArr.Length);
                 Vector = bi - (tau2 * (M * Solutions[i - 2])) + (tau1 * (M * Solutions[i - 1]));
-                Generator.ConsiderBoundaryConditions(ref Vector, bordersArr, pointsArr, timeMesh[i]);
+                Generator.ConsiderBoundaryConditions(ref Vector, bordersArr, pointsArr, Time[i]);
                 
                 (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
             }
@@ -123,22 +96,22 @@ public class FEM2D : FEM
     public void WriteData(string _path)
     {
         if (A_phi is null) throw new ArgumentNullException();
-        if (E_phi2D is null) throw new ArgumentNullException();
+        if (E_phi is null) throw new ArgumentNullException();
 
-        if (timeMesh is not null)
+        if (Time.Count != 1)
         {
-            for (int i = 0; i < timeMesh.Length; i++)
+            for (int i = 0; i < Time.Count; i++)
             {
-                using var sw = new StreamWriter($"{_path}\\A_phi\\Answer\\Answer_Aphi_time={timeMesh[i]}.dat");
+                using var sw = new StreamWriter($"{_path}\\A_phi\\Answer\\Answer_Aphi_time={Time[i]}.dat");
                 for (int j = 0;   j < A_phi[i].Size; j++)
                     sw.WriteLine($"{A_phi[i][j]:E8}");
                 sw.Close();
             }
-            for (int i = 0; i < timeMesh.Length; i++)
+            for (int i = 0; i < Time.Count; i++)
             {
-                using var sw = new StreamWriter($"{_path}\\E_phi\\Answer\\Answer_Ephi_time={timeMesh[i]}.dat");
-                for (int j = 0;   j < E_phi2D[i].Size; j++)
-                    sw.WriteLine($"{E_phi2D[i][j]:E8}");
+                using var sw = new StreamWriter($"{_path}\\E_phi\\Answer\\Answer_Ephi_time={Time[i]}.dat");
+                for (int j = 0;   j < E_phi[i].Size; j++)
+                    sw.WriteLine($"{E_phi[i][j]:E8}");
                 sw.Close();
             }
         }
@@ -150,30 +123,23 @@ public class FEM2D : FEM
             sw.Close();
 
             using var sw1 = new StreamWriter($"{_path}\\E_phi\\Answer\\Answer.dat");
-            for (int j = 0; j < E_phi2D[0].Size; j++)
-                sw1.WriteLine($"{E_phi2D[0][j]:E8}");
+            for (int j = 0; j < E_phi[0].Size; j++)
+                sw1.WriteLine($"{E_phi[0][j]:E8}");
             sw1.Close();
         }
     }
 
     public void WriteDiscrepancy(string _path)
     {
-        if (Mesh2D is null) throw new ArgumentNullException();
-        if (Mesh2D.nodesR is null) throw new ArgumentNullException();
-        if (Mesh2D.nodesZ is null) throw new ArgumentNullException();
-        if (Solutions is null) throw new ArgumentNullException();
-        if (Discrepancy is null) throw new ArgumentNullException();
         if (A_phi is null) throw new ArgumentNullException();
-        if (E_phi2D is null) throw new ArgumentNullException();
+        if (E_phi is null) throw new ArgumentNullException();
 
 
-        if (timeMesh is not null)
+        if (Time.Count != 1)
         {
-            for (int i = 0; i < timeMesh.Length; i++)
+            for (int i = 0; i < Time.Count; i++)
             {
-                if (i == 1)
-                    continue;
-                using var sw_d = new StreamWriter($"{_path}\\A_phi\\Discrepancy\\Discrepancy_Aphi_time={timeMesh[i]}.dat");
+                using var sw_d = new StreamWriter($"{_path}\\A_phi\\Discrepancy\\Discrepancy_Aphi_time={Time[i]}.dat");
 
                 int NotNaNamount = 0;
                 double maxDisc = 0.0;
@@ -251,53 +217,34 @@ public class FEM2D : FEM
 
     public void GenerateVectorEphi()
     {
-        if (timeMesh is null) throw new NullReferenceException("timeMesh is null");
-        
-        E_phi2D = new GlobalVector[A_phi.Length];
-        
-        for (int i = 0; i < E_phi2D.Length; i++)
+        E_phi = new GlobalVector[A_phi.Length];   
+        for (int i = 0; i < E_phi.Length; i++)
         {
             if (i == 0 || i == 1)
-                E_phi2D[i] = new GlobalVector(A_phi[i].Size);
+                E_phi[i] = new GlobalVector(A_phi[i].Size);
             else
             {
-                double ti = timeMesh[i];
-                double ti_1 = timeMesh[i - 1];
-                double ti_2 = timeMesh[i - 2];
-                E_phi2D[i] = 1.0D / (ti_1 - ti_2) * A_phi[i - 2] - (ti - ti_2) / ((ti_1 - ti_2) * (ti - ti_1)) * A_phi[i - 1] + 
+                double ti = Time[i];
+                double ti_1 = Time[i - 1];
+                double ti_2 = Time[i - 2];
+                E_phi[i] = 1.0D / (ti_1 - ti_2) * A_phi[i - 2] - (ti - ti_2) / ((ti_1 - ti_2) * (ti - ti_1)) * A_phi[i - 1] + 
                 (2 * ti - ti_1 - ti_2) / ((ti - ti_2) * (ti - ti_1)) * A_phi[i];
             }
         }
-        
-        /*
-        for (int i = 0; i < E_phi2D.Length; i++)
-        {
-            if (i == 0)
-                E_phi2D[i] = (-1.0 / (timeMesh[i + 1] - timeMesh[i])) * (A_phi[i + 1] - A_phi[i]);
-            else if (i == E_phi2D.Length - 1)
-                E_phi2D[i] = (-1.0 / (timeMesh[i] - timeMesh[i - 1])) * (A_phi[i] - A_phi[i - 1]);
-            else
-                E_phi2D[i] = (-1.0 / (timeMesh[i + 1] - timeMesh[i - 1])) * (A_phi[i + 1] - A_phi[i - 1]);
-        }
-        */
+
     }
 
     internal List<int> GetE_phi(double r, double z, double t)
     {
-        if (Mesh2D is null) throw new ArgumentNullException();
-        if (Mesh2D.nodesR is null) throw new ArgumentNullException();
-        if (Mesh2D.nodesZ is null) throw new ArgumentNullException();
-        if (elemsArr is null) throw new ArgumentNullException();
-
         int i;
-        for (i = 0; i < Mesh2D.nodesR.Count - 1; i++)
-            if (Mesh2D.nodesR[i] <= r && r <= Mesh2D.nodesR[i + 1])
+        for (i = 0; i < mesh2Dim.nodesR.Count - 1; i++)
+            if (mesh2Dim.nodesR[i] <= r && r <= mesh2Dim.nodesR[i + 1])
                 break;
         int j;
-        for (j = 0; j < Mesh2D.nodesZ.Count - 1; j++)
-            if (Mesh2D.nodesZ[j] <= z && z <= Mesh2D.nodesZ[j + 1])
+        for (j = 0; j < mesh2Dim.nodesZ.Count - 1; j++)
+            if (mesh2Dim.nodesZ[j] <= z && z <= mesh2Dim.nodesZ[j + 1])
                 break;
 
-        return elemsArr[j * (Mesh2D.nodesR.Count - 1) + i];
+        return elemsArr[j * (mesh2Dim.nodesR.Count - 1) + i];
     }
 }

@@ -1,8 +1,12 @@
-namespace Grid;
 using System.Collections.Immutable;
 using DataStructs;
 
-public class Mesh3Dim : Mesh
+namespace Grid;
+
+public class Mesh3Dim(List<double> nodesX, string infoAboutX,
+                      List<double> nodesY, string infoAboutY,
+                      List<double> nodesZ, string infoAboutZ,
+                      List<Elem> elems, List<Border3D> borders) : Mesh(elems)
 {
     public override int NodesAmountTotal 
     { 
@@ -15,35 +19,33 @@ public class Mesh3Dim : Mesh
         set => ElemsAmount = value;
     }
 
-    internal List<int> nodesXRefs;
+    public int NodesAmountX => nodesX.Count;
+    public int NodesAmountY => nodesY.Count;
+    public int NodesAmountZ => nodesZ.Count;
 
-    internal ImmutableArray<double> NodesXWithoutFragmentation { get; set; }
-
-    internal string? infoAboutX;
-
-    internal List<int> nodesYRefs;
-
-    internal ImmutableArray<double> NodesYWithoutFragmentation { get; set; }
-
-    internal string? infoAboutY;
-
-    internal List<int> nodesZRefs;
-
-    public ImmutableArray<double> NodesZWithoutFragmentation { get; set; }
-
-    internal string? infoAboutZ;
+    public List<double> nodesX = nodesX;
     
-    public Mesh3Dim()
-    {
-        borders = new();
-        Elems = new();
-        nodesZ = new();
-        nodesX = new();
-        nodesY = new();
-        nodesXRefs = new();
-        nodesZRefs = new();
-        nodesYRefs = new();
-        mu0 = new();
-        sigma = new();
-    }
+    public List<double> nodesY = nodesY;
+    
+    public List<double> nodesZ = nodesZ;
+
+    internal ImmutableArray<double> NodesXWithoutFragmentation { get; set; } = [.. nodesX];
+
+    internal ImmutableArray<double> NodesYWithoutFragmentation { get; set; } = [.. nodesY];
+
+    public ImmutableArray<double> NodesZWithoutFragmentation { get; set; } = [.. nodesZ];
+
+    internal string infoAboutX = infoAboutX;
+
+    internal string infoAboutY = infoAboutY;
+
+    internal string infoAboutZ = infoAboutZ;
+
+    public List<int> NodesXRefs = [0];
+    
+    public List<int> NodesYRefs = [0];
+    
+    public List<int> NodesZRefs = [0];
+
+    public List<Border3D> borders = borders;
 }

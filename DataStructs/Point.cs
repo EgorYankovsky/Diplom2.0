@@ -52,7 +52,7 @@ public class Point
     public Point(List<string> arr)
     {
         // TODO: Придумать что-нибудь интереснее.
-        if (arr.Count == 5)
+        if (arr.Count == 6)
         {
             X = double.Parse(arr[0]);
             Y = double.Parse(arr[1]);
@@ -92,7 +92,7 @@ public class Point
                 }
             }
         }
-        else if (arr.Count == 4)
+        else if (arr.Count == 5)
         {
             R = double.Parse(arr[0]);
             Z = double.Parse(arr[1]);

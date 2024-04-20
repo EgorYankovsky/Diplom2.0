@@ -21,9 +21,21 @@ public enum EquationType
 }
 
 
-public abstract class FEM
+public abstract class FEM(TimeMesh time, int dimesion)
 {
-    internal double[]? timeMesh;
+    private static string _elemspath2D = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Elems.poly");
+    
+    private static string _pointspath2D = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Points.poly");
+    
+    private static string _borderspath2D = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Borders.poly");
+
+    private static string _elemspath3D = Path.GetFullPath("../../../../Data/Subtotals/3_dim/Elems.poly");
+    
+    private static string _pointspath3D = Path.GetFullPath("../../../../Data/Subtotals/3_dim/Points.poly");
+    
+    private static string _borderspath3D = Path.GetFullPath("../../../../Data/Subtotals/3_dim/Borders.poly");
+
+    public TimeMesh Time = time;
 
     protected internal EquationType equationType;
 
@@ -31,15 +43,11 @@ public abstract class FEM
 
     protected ISolver? solver;
 
-    public ArrayOfElems? elemsArr; 
+    public ArrayOfElems elemsArr = dimesion == 2 ? new(_elemspath2D) : new(_elemspath3D); 
 
-    public ArrayOfPoints? pointsArr; 
+    public ArrayOfPoints pointsArr = dimesion == 2 ? new(_pointspath2D) : new(_pointspath3D);
 
-    public ArrayOfBorders? bordersArr; 
-
-    internal List<double>? mu0;
-
-    internal List<double>? sigma;
+    public ArrayOfBorders bordersArr = dimesion == 2 ? new(_borderspath2D) : new(_borderspath3D);
 
     public GlobalMatrix? Matrix;
 
@@ -47,44 +55,9 @@ public abstract class FEM
 
     public GlobalVector? Answer;
 
-    public GlobalVector[]? Solutions;
+    public GlobalVector[] Solutions = new GlobalVector[time.Count];
 
-    public GlobalVector[]? Discrepancy;
-
-    private protected void SetTimeMesh(string data)
-    {
-        var info = data.Split(" ");
-        var t0 = double.Parse(info[0]);
-        var t1 = double.Parse(info[1]);
-        var tn = int.Parse(info[2]);
-        var tk = double.Parse(info[3]);
-
-        if (t0 - t1 == 0)
-        {
-            equationType = EquationType.Elliptic;
-            Solutions = new GlobalVector[1];
-            Discrepancy = new GlobalVector[1];
-            return;
-        }
-
-        timeMesh = new double[tn + 1];
-        Solutions = new GlobalVector[tn + 1];
-        Discrepancy = new GlobalVector[tn + 1];
-
-        double h = t1 - t0;
-        double denominator = 0.0;
-
-        for (int j = 0; j < tn; j++)
-            denominator += Math.Pow(double.Parse(info[3]), j);
-
-        double x0 = h / denominator;
-        timeMesh[0] = t0;
-        for(int j = 0; j < tn - 1; j++)
-            timeMesh[j + 1] = timeMesh[j] + x0 * Math.Pow(tk, j);
-        timeMesh[^1] = t1;
-        equationType = EquationType.Parabolic;
-        Debug.WriteLine("Time mesh built correctly!");
-    }
+    public GlobalVector[] Discrepancy = new GlobalVector[time.Count];
 
     public void SetSolver(ISolver solver)
     {

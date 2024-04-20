@@ -4,7 +4,7 @@ namespace Processor;
 
 public static class Postprocessor
 {
-    private static readonly string _arg1 = Path.GetFullPath("../../../../Data/Subtotals/Points.dat");
+    private static readonly string _arg1 = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Points.poly");
 
     private static readonly string _arg2 = Path.GetFullPath("../../../../Data/Output/A_phi/Answer/");
 

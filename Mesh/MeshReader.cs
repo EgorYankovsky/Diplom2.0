@@ -9,60 +9,82 @@ public static class MeshReader
 {
     private static readonly double mu0 = 4.0D * Math.PI * Math.Pow(10.0D, -7);
 
-    public static void ReadMesh(string path1, string path2, ref Mesh2Dim mesh)
+    public static double R;
+
+    public static List<double> NodesR = [];
+
+    public static string InfoAboutR = string.Empty;
+
+    public static List<double> NodesX = [];
+
+    public static string InfoAboutX = string.Empty;
+
+    public static List<double> NodesY = [];
+
+    public static string InfoAboutY = string.Empty;
+
+    public static List<double> NodesZ = [];
+
+    public static string InfoAboutZ = string.Empty;
+
+    public static List<Elem> Elems = [];
+
+    public static List<Border3D> Borders = [];
+
+    public static (double, double) Time;
+
+    public static int tn;
+
+    public static double tk;
+
+    public static void ReadMesh(string meshPath, string bordersPath)
     {
-        string _currPath = path1;
-        try
+        var fileData = File.ReadAllText(meshPath).Split("\n");
+        
+        NodesX = fileData[0].Split(" ").Select(double.Parse).ToList();
+        InfoAboutX = fileData[1];
+        
+        NodesY = fileData[2].Split(" ").Select(double.Parse).ToList();
+        InfoAboutY = fileData[3];
+        
+        NodesZ = fileData[4].Split(" ").Select(double.Parse).ToList();
+        InfoAboutZ = fileData[5];
+
+        NodesR = fileData[6].Split(" ").Select(double.Parse).ToList();
+        InfoAboutR = fileData[7];
+
+        R = double.Parse(fileData[8]);
+
+        var elemsAmount = int.Parse(fileData[9]);
+        for (int i = 0; i < elemsAmount; i++)
         {
-            // Считывание параметров для расчетной области.
-            using (var sr = new StreamReader(_currPath))
-            {
-                mesh.nodesR = sr.ReadLine().Split().Select(double.Parse).ToList();
-                for (int i = 0; i < mesh.nodesR.Count; i++)
-                    mesh.nodesR_Refs.Add(i);
-                mesh.NodesRWithoutFragmentation = mesh.nodesR.ToImmutableArray();
-                mesh.infoAboutR = sr.ReadLine() ?? "";
-
-                mesh.nodesZ = sr.ReadLine().Split().Select(double.Parse).ToList();
-                for (int i = 0; i < mesh.nodesZ.Count; i++)
-                    mesh.nodesZRefs.Add(i);
-                mesh.NodesZWithoutFragmentation = mesh.nodesZ.ToImmutableArray();
-                mesh.infoAboutZ = sr.ReadLine() ?? "";
-
-
-                int elemsAmount = int.Parse(sr.ReadLine() ?? "0");
-                for (int i = 0; i < elemsAmount; i++)
-                {
-                    string[] str = sr.ReadLine().Split();
-                    mesh.mu0.Add(mu0);
-                    mesh.sigma.Add(double.Parse(str[6]));
-                    mesh.Elems.Add([int.Parse(str[0]), int.Parse(str[1]),
-                                    int.Parse(str[2]), int.Parse(str[3]), 
-                                    int.Parse(str[4])]);
-            
-                }
-            }
-
-            // Считывание данных для границ.
-            _currPath = path2;
-            using (var sr = new StreamReader(_currPath))
-            {
-                mesh.bordersAmount = int.Parse(sr.ReadLine() ?? "0");
-                for (int i = 0; i < mesh.bordersAmount; i++)
-                    mesh.borders.Add(sr.ReadLine().Split().Select(int.Parse).ToList());
-
-            }
+            var info = fileData[10 + i].Split(" ");
+            Elems.Add(new Elem(int.Parse(info[0]), int.Parse(info[1]),
+                               int.Parse(info[2]), int.Parse(info[3]), 
+                               int.Parse(info[4]), int.Parse(info[5]), 
+                               int.Parse(info[6]), mu0, double.Parse(info[7])));
         }
-        catch(IOException ex)
+
+        fileData = File.ReadAllText(bordersPath).Split("\n");
+
+        var bordersAmount = int.Parse(fileData[0]);
+        for (int i = 0; i < bordersAmount; i++)
         {
-            Console.WriteLine($"Error during reading {_currPath} file. Wrong data format: {ex}");
-            throw new IOException();
+            var info = fileData[1 + i].Split(" ").Select(int.Parse).ToArray();
+            Borders.Add(new Border3D(info[0], info[1], info[2], info[3],
+                                     info[4], info[5], info[6], info[7]));
         }
-        catch(Exception ex)
-        {
-            Console.WriteLine($"Error during reading {_currPath} file: {ex}");
-            throw new IOException();
-        }
+        Debug.WriteLine("All data read correctly");
+    }
+
+    public static void ReadTimeMesh(string timePath)
+    {
+        var info = File.ReadAllText(timePath).Split("\n");
+        Time.Item1 = double.Parse(info[0].Split(" ")[0]);
+        Time.Item2 = double.Parse(info[0].Split(" ")[1]);
+        tn = int.Parse(info[0].Split(" ")[2]);
+        tk = double.Parse(info[0].Split(" ")[3]);
+        Debug.WriteLine("Time data read correctly");
     }
 
     public static Layer ReadField(string path)
@@ -81,41 +103,5 @@ public static class MeshReader
         mu = arr[0];
         sigma = arr[1];
         return new Layer(z0, z1, mu, sigma);
-    }
-
-    public static Mesh3Dim ReadMesh(string path)
-    {
-        var mesh = new Mesh3Dim();
-        try
-        {
-            using var sr = new StreamReader(path);
-
-            mesh.nodesX = sr.ReadLine().Split().Select(double.Parse).ToList();
-            for (int i = 0; i < mesh.nodesX.Count; i++)
-                mesh.nodesXRefs.Add(i);            
-            mesh.NodesXWithoutFragmentation = mesh.nodesX.ToImmutableArray();
-            mesh.infoAboutX = sr.ReadLine() ?? "";
-
-            mesh.nodesY = sr.ReadLine().Split().Select(double.Parse).ToList();
-            for (int i = 0; i < mesh.nodesY.Count; i++)
-                mesh.nodesYRefs.Add(i);
-            mesh.NodesYWithoutFragmentation = mesh.nodesY.ToImmutableArray();
-            mesh.infoAboutY = sr.ReadLine() ?? "";
-
-            mesh.nodesZ = sr.ReadLine().Split().Select(double.Parse).ToList();
-            for (int i = 0; i < mesh.nodesZ.Count; i++)
-                mesh.nodesZRefs.Add(i);
-            mesh.NodesZWithoutFragmentation = mesh.nodesZ.ToImmutableArray();
-            mesh.infoAboutZ = sr.ReadLine() ?? "";
-
-            string[] str = sr.ReadLine().Split();
-            mesh.mu0.Add(double.Parse(str[0]));
-            mesh.sigma.Add(double.Parse(str[1]));
-        }
-        catch(Exception ex)
-        {
-            Debug.WriteLine($"Exception during reading file {path}: {ex.Message}.\nReturn empty mesh.");
-        }
-        return mesh;    
     }
 }

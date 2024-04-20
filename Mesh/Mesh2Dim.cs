@@ -1,13 +1,17 @@
-﻿namespace Grid;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using DataStructs;
 
-public class Mesh2Dim : Mesh
+namespace Grid;
+
+public class Mesh2Dim(List<double> nodesR, string infoAboutR,
+                      List<double> nodesZ, string infoAboutZ,
+                      List<Elem> elems, double lastR) : Mesh(elems)
 {
-    public override int NodesAmountTotal 
-    { 
-        get => NodesAmountR * NodesAmountZ;
-    }
+    public override int NodesAmountTotal => NodesAmountR * NodesAmountZ;
+
+    public List<double> nodesR = [.. nodesR, lastR];
+    
+    public List<double> nodesZ = nodesZ;
 
     public override int ElemsAmount
     {
@@ -15,38 +19,57 @@ public class Mesh2Dim : Mesh
         set => ElemsAmount = value;
     }
 
-    public int NodesAmountR
-    { 
-        get => nodesR.Count; 
-    }
+    public int NodesAmountR => nodesR.Count;
 
-    internal List<int> nodesR_Refs;
+    public int NodesAmountZ => nodesZ.Count;
 
-    internal ImmutableArray<double> NodesRWithoutFragmentation { get; set; }
+    public List<int> NodesR_Refs = [0];
 
-    internal string? infoAboutR;
+    public List<int> NodesZRefs = [0];
 
-    public int NodesAmountZ 
-    { 
-        get => nodesZ.Count;
-    }
+    internal ImmutableArray<double> NodesRWithoutFragmentation { get; set; } = [.. nodesR, lastR];
 
-    internal List<int> nodesZRefs;
+    public ImmutableArray<double> NodesZWithoutFragmentation { get; set; } = [.. nodesZ];
 
-    public ImmutableArray<double> NodesZWithoutFragmentation { get; set; }
+    internal string infoAboutR = infoAboutR;
 
-    internal string? infoAboutZ;
-    
+    internal string infoAboutZ = infoAboutZ;
 
-    public Mesh2Dim()
+    internal List<Border2D> borders = [];
+
+    public void SetLastR(double val)
     {
-        borders = new();
-        Elems = new();
-        nodesZ = new();
-        nodesR = new();
-        nodesR_Refs = new();
-        nodesZRefs = new();
-        mu0 = new();
-        sigma = new();
+        int i = 1;
+        if (val <= nodesR[^i])
+        {
+            while (val < nodesR[^i]) i++; 
+            nodesR[^i] = val;
+            nodesR = nodesR.Take(i + 1).ToList();
+        }
+        else
+            nodesR.Add(val);
+    }
+
+    public void SetBorders(List<Border3D> borders3D)
+    {
+        // Set lower border.
+        borders.Add(new Border2D(borders3D[0].BorderType, borders3D[0].BorderFormula,
+                                 0, NodesRWithoutFragmentation.Length - 1, 0, 0));
+        
+        // Set left border.
+        borders.Add(new Border2D(borders3D[1].BorderType, borders3D[1].BorderFormula,
+                                 0, 0, 0, NodesZWithoutFragmentation.Length - 1));
+        
+        // Set right border.
+        borders.Add(new Border2D(borders3D[3].BorderType, borders3D[3].BorderFormula,
+                                 NodesRWithoutFragmentation.Length - 1, 
+                                 NodesRWithoutFragmentation.Length - 1,
+                                 0, NodesZWithoutFragmentation.Length - 1));
+
+        // Set upper border.
+        borders.Add(new Border2D(borders3D[^1].BorderType, borders3D[^1].BorderFormula,
+                                 0, NodesRWithoutFragmentation.Length - 1,
+                                 NodesZWithoutFragmentation.Length - 1, 
+                                 NodesZWithoutFragmentation.Length - 1));
     }
 }
