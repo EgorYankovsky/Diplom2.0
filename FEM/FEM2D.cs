@@ -36,12 +36,11 @@ public class FEM2D : FEM
         Matrix = new GlobalMatrix(pointsArr.Length);
         Generator.BuildPortait(ref Matrix, pointsArr.Length, elemsArr);
         Generator.FillMatrix(ref Matrix, pointsArr, elemsArr, TypeOfMatrixM.Mrr);
-        Generator.ConsiderBoundaryConditions(ref Matrix, bordersArr);
 
         Vector = new GlobalVector(pointsArr.Length);
         Generator.FillVector(ref Vector, pointsArr, elemsArr, 0.0);
-        Generator.ConsiderBoundaryConditions(ref Vector, bordersArr, pointsArr, 0.0D);
 
+        Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, pointsArr, bordersArr, 0.0);
         (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
 
         if (equationType == EquationType.Parabolic)
@@ -64,20 +63,17 @@ public class FEM2D : FEM
                 var matrix1 = new GlobalMatrix(pointsArr.Length);
                 Generator.BuildPortait(ref matrix1, pointsArr.Length, elemsArr);
                 Generator.FillMatrix(ref matrix1, pointsArr, elemsArr, TypeOfMatrixM.Mrr);
-                Generator.ConsiderBoundaryConditions(ref matrix1, bordersArr);
 
                 var M = new GlobalMatrix(pointsArr.Length); // ???
                 Generator.BuildPortait(ref M, pointsArr.Length, elemsArr);
                 Generator.FillMatrix(ref M, pointsArr, elemsArr, TypeOfMatrixM.Mr);
-                Generator.ConsiderBoundaryConditions(ref M, bordersArr);
 
                 Matrix = (tau0 * M) + matrix1;
-                Generator.ConsiderBoundaryConditions(ref Matrix, bordersArr);
 
                 var bi = new GlobalVector(pointsArr.Length);
                 Vector = bi - (tau2 * (M * Solutions[i - 2])) + (tau1 * (M * Solutions[i - 1]));
-                Generator.ConsiderBoundaryConditions(ref Vector, bordersArr, pointsArr, Time[i]);
-                
+
+                Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, pointsArr, bordersArr, Time[i]);        
                 (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
             }
         }

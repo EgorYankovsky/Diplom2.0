@@ -249,4 +249,81 @@ public static class Generator
                 case 3: throw new ArgumentException("Пока нет возможности учитывать КУ III-го рода");
             }
     }
+
+
+    public static void ConsiderBoundaryConditions(ref GlobalMatrix m, ref GlobalVector v, ArrayOfPoints arrp, ArrayOfBorders arrBrd, double t)
+    {
+        foreach (var border in arrBrd)
+        {
+            switch (border[0])
+            {
+                // КУ - I-го рода
+                case 1:
+                for (int i = 2; i < 4; i++)
+                {
+                    for (int j = m._ig[border[i]]; j < m._ig[border[i] + 1]; j++)
+                        m._al[j] = 0.0D;
+                    m._diag[border[i]] = 1.0D;
+                    for (int j = 0; j < m._jg.Count; j++)
+                        if (m._jg[j] == border[i])
+                            m._au[j] = 0.0D;
+                }
+
+                switch (border[1])
+                {
+                    case 1:
+                    for (int i = 2; i < 4; i++)
+                        v[border[i]] = Function.U1_1(arrp[border[i]], t);
+                    break;
+                    
+                    case 2:
+                    for (int i = 2; i < 4; i++)
+                        v[border[i]] = Function.U1_2(arrp[border[i]], t);
+                    break;
+
+                    case 3:
+                    for (int i = 2; i < 4; i++)
+                        v[border[i]] = Function.U1_3(arrp[border[i]], t);
+                    break;
+                    
+                    case 4:
+                    for (int i = 2; i < 4; i++)
+                        v[border[i]] = Function.U1_4(arrp[border[i]], t);
+                    break;
+                    
+                    default:
+                    throw new Exception("No such bord");
+                }
+                break;
+                // КУ - II-го рода
+                case 2:
+                    for (int i = 2; i < 4; i++)
+                        v[border[i]] += 0.0D;
+                    break;
+                // КУ - III-го рода
+                case 3: throw new ArgumentException("Пока нет возможности учитывать КУ III-го рода");
+            }
+        }
+
+        /*
+        foreach (var border in arrBrd)
+        {
+            for (int i = 2; i < 4; i++)
+            {
+                for (int j = 0; j < m.Size; j++)
+                {
+                    if (border[i] == j)
+                        continue;
+                    else
+                    {
+                        var k = m[j, border[i]];
+                        var f = -1.0D * k * v[border[i]];
+                        v[j] += f;
+                        m[j, border[i]] = 0.0D;
+                    }
+                }
+            }
+        }
+        */
+    }
 }

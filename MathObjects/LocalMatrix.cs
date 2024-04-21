@@ -29,6 +29,8 @@ public class LocalMatrix : Matrix
                 _ => throw new Exception("Unexpected matrix"),
             };
         }
+        set
+        {}
     }
 
     private readonly double[,] _G =  {{ 1.0, -1.0},

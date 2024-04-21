@@ -39,6 +39,7 @@ public class LocalMatrixG3D (double mu, double hx, double hy, double hz) : Matri
                 _ => throw new ArgumentOutOfRangeException("Out of local matrix 3d range"),
             };
         }
+        set{}
     }
 }
 
@@ -66,5 +67,7 @@ public class LocalMatrixM3D(double gamma, double hx, double hy, double hz) : Mat
                 _ => throw new ArgumentOutOfRangeException("Out of local matrix 3d range"),
             };
         }
+        set
+        {}
     }
 }
