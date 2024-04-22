@@ -169,6 +169,7 @@ myFEM3D_test.GenerateArrays();
 myFEM3D_test.ConstructMatrixAndVector();
 myFEM3D_test.SetSolver(new LOS());
 myFEM3D_test.Solve();
+myFEM3D_test.TestOutput(AnswerPath);
 myFEM3D_test.WriteData(AnswerPath);
 return 0;
 

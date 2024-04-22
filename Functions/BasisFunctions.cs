@@ -83,3 +83,37 @@ public static class BasisFunctions3D
     public static double Z1(double z1, double z0, double z) => (z1 - z) / (z1 - z0);
     public static double Z2(double z1, double z0, double z) => (z - z0) / (z1 - z0);
 }
+
+public static class BasisFunctions3DVec
+{
+
+    public static (double, double, double) GetValue(double eps, double nu, double khi, double[] q)
+    {
+        if (q.Length != 12) throw new ArgumentException("q doesn't contain 12 values");
+        return (BF1(q[0], eps, nu, khi) + BF2(q[1], eps, nu, khi) + BF3(q[2], eps, nu, khi) + BF4(q[3], eps, nu, khi),
+                BF5(q[4], eps, nu, khi) + BF6(q[5], eps, nu, khi) + BF7(q[6], eps, nu, khi) + BF8(q[7], eps, nu, khi),
+                BF9(q[8], eps, nu, khi) + BF10(q[9], eps, nu, khi) + BF11(q[10], eps, nu, khi) + BF12(q[11], eps, nu, khi));
+    }
+
+
+    //                                          x           y          z
+    private static double BF1(double q, double eps, double nu, double khi) => q * LF1(nu) * LF1(khi);
+    private static double BF2(double q, double eps, double nu, double khi) => q * LF2(nu) * LF1(khi);
+    private static double BF3(double q, double eps, double nu, double khi) => q * LF1(nu) * LF2(khi);
+    private static double BF4(double q, double eps, double nu, double khi) => q * LF2(nu) * LF2(khi);
+
+
+    private static double BF5(double q, double eps, double nu, double khi) => q * LF1(eps) * LF1(khi);
+    private static double BF6(double q, double eps, double nu, double khi) => q * LF2(eps) * LF1(khi);
+    private static double BF7(double q, double eps, double nu, double khi) => q * LF1(eps) * LF2(khi);
+    private static double BF8(double q, double eps, double nu, double khi) => q * LF2(eps) * LF2(khi);
+
+
+    private static double BF9(double q, double eps, double nu, double khi) => q * LF1(eps) * LF1(nu);
+    private static double BF10(double q, double eps, double nu, double khi) => q * LF2(eps) * LF1(nu);
+    private static double BF11(double q, double eps, double nu, double khi) => q * LF1(eps) * LF2(nu);
+    private static double BF12(double q, double eps, double nu, double khi) => q * LF2(eps) * LF2(nu);
+
+    private static double LF1(double v) => 1 - v;
+    private static double LF2(double v) => v;
+}
