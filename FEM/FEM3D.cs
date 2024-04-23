@@ -68,8 +68,8 @@ public class FEM3D : FEM
     public void ConstructMesh()
     {
         if (mesh == null) throw new ArgumentNullException("Mesh is null");
-        mesh.nodesX = [0.0D, 1.0D, 2.0D, 3.0D];
-        mesh.nodesY = [0.0D, 1.0D, 2.0D, 3.0D];
+        mesh.nodesX = [0.0D, 1.0D, 2.0D];
+        mesh.nodesY = [0.0D, 1.0D, 2.0D];
         mesh.nodesZ = [0.0D, 1.0D, 2.0D, 3.0D];
         timeMesh = [1.0D];
     }
@@ -338,7 +338,7 @@ public class FEM3D : FEM
             using var sw = new StreamWriter(path + $"/A_phi/Answer3D/Answer_{timeMesh[t]}.txt");
 
             for (int i = 0; i < Solutions[t].Size; i++)
-                if (i == 48 || i == 69 || i == 70 || i == 88 || i == 51 || i == 52 || i == 91 || i == 92 || i == 55 || i == 73 || i == 74 || i == 95)
+                if (i == 38 || i == 45 || i == 67 || i == 74 || i == 41 || i == 42 || i == 70 || i == 71 || i == 52 || i == 53 || i == 56 || i == 57)
                     sw.WriteLine($"{i} {Solutions[t][i]:E8}");
 
             sw.Close();
@@ -349,29 +349,82 @@ public class FEM3D : FEM
     {
         using var sw = new StreamWriter(path + "/A_phi/Answer3D/Answer_Test.txt");
         
+        var absDiscX = 0.0D;
+        var absDiscY = 0.0D;
+        var absDiscZ = 0.0D;
+
+        var absDivX = 0.0D;
+        var absDivY = 0.0D;
+        var absDivZ = 0.0D;
+
+        var relDiscX = 0.0D;
+        var relDiscY = 0.0D;
+        var relDiscZ = 0.0D;
+
+        var relDivX = 0.0D;
+        var relDivY = 0.0D;
+        var relDivZ = 0.0D;
+
+        int iter = 0;
+
         foreach (var elem in elemsArr)
         {
             int[] elem_local = [elem[0], elem[3], elem[8], elem[11],
                                 elem[1], elem[2], elem[9], elem[10],
                                 elem[4], elem[5], elem[6], elem[7]];
             
-            var x = 0.5D * (ribsArr[elem[0]].a.X + ribsArr[elem[0]].b.X);
-            var y = 0.5D * (ribsArr[elem[4]].a.Y + ribsArr[elem[4]].b.Y);
-            var z = 0.5D * (ribsArr[elem[8]].a.Z + ribsArr[elem[8]].b.Z);
+            var x = 0.5D * (ribsArr[elem_local[0]].a.X + ribsArr[elem_local[0]].b.X);
+            var y = 0.5D * (ribsArr[elem_local[4]].a.Y + ribsArr[elem_local[4]].b.Y);
+            var z = 0.5D * (ribsArr[elem_local[8]].a.Z + ribsArr[elem_local[8]].b.Z);
 
-            sw.WriteLine($"{x:E15} {y:E15} {z:E15}");
+            sw.WriteLine($"Points {x:E15} {y:E15} {z:E15}");
             
-            var eps = (x - ribsArr[elem[0]].a.X) / (ribsArr[elem[0]].b.X - ribsArr[elem[0]].a.X);
-            var nu =  (y - ribsArr[elem[4]].a.Y) / (ribsArr[elem[4]].b.Y - ribsArr[elem[4]].a.Y);
-            var khi = (z - ribsArr[elem[8]].a.Z) / (ribsArr[elem[8]].b.Z - ribsArr[elem[8]].a.Z);
+            var eps = (x - ribsArr[elem_local[0]].a.X) / (ribsArr[elem_local[0]].b.X - ribsArr[elem_local[0]].a.X);
+            var nu =  (y - ribsArr[elem_local[4]].a.Y) / (ribsArr[elem_local[4]].b.Y - ribsArr[elem_local[4]].a.Y);
+            var khi = (z - ribsArr[elem_local[8]].a.Z) / (ribsArr[elem_local[8]].b.Z - ribsArr[elem_local[8]].a.Z);
 
-            double[] q = [Solutions[0][elem[0]], Solutions[0][elem[3]], Solutions[0][elem[8]], Solutions[0][elem[11]], 
-                          Solutions[0][elem[1]], Solutions[0][elem[2]], Solutions[0][elem[9]], Solutions[0][elem[10]],
-                          Solutions[0][elem[4]], Solutions[0][elem[5]], Solutions[0][elem[6]], Solutions[0][elem[7]],];
+            double[] q = [Solutions[0][elem_local[0]], Solutions[0][elem_local[1]], Solutions[0][elem_local[2]], Solutions[0][elem_local[3]], 
+                          Solutions[0][elem_local[4]], Solutions[0][elem_local[5]], Solutions[0][elem_local[6]], Solutions[0][elem_local[7]],
+                          Solutions[0][elem_local[8]], Solutions[0][elem_local[9]], Solutions[0][elem_local[10]], Solutions[0][elem_local[11]]];
             
             var ans = BasisFunctions3DVec.GetValue(eps, nu, khi, q);
-            sw.WriteLine($"{ans.Item1:E15} {ans.Item2:E15} {ans.Item3:E15}");
+            var theorValue = Function.A(x, y, z, 0.0D);
+
+            sw.WriteLine($"FEM A  {ans.Item1:E15} {ans.Item2:E15} {ans.Item3:E15}");
+            sw.WriteLine($"Theor  {theorValue.Item1:E15} {theorValue.Item2:E15} {theorValue.Item3:E15}");
+
+
+            var currAbsDiscX = Math.Abs(ans.Item1 - theorValue.Item1);
+            var currAbsDiscY = Math.Abs(ans.Item2 - theorValue.Item2);
+            var currAbsDiscZ = Math.Abs(ans.Item3 - theorValue.Item3);
+
+            var currRelDiscX = currAbsDiscX / Math.Abs(theorValue.Item1);
+            var currRelDiscY = currAbsDiscY / Math.Abs(theorValue.Item2);
+            var currRelDiscZ = currAbsDiscZ / Math.Abs(theorValue.Item3);
+
+            sw.WriteLine($"CurrAD {currAbsDiscX:E15} {currAbsDiscY:E15} {currAbsDiscZ:E15}");
+            sw.WriteLine($"CurrRD {currRelDiscX:E15} {currRelDiscY:E15} {currRelDiscZ:E15}\n");
+
+            absDiscX += currAbsDiscX;
+            absDiscY += currAbsDiscY;
+            absDiscZ += currAbsDiscZ;
+
+            absDivX += theorValue.Item1;
+            absDivY += theorValue.Item2;
+            absDivZ += theorValue.Item3;
+
+            relDiscX += currRelDiscX * currRelDiscX;
+            relDiscY += currRelDiscY * currRelDiscY;
+            relDiscZ += currRelDiscZ * currRelDiscZ;
+
+            relDivX += theorValue.Item1 * theorValue.Item1;
+            relDivY += theorValue.Item2 * theorValue.Item2;
+            relDivZ += theorValue.Item3 * theorValue.Item3;
+
+            iter++;
         }
+        sw.WriteLine($"Avg disc: {absDiscX / iter:E15} {absDiscY / iter:E15} {absDiscZ / iter:E15}");
+        sw.WriteLine($"Rel disc: {Math.Sqrt(relDiscX / relDivX):E15} {Math.Sqrt(relDiscY / relDivY):E15} {Math.Sqrt(relDiscZ / relDivZ):E15}");
         sw.Close();
     }
 }

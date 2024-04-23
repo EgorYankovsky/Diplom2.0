@@ -176,7 +176,6 @@ public static class MeshGenerator
         return pnt;
     }
 
-    // ! Костыль вселенских масштабов.
     public static ArrayOfElems GenerateListOfElems(Mesh mesh)
     {
         var arr = new ArrayOfElems(mesh.ElemsAmount);
@@ -190,39 +189,18 @@ public static class MeshGenerator
         int rxy = rx * ny + ry * nx;
         int nxy = nx * ny;
         int nz = mesh.NodesAmountZ;
-        int ramount = 3 * nx * ny * nz - nx * ny - nx * nz - ny * nz;
 
-        int j = 0;
-        int k = 0;
-        for (int i = 0; i < nx * ny * nz; i++)
-        {
-            //Console.WriteLine($"{i} | {nx * ny * nz}");
-            if (i + ry * j + rxy * k + rxy + nxy + rx + nx > ramount) 
-                break;
-
-            if (i % (nx * ry - 1 + k * nx * ny) == 0 && i != 0)
-            {
-                i += nx;
-                k++;
-                j = 0;
-            }
-            else if (i % nx == nx - 1)
-                j++;
-            else
-            {
-                int fst = i + ry * j + rxy * k;
-                arr.Add([i + ry * j + rxy * k, i + rx + ry * j + rxy * k, i + rx + 1 + ry * j + rxy * k, i + rx + nx + ry * j + rxy * k,
-                 i + rxy * (k + 1), i + rxy * (k + 1) + 1, i + rxy * (k + 1) + rx + 1, i + rxy * (k + 1) + rx + 1 + 1,
-                 fst + rxy + nxy, fst + rxy + nxy + rx, fst + rxy + nxy + rx + 1, fst + rxy + nxy + rx + nx]);
-                //arr.mui.Add(mesh.mu0[0]);
-                //arr.sigmai.Add(mesh.nodesZ[i / (nx * ny)] <= 0.0D ? mesh.sigma[0] : mesh.sigma[^1]);
-                arr.mui.Add(1.0D);
-                arr.sigmai.Add(1.0D);
-            }
-        }
-
-
-
+        for (int k = 0; k < nz - 1; k++)
+            for (int j = 0; j < ny - 1; j++)
+                for (int i = 0; i < nx - 1; i++)
+                {
+                    int curr = i + j * (nx + rx) + k * (rxy + nxy);
+                    arr.Add([               curr,               curr + rx,             curr + rx + 1,               curr + rx + nx,
+                             curr + rxy - j * rx, curr + rxy + 1 - j * rx,  curr + rxy + nx - j * rx, curr + rxy + nx + 1 - j * rx,
+                                curr + rxy + nxy,   curr + rxy + nxy + rx, curr + rxy + nxy + rx + 1,   curr + rxy + nxy + rx + nx]);
+                    arr.mui.Add(1.0D);
+                    arr.sigmai.Add(1.0D);
+                }
         return arr;
     }
 
@@ -286,7 +264,7 @@ public static class MeshGenerator
         
         // 0YZ
         for (int i = 0; i < nz - 1; i++)
-            for (int j = 0; j < nx - 1; j++)
+            for (int j = 0; j < ny - 1; j++)
                 arr.Add([1, 3, nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1), 
                                rxy + i * (rxy + nxny) + j * nx,
                                rxy + nx + i * (rxy + nxny) + j * nx,
@@ -310,7 +288,7 @@ public static class MeshGenerator
 
         // 1YZ
         for (int i = 0; i < nz - 1; i++)
-            for (int j = 0; j < nx - 1; j++)
+            for (int j = 0; j < ny - 1; j++)
                 arr.Add([1, 6, nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1) + nx - 1, 
                                rxy + i * (rxy + nxny) + j * nx + nx - 1,
                                rxy + nx + i * (rxy + nxny) + j * nx + nx - 1,
