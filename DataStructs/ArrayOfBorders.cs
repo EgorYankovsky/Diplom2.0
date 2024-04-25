@@ -46,9 +46,4 @@ public class ArrayOfBorders
             Arr.Add([.. data[i + 1].Split(" ").Select(int.Parse)]);
         SortList();
     }
-
-
-    public void Add(List<int> borders) => Arr.Add(borders);
-
-    public ArrayOfBorders(object o) => Arr = [];
 }
