@@ -48,4 +48,6 @@ public class Mesh3Dim(List<double> nodesX, string infoAboutX,
     public List<int> NodesZRefs = [0];
 
     public List<Border3D> borders = borders;
+
+    public ArrayOfRibs? arrayOfRibs;
 }

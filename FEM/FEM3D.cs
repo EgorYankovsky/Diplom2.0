@@ -72,34 +72,6 @@ public class FEM3D : FEM
         mesh3Dim.nodesZ = [0.0D, 1.0D, 2.0D, 3.0D];
     }
 
-    public void ConstructMesh(FEM2D fem2d)
-    {   
-        //if (fem2d.Mesh2D.nodesR is null) throw new ArgumentNullException("null object");
-        if (mesh is null) throw new ArgumentNullException("null object");
-        //if (mesh.nodesX is null) throw new ArgumentNullException("null object");
-        //if (mesh.nodesY is null) throw new ArgumentNullException("null object");
-
-        //mesh.nodesX = fem2d.Mesh2D.nodesR.Where(r => r < fem2d.Mesh2D.nodesR.Last() / Math.Sqrt(2.0D)).ToList();
-        //mesh.nodesY = fem2d.Mesh2D.nodesR.Where(r => r < fem2d.Mesh2D.nodesR.Last() / Math.Sqrt(2.0D)).ToList();
-        
-        //mesh.nodesX.Add(fem2d.Mesh2D.nodesR.Last() / Math.Sqrt(2.0D));
-        //mesh.nodesY.Add(fem2d.Mesh2D.nodesR.Last() / Math.Sqrt(2.0D));
-        
-        //int amount = 2 * mesh.nodesX.Count - 2;
-
-        //for (int i = 1; i < amount; i += 2)
-        //{
-        //   mesh.nodesX.Insert(0, -1.0D * mesh.nodesX[i]);
-        //   mesh.nodesY.Insert(0, -1.0D * mesh.nodesY[i]);
-        //}
-
-        //mesh.mu = fem2d.mu0;
-        //mesh.sigma = fem2d.sigma;
-
-        //mesh.nodesZ = fem2d.Mesh2D.nodesZ;
-        //timeMesh = fem2d.timeMesh;
-    }
-
     public void ConvertResultTo3Dim(FEM2D fem2d)
     {
         Task TaskGenerationAxyz = Task.Run(() => GenerateAxyz(fem2d));

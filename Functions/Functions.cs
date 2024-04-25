@@ -6,7 +6,7 @@ namespace Functions;
 public static class Function
 {
     // Функция правой части.
-    public static double F(double r, double z, double t) => -8.0D * r - 6.0D * z + z * z * z / (r * r);
+    public static double F(double r, double z, double t) => Math.Pow(10.0D, 2);
 
     public static (double, double, double) F(double x, double y, double z, double t) => (y * y - 2.0D,
                                                                                          z * z - 2.0D,

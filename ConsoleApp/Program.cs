@@ -13,6 +13,7 @@ using Grid;
 using DataStructs;
 using static Grid.MeshReader;
 using static Grid.MeshGenerator;
+using static Manager.FolderManager;
 
 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 DumpConfig.Default.ColorConfig.ColumnNameColor = DumpColor.FromHexString("#FF0000");
@@ -27,18 +28,18 @@ string SubtotalsPath = Path.GetFullPath("../../../../Data/Subtotals/");
 string AnswerPath = Path.GetFullPath("../../../../Data/Output/");
 string PicturesPath = Path.GetFullPath("../../../../Drawer/Pictures/");
 
-bool isUsing2dimAnswer = Checker();
+bool isSolving2DimTask = Checker(AnswerPath);
 
 // Pre-processor. Clearing output folders.
 
-if (!isUsing2dimAnswer)
-    FolderManager.ClearFolders(new List<string> {SubtotalsPath,
-                                                 PicturesPath + "/E_phi/",
-                                                 PicturesPath + "/A_phi/",
-                                                 AnswerPath + "/E_phi/Discrepancy/",
-                                                 AnswerPath + "/E_phi/Answer/",
-                                                 AnswerPath + "/A_phi/Discrepancy/",
-                                                 AnswerPath + "/A_phi/Answer/"});
+if (isSolving2DimTask)
+    ClearFolders(new List<string> {SubtotalsPath + "/2_dim/",
+                                   PicturesPath + "/E_phi/",
+                                   PicturesPath + "/A_phi/",
+                                   AnswerPath + "/E_phi/Discrepancy/",
+                                   AnswerPath + "/E_phi/Answer/",
+                                   AnswerPath + "/A_phi/Discrepancy/",
+                                   AnswerPath + "/A_phi/Answer/"});
 
 
 /*
@@ -104,67 +105,58 @@ ReadTimeMesh(TimePath);
 Mesh3Dim mesh3D = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
                       NodesZ, InfoAboutZ, Elems, Borders);
 
+var timeMesh = GenerateTimeMesh(Time.Item1, Time.Item2, tn, tk);
 Mesh2Dim mesh2D = new(NodesR, InfoAboutR, NodesZ, InfoAboutZ,
                       Elems, Math.Sqrt(Math.Pow(mesh3D.nodesX[^1], 2) + Math.Pow(mesh3D.nodesY[^1], 2)));
-mesh2D.SetBorders(mesh3D.borders);
-
-ConstructMesh(ref mesh2D);
-var timeMesh = GenerateTimeMesh(Time.Item1, Time.Item2, tn, tk);
-
-/*
-// Для теста узлы:
-// 48 69 70 88 51 52 91 92 55 73 74 95
-FEM3D myFEM3D_test = new();
-myFEM3D_test.ConstructMesh();
-myFEM3D_test.GenerateArrays();
-myFEM3D_test.ConstructMatrixAndVector();
-myFEM3D_test.SetSolver(new LOS());
-myFEM3D_test.Solve();
-myFEM3D_test.TestOutput(AnswerPath);
-myFEM3D_test.WriteData(AnswerPath);
-return 0;
-*/
-
 // Main process of 2-dim task.
 FEM2D myFEM2D = new(mesh2D, timeMesh);
-myFEM2D.SetSolver(new LOS());
-myFEM2D.Solve();
-myFEM2D.GenerateVectorEphi();
-myFEM2D.WriteData(AnswerPath);
-myFEM2D.WriteDiscrepancy(AnswerPath);
+mesh2D.SetBorders(mesh3D.borders);
+ConstructMesh(ref mesh2D);
+if (isSolving2DimTask)
+{
+    myFEM2D.SetSolver(new BCG());
+    myFEM2D.Solve();
+    myFEM2D.GenerateVectorEphi();
+    myFEM2D.WriteData(AnswerPath);
+    myFEM2D.WriteDiscrepancy(AnswerPath);
 
-// Post-processor of zero-layer. Drawing A_phi and E_phi.
-int a = Postprocessor.DrawA_phi();
-int b = Postprocessor.DrawE_phi();
-Console.WriteLine($"Drawing A_phi finished with code: {a}\n" +
-                  $"Drawing E_phi finished with code: {b}");
+    // Post-processor of zero-layer. Drawing A_phi and E_phi.
+    int a = Postprocessor.DrawA_phi();
+    int b = Postprocessor.DrawE_phi();
+    Console.WriteLine($"Drawing A_phi finished with code: {a}\n" +
+                      $"Drawing E_phi finished with code: {b}");
+}
+else
+    myFEM2D.ReadAnswer(AnswerPath);
 
-// Converting 2-dim results into 3-dim form
-return 0;
-MeshGenerator.ConstructMesh(ref mesh3D);
+/*
+TODO:
+    1. Read generated points and elems
+*/
 
-FEM3D myFEM3D = new(myFEM2D);
-myFEM3D.ConstructMesh(myFEM2D);
+ConstructMesh(ref mesh3D);
+FEM3D myFEM3D = new(mesh3D,  timeMesh);
 myFEM3D.ConvertResultTo3Dim(myFEM2D);
 myFEM3D.GenerateArrays();
-myFEM3D.AddField(MeshReader.ReadField(LayersArea));
+myFEM3D.AddField(ReadField(LayersArea));
 myFEM3D.CommitFields();
 myFEM3D.ConstructMatrixAndVector();
-
 myFEM3D.SetSolver(new LOS());
 
 
-static bool Checker()
+static bool Checker(string Answer)
 {
-    while (true)
-    {
-        var ans = string.Empty;
-        Console.WriteLine("Use result of 2-dim task? [Y/n]");
-        ans = Console.ReadLine()?.ToLower();
-        if (ans == "y" || ans == "yes" || ans == "да" || ans == "д")
-            return true;
-        else if (ans == "n" || ans == "no" || ans == "нет" || ans == "н")
-            return false;
-        Console.WriteLine("Unexpected answer!");
-    }
+    if (CountFilesAmount(Answer + "A_phi/Answer/") == CountFilesAmount(Answer + "E_phi/Answer/"))
+        while (true)
+        {
+            string? ans;
+            Console.WriteLine("Detected answer for 2-dim task. Would you like to solve 2-dim task again? [Y/n]");
+            ans = Console.ReadLine()?.ToLower();
+            if (ans == "y" || ans == "yes" || ans == "да" || ans == "д")
+                return true;
+            else if (ans == "n" || ans == "no" || ans == "нет" || ans == "н")
+                return false;
+            Console.WriteLine("Unexpected answer!");
+        }
+    return true;
 }

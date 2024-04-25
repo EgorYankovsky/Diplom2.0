@@ -29,6 +29,7 @@ public static class MeshGenerator
         return new TimeMesh(arr);
     }
 
+#region 2Dim
     public static void GenerateMesh(ref Mesh2Dim mesh)
     {
         int currentPosition = 0;
@@ -73,6 +74,134 @@ public static class MeshGenerator
             currentPosition++;
             mesh.NodesZRefs.Add(currentPosition);
         }
+    }
+
+    public static void ConstructMesh(ref Mesh2Dim mesh)
+    {
+        GenerateMesh(ref mesh);
+        RemakeBorders(ref mesh);
+        OutputPoints(ref mesh);
+        OutputListOfElems(ref mesh);
+        GenerateListOfBorders(ref mesh);
+    }
+
+    public static void RemakeBorders(ref Mesh2Dim mesh)
+    {
+        for (int i = 0; i < mesh.borders.Count; i++)
+        {
+            var newBorder = new Border2D(mesh.borders[i].BorderType, mesh.borders[i].BorderFormula,
+                                         mesh.NodesR_Refs[mesh.borders[i].R0], mesh.NodesR_Refs[mesh.borders[i].R1],
+                                         mesh.NodesZRefs[mesh.borders[i].Z0], mesh.NodesZRefs[mesh.borders[i].Z1]);
+            mesh.borders[i] = newBorder;
+        }
+    }
+
+    public static void OutputPoints(ref Mesh2Dim mesh)
+    {
+        using var sw = new StreamWriter(_points2DPath);
+        sw.WriteLine(mesh.NodesAmountTotal);
+        int i = 0;
+        foreach (var Z in mesh.nodesZ)
+            foreach (var R in mesh.nodesR)
+            {
+                sw.WriteLine($"{SetPointType(mesh, new Point(R, Z))}");
+                i++;
+            }
+    }
+
+    private static Point SetPointType(Mesh2Dim mesh, Point pnt)
+    {
+        for (int i = 0; i < mesh.Elems.Count; i++)
+        {   
+            if (mesh.NodesZWithoutFragmentation[mesh.Elems[i].Arr[4]] <= pnt.Z && pnt.Z <= mesh.NodesZWithoutFragmentation[mesh.Elems[i].Arr[5]])
+            {
+                int minValue = 4;
+                foreach (var arr in mesh.borders)
+                {
+                    if (mesh.nodesR[arr.R0] <= pnt.R && pnt.R <= mesh.nodesR[arr.R1] &&
+                        mesh.nodesZ[arr.Z0] <= pnt.Z && pnt.Z <= mesh.nodesZ[arr.Z1] &&
+                        arr.BorderType < minValue)
+                        {
+                            minValue = arr.BorderType;
+                            break;
+                        }
+                }
+                switch (minValue)
+                {
+                    case 1: {pnt.Type = Location.BoundaryI; break; }
+                    case 2: {pnt.Type = Location.BoundaryII; break; }
+                    case 3: {pnt.Type = Location.BoundaryIII; break; }
+                    default: {pnt.Type = Location.Inside; pnt.SubElemNum = i; break;}
+                }
+            }
+            else if (pnt.Type == Location.NotStated)
+                pnt.Type = Location.OutSide;
+        }
+        return pnt;
+    }
+
+    public static void OutputListOfElems(ref Mesh2Dim mesh)
+    {
+        using var sw = new StreamWriter(_elems2DPath);
+        int nr = mesh.NodesAmountR;
+        int nz = mesh.NodesAmountZ;
+        sw.WriteLine((nr - 1) * (nz - 1));
+        for (int k = 0; k < nz - 1; k++)
+            for (int i = 0; i < nr - 1; i++)
+                sw.WriteLine($"{k * nr + i} {k * nr + i + 1} " +
+                             $"{(k + 1) * nr + i} {(k + 1) * nr + i + 1} " +
+                             $"{SelectMuAndSigma(mesh, k, k + 1)}");
+    }
+
+    private static string SelectMuAndSigma(Mesh2Dim mesh, int a, int d)
+    {
+        int index = -1;
+        for (int i = 0; i < mesh.NodesZRefs.Count - 1; i++)
+            if (mesh.NodesZRefs[i] <= a && d <= mesh.NodesZRefs[i + 1])
+                index = i;
+        if (index == -1) throw new IndexOutOfRangeException("Failure during selecting mu and sigma");
+        return $"{mesh.Elems[index].mu} {mesh.Elems[index].sigma}";
+    }
+
+    public static void GenerateListOfBorders(ref Mesh2Dim mesh)
+    {
+        using var sw = new StreamWriter(_borders2DPath);
+
+        sw.WriteLine(2 * (mesh.NodesAmountR - 1 + mesh.NodesAmountZ - 1));
+        
+        foreach (var border in mesh.borders)
+        {
+            if (border.R0 == border.R1) // border || oR
+            {
+                int iter = border.R0 == 0 ? 0 : mesh.NodesAmountR - 1;
+                for (int i = 0; i < mesh.NodesAmountZ - 1; i++)
+                {
+                    sw.WriteLine($"{border.BorderType} {border.BorderFormula} {iter} {iter + mesh.NodesAmountR}");
+                    iter += mesh.NodesAmountR;
+                }
+            }
+            else if (border.Z0 == border.Z1) // border || oZ
+            {
+                int iter = border.Z0 == 0 ? 0 : mesh.NodesAmountR * (mesh.NodesAmountZ - 1);
+                for (int i = 0; i < mesh.NodesAmountR - 1; i++)
+                {
+                    sw.WriteLine($"{border.BorderType} {border.BorderFormula} {iter} {iter + 1}");
+                    iter++;
+                }
+            }
+        }
+    }
+
+#endregion
+
+#region 3Dim
+    public static void ConstructMesh(ref Mesh3Dim mesh)
+    {
+        GenerateMesh(ref mesh);
+        RemakeBorders(ref mesh);
+        OutputPoints(ref mesh);
+        OutputListOfElems(mesh);
+        GenerateListOfBorders(mesh);
     }
 
     public static void GenerateMesh(ref Mesh3Dim mesh)
@@ -143,22 +272,6 @@ public static class MeshGenerator
         }
     }
 
-    public static void ConstructMesh(ref Mesh2Dim mesh)
-    {
-        GenerateMesh(ref mesh);
-        RemakeBorders(ref mesh);
-        OutputPoints(ref mesh);
-        OutputListOfElems(ref mesh);
-        GenerateListOfBorders(ref mesh);
-    }
-
-    public static void ConstructMesh(ref Mesh3Dim mesh)
-    {
-        GenerateMesh(ref mesh);
-        RemakeBorders(ref mesh);
-        OutputPoints(ref mesh);
-    }
-
     public static void RemakeBorders(ref Mesh3Dim mesh)
     {
         for (int i = 0; i < mesh.borders.Count; i++)
@@ -171,30 +284,6 @@ public static class MeshGenerator
         }
     }
 
-    public static void RemakeBorders(ref Mesh2Dim mesh)
-    {
-        for (int i = 0; i < mesh.borders.Count; i++)
-        {
-            var newBorder = new Border2D(mesh.borders[i].BorderType, mesh.borders[i].BorderFormula,
-                                         mesh.NodesR_Refs[mesh.borders[i].R0], mesh.NodesR_Refs[mesh.borders[i].R1],
-                                         mesh.NodesZRefs[mesh.borders[i].Z0], mesh.NodesZRefs[mesh.borders[i].Z1]);
-            mesh.borders[i] = newBorder;
-        }
-    }
-
-    public static void OutputPoints(ref Mesh2Dim mesh)
-    {
-        using var sw = new StreamWriter(_points2DPath);
-        sw.WriteLine(mesh.NodesAmountTotal);
-        int i = 0;
-        foreach (var Z in mesh.nodesZ)
-            foreach (var R in mesh.nodesR)
-            {
-                sw.WriteLine($"{SetPointType(mesh, new Point(R, Z))}");
-                i++;
-            }
-    }
-
     public static void OutputPoints(ref Mesh3Dim mesh)
     {
         using var sw = new StreamWriter(_points3DPath);
@@ -204,94 +293,14 @@ public static class MeshGenerator
             foreach (var Y in mesh.nodesY)
                 foreach (var X in mesh.nodesX)
                 {
-                    sw.WriteLine($"{SetPointType(mesh, new Point(X, Y, Z))}");
+                    sw.WriteLine($"{SetPointType3D(new Point(X, Y, Z), mesh)}");
                     i++;
                 }
     }
-
-    private static Point SetPointType(Mesh2Dim mesh, Point pnt)
-    {
-        for (int i = 0; i < mesh.Elems.Count; i++)
-        {   
-            if (mesh.NodesZWithoutFragmentation[mesh.Elems[i].Arr[4]] <= pnt.Z && pnt.Z <= mesh.NodesZWithoutFragmentation[mesh.Elems[i].Arr[5]])
-            {
-                int minValue = 4;
-                foreach (var arr in mesh.borders)
-                {
-                    if (mesh.nodesR[arr.R0] <= pnt.R && pnt.R <= mesh.nodesR[arr.R1] &&
-                        mesh.nodesZ[arr.Z0] <= pnt.Z && pnt.Z <= mesh.nodesZ[arr.Z1] &&
-                        arr.BorderType < minValue)
-                        {
-                            minValue = arr.BorderType;
-                            break;
-                        }
-                }
-                switch (minValue)
-                {
-                    case 1: {pnt.Type = Location.BoundaryI; break; }
-                    case 2: {pnt.Type = Location.BoundaryII; break; }
-                    case 3: {pnt.Type = Location.BoundaryIII; break; }
-                    default: {pnt.Type = Location.Inside; pnt.SubElemNum = i; break;}
-                }
-            }
-            else if (pnt.Type == Location.NotStated)
-                pnt.Type = Location.OutSide;
-        }
-        return pnt;
-    }
-
-    private static Point SetPointType(Mesh3Dim mesh, Point pnt)
-    {
-        return new Point(0.0, 0.0, 0.0);
-    }
-
-    public static void OutputListOfElems(ref Mesh2Dim mesh)
-    {
-        using var sw = new StreamWriter(_elems2DPath);
-        int nr = mesh.NodesAmountR;
-        int nz = mesh.NodesAmountZ;
-        sw.WriteLine((nr - 1) * (nz - 1));
-        for (int k = 0; k < nz - 1; k++)
-            for (int i = 0; i < nr - 1; i++)
-                sw.WriteLine($"{k * nr + i} {k * nr + i + 1} " +
-                             $"{(k + 1) * nr + i} {(k + 1) * nr + i + 1} " +
-                             $"{SelectMuAndSigma(mesh, k, k + 1)}");
-    }
-
-    private static string SelectMuAndSigma(Mesh2Dim mesh, int a, int d)
-    {
-        int index = -1;
-        for (int i = 0; i < mesh.NodesZRefs.Count - 1; i++)
-            if (mesh.NodesZRefs[i] <= a && d <= mesh.NodesZRefs[i + 1])
-                index = i;
-        if (index == -1) throw new IndexOutOfRangeException("Failure during selecting mu and sigma");
-        return $"{mesh.Elems[index].mu} {mesh.Elems[index].sigma}";
-    }
-
-    /*
-    public static ArrayOfPoints GenerateListOfPoints(Mesh mesh)
-    {
-        if (mesh.nodesX is null) throw new ArgumentNullException("nodesX is null");
-        if (mesh.nodesY is null) throw new ArgumentNullException("nodesY is null");
-        if (mesh.nodesZ is null) throw new ArgumentNullException("nodesZ is null");
-        
-        var arr = new ArrayOfPoints(mesh.NodesAmountTotal);
-        foreach (var Z in mesh.nodesZ)
-            foreach (var Y in mesh.nodesY)
-                foreach(var X in mesh.nodesX)
-                    arr.Append(SetPointType3D(new Point(X, Y, Z), mesh));
-        return arr;
-    }
-    */
-
+    
     // ! Топорный метод.
-    /*
-    private static Point SetPointType3D(Point pnt, Mesh mesh)
+    private static Point SetPointType3D(Point pnt, Mesh3Dim mesh)
     {
-        if (mesh.nodesX is null) throw new ArgumentNullException("nodesX is null");
-        if (mesh.nodesY is null) throw new ArgumentNullException("nodesY is null");
-        if (mesh.nodesZ is null) throw new ArgumentNullException("nodesZ is null");
-
         double xMin = mesh.nodesX[0];
         double xMax = mesh.nodesX[^1];
         double yMin = mesh.nodesY[0];
@@ -308,9 +317,8 @@ public static class MeshGenerator
     
         return pnt;
     }
-    */
-
-    public static ArrayOfElems GenerateListOfElems(Mesh3Dim mesh)
+    
+    public static ArrayOfElems OutputListOfElems(Mesh3Dim mesh)
     {
         var arr = new ArrayOfElems(mesh.ElemsAmount);
         
@@ -366,9 +374,8 @@ public static class MeshGenerator
                 ii++;
         }
     }
-
-    /*
-    public static ArrayOfBorders GenerateListOfBorders(Mesh mesh)
+    
+    public static ArrayOfBorders GenerateListOfBorders(Mesh3Dim mesh)
     {
         var arr = new ArrayOfBorders(null);
 
@@ -432,10 +439,8 @@ public static class MeshGenerator
 
         return arr;
     }
-    */
-
-    /*
-    public static ArrayOfRibs GenerateListOfRibs(Mesh mesh, ArrayOfPoints arrPt)
+    
+    public static ArrayOfRibs GenerateListOfRibs(Mesh3Dim mesh, ArrayOfPoints arrPt)
     {
         ArgumentNullException.ThrowIfNull(arrPt);
 
@@ -464,33 +469,5 @@ public static class MeshGenerator
         }
         return arr;
     }
-    */
-    public static void GenerateListOfBorders(ref Mesh2Dim mesh)
-    {
-        using var sw = new StreamWriter(_borders2DPath);
-
-        sw.WriteLine(2 * (mesh.NodesAmountR - 1 + mesh.NodesAmountZ - 1));
-        
-        foreach (var border in mesh.borders)
-        {
-            if (border.R0 == border.R1) // border || oR
-            {
-                int iter = border.R0 == 0 ? 0 : mesh.NodesAmountR - 1;
-                for (int i = 0; i < mesh.NodesAmountZ - 1; i++)
-                {
-                    sw.WriteLine($"{border.BorderType} {border.BorderFormula} {iter} {iter + mesh.NodesAmountR}");
-                    iter += mesh.NodesAmountR;
-                }
-            }
-            else if (border.Z0 == border.Z1) // border || oZ
-            {
-                int iter = border.Z0 == 0 ? 0 : mesh.NodesAmountR * (mesh.NodesAmountZ - 1);
-                for (int i = 0; i < mesh.NodesAmountR - 1; i++)
-                {
-                    sw.WriteLine($"{border.BorderType} {border.BorderFormula} {iter} {iter + 1}");
-                    iter++;
-                }
-            }
-        }
-    }
+#endregion
 }

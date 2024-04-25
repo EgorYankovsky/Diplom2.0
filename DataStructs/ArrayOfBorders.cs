@@ -37,6 +37,8 @@ public class ArrayOfBorders
                     (Arr[j], Arr[j + 1]) = (Arr[j + 1], Arr[j]);
     }
 
+    public void Add(List<int> arr) => Arr.Add(arr);
+
     public ArrayOfBorders(string path)
     {
         Arr = [];

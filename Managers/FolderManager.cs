@@ -16,4 +16,10 @@ public static class FolderManager
         foreach (string path in paths)
             ClearFolder(path);
     }
+
+    public static int CountFilesAmount(string path)
+    {
+        DirectoryInfo di = new (path);
+        return di.GetFiles().Length;
+    }
 }

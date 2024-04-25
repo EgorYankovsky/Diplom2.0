@@ -256,4 +256,37 @@ public class FEM2D : FEM
 
         return elemsArr[j * (mesh2Dim.nodesR.Count - 1) + i];
     }
+
+    public void ReadAnswer(string AnswerPath)
+    {
+        string file = string.Empty;
+        if (equationType == EquationType.Elliptic)
+        {
+            file = "Answer.dat";
+            var fileData = File.ReadAllText(AnswerPath + "A_phi/Answer/" + file).Split("\n");
+            A_phi[0] = new GlobalVector(fileData.Length - 1);
+            for (int i = 0; i < fileData.Length - 1; i++)
+                A_phi[0][i] = double.Parse(fileData[i]);
+            fileData = File.ReadAllText(AnswerPath + "E_phi/Answer/" + file).Split("\n");
+            E_phi[0] = new GlobalVector(fileData.Length - 1);
+            for (int i = 0; i < fileData.Length - 1; i++)
+                E_phi[0][i] = double.Parse(fileData[i]);
+        }
+        else
+        {
+            for (int t = 0; t < Time.Count; t++)
+            {
+                file = $"Answer_Aphi_time={Time[t]}.dat";
+                var fileData = File.ReadAllText(AnswerPath + "A_phi/Answer/" + file).Split("\n");
+                A_phi[t] = new GlobalVector(fileData.Length - 1);
+                for (int i = 0; i < fileData.Length - 1; i++)
+                    A_phi[t][i] = double.Parse(fileData[i]);
+                file = $"Answer_Ephi_time={Time[t]}.dat";
+                fileData = File.ReadAllText(AnswerPath + "E_phi/Answer/" + file).Split("\n");
+                E_phi[t] = new GlobalVector(fileData.Length - 1);
+                for (int i = 0; i < fileData.Length - 1; i++)
+                    E_phi[t][i] = double.Parse(fileData[i]);
+            }
+        }
+    }
 }
