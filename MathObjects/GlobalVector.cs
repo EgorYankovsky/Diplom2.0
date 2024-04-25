@@ -99,4 +99,9 @@ public class GlobalVector : Vector
                 case 3: throw new ArgumentException("Пока нет возможности учитывать КУ III-го рода");
             }
     }
+
+    public GlobalVector(ArrayOfPoints arrPt)
+    {
+        _values = new double[arrPt.Length];
+    }
 }

@@ -25,11 +25,9 @@ if path1.is_dir():
             plt.figure(figsize=(19, 10))
 
             # Draw (r,z) axis
-            #plt.plot([min(add.r), min(add.r)], [max(add.z), min(add.z)], 'black', linewidth = 3.5)
-            #plt.plot([min(add.r), max(add.r)], [0.0, 0.0], 'black', linewidth = 1.8)
-            plt.plot([min(add.r), max(add.r)], [-60.0, -60.0], 'black', linewidth = 1.0)
-            plt.plot([min(add.r), max(add.r)], [-40.0, -40.0], 'black', linewidth = 1.0)
-            plt.plot([min(add.r), max(add.r)], [-20.0, -20.0], 'black', linewidth = 1.0)
+            #plt.plot([min(add.r), max(add.r)], [-60.0, -60.0], 'black', linewidth = 1.0)
+            #plt.plot([min(add.r), max(add.r)], [-40.0, -40.0], 'black', linewidth = 1.0)
+            #plt.plot([min(add.r), max(add.r)], [-20.0, -20.0], 'black', linewidth = 1.0)
 
             # Draw mesh
             for ri in add.r:
@@ -41,14 +39,14 @@ if path1.is_dir():
             rgrid, zgrid = np.meshgrid(add.r, add.z)
             fgrid = f(rgrid, zgrid)
 
-            cont = plt.contour(rgrid, zgrid, fgrid, 15, colors='black')
+            #cont = plt.contour(rgrid, zgrid, fgrid, 15, colors='black')
             cbar = plt.contourf(rgrid, zgrid, add.basis, 125, cmap='plasma')
             plt.colorbar(cbar)
             plt.title(file.name)
             plt.plot([min(add.r), min(add.r)], [max(add.z), min(add.z)], 'black', linewidth = 3.5)
             plt.plot([min(add.r), max(add.r)], [0.0, 0.0], 'black', linewidth = 1.8)
-            plt.plot(10.0, 0.0, 'ro') 
-            cont.clabel()
+            #plt.plot(10.0, 0.0, 'ro') 
+            #cont.clabel()
 
             name = file.name.replace('.dat', '')
 

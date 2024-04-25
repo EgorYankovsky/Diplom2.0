@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DataStructs\DataStructs.csproj" />
     <ProjectReference Include="..\Functions\Functions.csproj" />
+    <ProjectReference Include="..\GaussIntegr\GaussIntegr.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

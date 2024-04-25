@@ -40,6 +40,7 @@ public class LocalMatrixG3D (double mu, double hx, double hy, double hz) : Matri
             };
         }
         set{}
+        set{}
     }
 }
 
