@@ -36,13 +36,13 @@ public static class Function
 
     #region Первые краевые условия.
 
-    public static double U1_1(Point p, double t) => p.R * p.R * p.R + 1.0D;
+    public static double U1_1(Point p, double t) => 0.0D;
 
-    public static double U1_2(Point p, double t) => 8.0D + p.Z * p.Z * p.Z;
+    public static double U1_2(Point p, double t) => 0.0D;
 
-    public static double U1_3(Point p, double t) => p.R * p.R * p.R + 8.0D;
+    public static double U1_3(Point p, double t) => 0.0D;
 
-    public static double U1_4(Point p, double t) => 1.0D + p.Z * p.Z * p.Z;
+    public static double U1_4(Point p, double t) => 0.0D;
 
     #endregion
 

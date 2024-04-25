@@ -27,8 +27,23 @@ public class FEM3D : FEM
 
     public ArrayOfRibs ribsArr;
 
+    private Mesh3Dim mesh3Dim;
+
     // Maybe private?
     public List<Layer> Layers;
+
+    public FEM3D(Mesh3Dim mesh, TimeMesh timeMesh) : base(timeMesh, 3)
+    {
+        mesh3Dim = mesh;
+        equationType = timeMesh[0] == timeMesh[^1] ? EquationType.Elliptic : EquationType.Parabolic;
+        Ax_3D = new(Time.Count);
+        Ay_3D = new(Time.Count);
+        Az_3D = new(Time.Count);
+        
+        Ex_3D = new(Time.Count);
+        Ey_3D = new(Time.Count);
+        Ez_3D = new(Time.Count);
+    }
 
     public FEM3D(FEM2D fem2d) : base(fem2d.Time, 3)
     {
@@ -48,13 +63,13 @@ public class FEM3D : FEM
         equationType = fem2d.equationType;
     }
 
+    // ! Тестовая вещь.
     public void ConstructMesh()
     {
         if (mesh == null) throw new ArgumentNullException("Mesh is null");
-        mesh.nodesX = [0.0D, 1.0D, 2.0D];
-        mesh.nodesY = [0.0D, 1.0D, 2.0D];
-        mesh.nodesZ = [0.0D, 1.0D, 2.0D, 3.0D];
-        timeMesh = [1.0D];
+        mesh3Dim.nodesX = [0.0D, 1.0D, 2.0D];
+        mesh3Dim.nodesY = [0.0D, 1.0D, 2.0D];
+        mesh3Dim.nodesZ = [0.0D, 1.0D, 2.0D, 3.0D];
     }
 
     public void ConstructMesh(FEM2D fem2d)
@@ -256,8 +271,8 @@ public class FEM3D : FEM
         if (solver is null) throw new ArgumentNullException("Solver is null");
         if (Matrix is null) throw new ArgumentNullException("Matrix is null");
         if (Vector is null) throw new ArgumentNullException("Vector is null");
-        Solutions = new GlobalVector[timeMesh.Length];
-        Discrepancy = new GlobalVector[timeMesh.Length];
+        Solutions = new GlobalVector[Time.Count];
+        Discrepancy = new GlobalVector[Time.Count];
         (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
         //
         //if (timeMesh.Length > 1)
@@ -318,9 +333,9 @@ public class FEM3D : FEM
     {
         if (Solutions is null) throw new ArgumentNullException("No solutions");
 
-        for (int t = 0; t < timeMesh.Length; t++)
+        for (int t = 0; t < Time.Count; t++)
         {
-            using var sw = new StreamWriter(path + $"/A_phi/Answer3D/Answer_{timeMesh[t]}.txt");
+            using var sw = new StreamWriter(path + $"/A_phi/Answer3D/Answer_{Time[t]}.txt");
 
             for (int i = 0; i < Solutions[t].Size; i++)
                 if (i == 38 || i == 45 || i == 67 || i == 74 || i == 41 || i == 42 || i == 70 || i == 71 || i == 52 || i == 53 || i == 56 || i == 57)

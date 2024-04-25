@@ -214,7 +214,7 @@ public class LocalMatrixNum : Matrix
         _r1 = arrPt[elem[1]].R;
         _z0 = arrPt[elem[0]].Z;
         _z1 = arrPt[elem[2]].Z;
-        _lambda = lambda;
+        _lambda = 1.0D / lambda;
         _gamma = gamma;
     }
 }

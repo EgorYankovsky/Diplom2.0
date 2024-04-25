@@ -14,7 +14,7 @@ public static class MeshGenerator
 
     public static TimeMesh GenerateTimeMesh(double t0, double t1, int tn, double tk)
     {
-        double[] arr = new double[tn];
+        double[] arr = new double[tn + 1];
         double h = t1 - t0;
         double denominator = 0.0;
 
@@ -23,7 +23,7 @@ public static class MeshGenerator
 
         double x0 = h / denominator;
         arr[0] = t0;
-        for(int j = 0; j < tn - 1; j++)
+        for(int j = 0; j < tn; j++)
             arr[j + 1] = arr[j] + x0 * Math.Pow(tk, j);
         arr[^1] = t1;
         return new TimeMesh(arr);
@@ -310,7 +310,7 @@ public static class MeshGenerator
     }
     */
 
-    public static ArrayOfElems GenerateListOfElems(Mesh mesh)
+    public static ArrayOfElems GenerateListOfElems(Mesh3Dim mesh)
     {
         var arr = new ArrayOfElems(mesh.ElemsAmount);
         
@@ -337,7 +337,6 @@ public static class MeshGenerator
                 }
         return arr;
     }
-    */
 
     public static void SelectRibs(ref ArrayOfRibs arrRibs, ref ArrayOfElems arrEl)
     {

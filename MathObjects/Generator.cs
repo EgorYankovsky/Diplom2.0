@@ -151,7 +151,6 @@ public static class Generator
     public static void BuildPortait(ref GlobalMatrix m, int arrPtLen, ArrayOfElems arrEl)
     {
         List<List<int>> arr = [];
-        List<List<int>> arr = [];
 
         // ! Дерьмодристный момент.
         for(int i = 0; i < arrPtLen; i++)
@@ -184,18 +183,6 @@ public static class Generator
         for (int i = 0; i < arrEl.Length; i++)
             Add(new LocalMatrixNum(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], arrEl.sigmai[i]), ref m, arrEl[i]);
             //Add(new LocalMatrixNum(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], arrEl.sigmai[i]), ref m, arrEl[i]);
-/*
-        for (int ii = 0; ii < 9; ii++)
-        {
-            for (int jj = 0; jj < 9; jj++)
-            {
-                Console.Write($"{m[ii, jj]:E2} ");
-            }
-            Console.WriteLine();
-        }
-        Console.WriteLine();
-*/
-        //ConsiderBoundaryConditions(ref m, arrBd);
     }
 
     private static void Add(LocalMatrixNum lm, ref GlobalMatrix gm, List<int> elem)
@@ -374,7 +361,6 @@ public static class Generator
                 arrPt[arrEl[i][0]].Z <= 0.0D && 0.0D <= arrPt[arrEl[i][3]].Z && t <= 1.0D)
                 Add(new LocalVector(arrEl[i], arrPt, t), ref v, arrEl[i]);
         }
-        //ConsiderBoundaryConditions(ref v, arrPt, arrBd, t);
     }
 
     private static void Add(LocalVector lv, ref GlobalVector gv, List<int> elems)
@@ -464,24 +450,24 @@ public static class Generator
             }
         }
 
-        foreach (var border in arrBd)
-        {
-            for (int i = 2; i < 4; i++)
-            {
-                for (int j = 0; j < gm.Size; j++)
-                {
-                    if (border[i] == j)
-                        continue;
-                    else
-                    {
-                        var k = gm[j, border[i]];
-                        var f = -1.0D * k * gv[border[i]];
-                        gv[j] += f;
-                        gm[j, border[i]] = 0.0D;
-                    }
-                }
-            }
-        }
+        //foreach (var border in arrBd)
+        //{
+        //    for (int i = 2; i < 4; i++)
+        //    {
+        //        for (int j = 0; j < gm.Size; j++)
+        //        {
+        //            if (border[i] == j)
+        //                continue;
+        //            else
+        //            {
+        //                var k = gm[j, border[i]];
+        //                var f = -1.0D * k * gv[border[i]];
+        //                gv[j] += f;
+        //                gm[j, border[i]] = 0.0D;
+        //            }
+        //        }
+        //    }
+        //}
     }
     public static void ConsiderBoundaryConditions(ref GlobalVector v, ArrayOfPoints arrp, ArrayOfBorders arrBd, double t)
     {
@@ -526,80 +512,4 @@ public static class Generator
             }
     }
 
-
-    public static void ConsiderBoundaryConditions(ref GlobalMatrix m, ref GlobalVector v, ArrayOfPoints arrp, ArrayOfBorders arrBrd, double t)
-    {
-        foreach (var border in arrBrd)
-        {
-            switch (border[0])
-            {
-                // КУ - I-го рода
-                case 1:
-                for (int i = 2; i < 4; i++)
-                {
-                    for (int j = m._ig[border[i]]; j < m._ig[border[i] + 1]; j++)
-                        m._al[j] = 0.0D;
-                    m._diag[border[i]] = 1.0D;
-                    for (int j = 0; j < m._jg.Count; j++)
-                        if (m._jg[j] == border[i])
-                            m._au[j] = 0.0D;
-                }
-
-                switch (border[1])
-                {
-                    case 1:
-                    for (int i = 2; i < 4; i++)
-                        v[border[i]] = Function.U1_1(arrp[border[i]], t);
-                    break;
-                    
-                    case 2:
-                    for (int i = 2; i < 4; i++)
-                        v[border[i]] = Function.U1_2(arrp[border[i]], t);
-                    break;
-
-                    case 3:
-                    for (int i = 2; i < 4; i++)
-                        v[border[i]] = Function.U1_3(arrp[border[i]], t);
-                    break;
-                    
-                    case 4:
-                    for (int i = 2; i < 4; i++)
-                        v[border[i]] = Function.U1_4(arrp[border[i]], t);
-                    break;
-                    
-                    default:
-                    throw new Exception("No such bord");
-                }
-                break;
-                // КУ - II-го рода
-                case 2:
-                    for (int i = 2; i < 4; i++)
-                        v[border[i]] += 0.0D;
-                    break;
-                // КУ - III-го рода
-                case 3: throw new ArgumentException("Пока нет возможности учитывать КУ III-го рода");
-            }
-        }
-
-        /*
-        foreach (var border in arrBrd)
-        {
-            for (int i = 2; i < 4; i++)
-            {
-                for (int j = 0; j < m.Size; j++)
-                {
-                    if (border[i] == j)
-                        continue;
-                    else
-                    {
-                        var k = m[j, border[i]];
-                        var f = -1.0D * k * v[border[i]];
-                        v[j] += f;
-                        m[j, border[i]] = 0.0D;
-                    }
-                }
-            }
-        }
-        */
-    }
 }

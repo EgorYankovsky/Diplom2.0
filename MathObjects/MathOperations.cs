@@ -45,6 +45,8 @@ public static class MathOperations
 
     public static GlobalVector Multiply(GlobalMatrix _gm, GlobalVector _gv)
     {
+        //Console.WriteLine(_gm.Size);
+        //Console.WriteLine(_gv.Size);
         if (_gm.Size != _gv.Size)
             throw new Exception("Невозможно перемножить матрицу на вектор.");
         GlobalVector ans = new(_gv.Size);

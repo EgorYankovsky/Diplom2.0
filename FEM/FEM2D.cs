@@ -29,6 +29,7 @@ public class FEM2D : FEM
     public void Solve()
     {
         if (solver is null) throw new ArgumentNullException("solver is null !");
+        if (Time is null) throw new ArgumentNullException("Time is null!");
 
         Debug.WriteLine($"\nTime layer: before BC");
         Thread.Sleep(1500);
@@ -38,14 +39,15 @@ public class FEM2D : FEM
         Generator.FillMatrix(ref Matrix, pointsArr, elemsArr, TypeOfMatrixM.Mrr);
 
         Vector = new GlobalVector(pointsArr.Length);
-        Generator.FillVector(ref Vector, pointsArr, elemsArr, 0.0);
+        Generator.FillVector(ref Vector, pointsArr, elemsArr, Time[0]);
 
-        Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, pointsArr, bordersArr, 0.0);
+        Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, pointsArr, bordersArr, Time[0]);
         (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
 
-            case EquationType.Parabolic:
-                if (timeMesh is null) throw new ArgumentNullException("timeMesh is null!");
-
+        if (Time.Count > 1)
+        {
+            (Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
+            if (Time.Count > 2)
             for (int i = 2; i < Time.Count; i++)
             {
                 Debug.WriteLine($"\nTime layer: {Time[i]}");
@@ -55,9 +57,9 @@ public class FEM2D : FEM
                 double deltT0 = Time[i] - Time[i - 1];
                 double deltT1 = Time[i - 1] - Time[i - 2];
 
-                        double tau0 = (deltT + deltT0) / (deltT * deltT0);
-                        double tau1 = deltT / (deltT1 * deltT0);
-                        double tau2 = deltT0 / (deltT * deltT1);
+                double tau0 = (deltT + deltT0) / (deltT * deltT0);
+                double tau1 = deltT / (deltT1 * deltT0);
+                double tau2 = deltT0 / (deltT * deltT1);
 
                 var matrix1 = new GlobalMatrix(pointsArr.Length);
                 Generator.BuildPortait(ref matrix1, pointsArr.Length, elemsArr);
@@ -116,12 +118,10 @@ public class FEM2D : FEM
             for (int j = 0; j < A_phi[0].Size; j++)
                 sw.WriteLine($"{A_phi[0][j]:E8}");
             sw.Close();
-#if RELEASE
             using var sw1 = new StreamWriter($"{_path}\\E_phi\\Answer\\Answer.dat");
             for (int j = 0; j < E_phi[0].Size; j++)
                 sw1.WriteLine($"{E_phi[0][j]:E8}");
             sw1.Close();
-#endif
         }
     }
 
@@ -145,9 +145,9 @@ public class FEM2D : FEM
                 double sumD = 0.0D;
 
                 List<double> TheorAnswer = [];
-                foreach (var Z in Mesh2D.nodesZ)
-                    foreach (var R in Mesh2D.nodesR)
-                        TheorAnswer.Add(Function.U(R, Z, timeMesh[i]));
+                foreach (var Z in mesh2Dim.nodesZ)
+                    foreach (var R in mesh2Dim.nodesR)
+                        TheorAnswer.Add(Function.U(R, Z, Time[i]));
 
                 for (int j = 0; j < A_phi[i].Size; j++)
                 {
@@ -175,16 +175,6 @@ public class FEM2D : FEM
                 sw_d.WriteLine($"Максимальная невязка: {maxDisc:E15}");
                 sw_d.WriteLine($"С: {avgDisc:E7}");
                 sw_d.WriteLine($"М: {maxDisc:E7}");
-                if (!double.IsNaN(avgDisc))
-                    timeDisc.Add(avgDisc);
-
-                if (timeMesh[i] == timeMesh.Last())
-                {
-                    double sum = 0.0D;
-                    foreach (var d in timeDisc)
-                        sum += d;
-                    sw_d.WriteLine($"\n\n\nСредняя погрешность по времени за {timeMesh.Length} слоя: {sum / timeDisc.Count:E15}\n{sum / timeDisc.Count:E8}");
-                }
                 sw_d.Close();
             }
         }
@@ -200,8 +190,8 @@ public class FEM2D : FEM
                 double sumD = 0.0D;
 
                 List<double> TheorAnswer = [];
-                foreach (var Z in Mesh2D.nodesZ)
-                    foreach (var R in Mesh2D.nodesR)
+                foreach (var Z in mesh2Dim.nodesZ)
+                    foreach (var R in mesh2Dim.nodesR)
                         TheorAnswer.Add(Function.U(R, Z, 0.0D));
 
                 for (int j = 0; j < A_phi[0].Size; j++)
@@ -246,7 +236,7 @@ public class FEM2D : FEM
                 double ti = Time[i];
                 double ti_1 = Time[i - 1];
                 double ti_2 = Time[i - 2];
-                E_phi[i] = 1.0D / (ti_1 - ti_2) * A_phi[i - 2] - (ti - ti_2) / ((ti_1 - ti_2) * (ti - ti_1)) * A_phi[i - 1] + 
+                E_phi[i] = -1.0D / (ti_1 - ti_2) * A_phi[i - 2] + (ti - ti_2) / ((ti_1 - ti_2) * (ti - ti_1)) * A_phi[i - 1] - 
                 (2 * ti - ti_1 - ti_2) / ((ti - ti_2) * (ti - ti_1)) * A_phi[i];
             }
         }

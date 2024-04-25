@@ -65,18 +65,6 @@ public class GlobalMatrix : Matrix
                 case > 0: SetValueAL(i, j, value); break;
             }
         }
-        set
-        {
-            if (i > _diag.Length || j > _diag.Length)
-                throw new Exception("Index ran out of matrix.");
-
-            switch (i - j)
-            {
-                case 0: _diag[i] = value; break;
-                case < 0: SetValueAU(j, i, value); break;
-                case > 0: SetValueAL(i, j, value); break;
-            }
-        }
     }
 
     private void SetValueAL(int i, int j, double val)
@@ -108,20 +96,6 @@ public class GlobalMatrix : Matrix
                 return _au[_ig[i] + ii];
         return 0.0D;  
     }   
-
-    private void SetValueAL(int i, int j, double value)
-    {
-        for (int ii = 0; ii < _ig[i + 1] - _ig[i]; ii++)
-            if (_jg[_ig[i] + ii] == j)
-                _al[_ig[i] + ii] = value;
-    }
-
-    private void SetValueAU(int i, int j, double value)
-    {
-        for (int ii = 0; ii < _ig[i + 1] - _ig[i]; ii++)
-            if (_jg[_ig[i] + ii] == j)
-                _au[_ig[i] + ii] = value;
-    }
 
     public GlobalMatrix Transpose() => new(_ig, _jg, _diag, _au, _al);
 
