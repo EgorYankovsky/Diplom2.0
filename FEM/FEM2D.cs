@@ -243,17 +243,22 @@ public class FEM2D : FEM
 
     }
 
-    internal List<int> GetE_phi(double r, double z, double t)
+    internal List<int> GetElem(double r, double z)
     {
-        int i;
-        for (i = 0; i < mesh2Dim.nodesR.Count - 1; i++)
+        int a = 0;
+        if (r == 0) 
+            a = 0;
+        int i = 0;
+        for (; i < mesh2Dim.nodesR.Count - 1 && r >= 0.001; i++)
             if (mesh2Dim.nodesR[i] <= r && r <= mesh2Dim.nodesR[i + 1])
                 break;
-        int j;
-        for (j = 0; j < mesh2Dim.nodesZ.Count - 1; j++)
+        int j = 0;
+        for (; j < mesh2Dim.nodesZ.Count - 1; j++)
             if (mesh2Dim.nodesZ[j] <= z && z <= mesh2Dim.nodesZ[j + 1])
                 break;
 
+        if (j * (mesh2Dim.nodesR.Count - 1) + i == 22500)
+            return [];
         return elemsArr[j * (mesh2Dim.nodesR.Count - 1) + i];
     }
 

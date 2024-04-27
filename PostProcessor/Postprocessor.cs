@@ -16,6 +16,9 @@ public static class Postprocessor
 
     private static readonly string _source = "..\\..\\..\\..\\Drawer\\source.py";
 
+    private static readonly string _sourceAnimation = "..\\..\\..\\..\\Drawer\\animation_creator.py";
+
+
     private static readonly string _fileName = "python";
 
     private static Process? process;
@@ -27,13 +30,35 @@ public static class Postprocessor
         process.StartInfo.FileName = _fileName;
         process.Start();
         process.WaitForExit();
-        return process.ExitCode;
+        int animStatus = DrawA_phi_gif();
+        return process.ExitCode & animStatus;
     }
 
     public static int DrawE_phi()
     {
         process = new();
         process.StartInfo.Arguments = $"{_source} {_arg1} {_arg4} {_arg5}";
+        process.StartInfo.FileName = _fileName;
+        process.Start();
+        process.WaitForExit();
+        int animStatus = DrawE_phi_gif();
+        return process.ExitCode & animStatus;
+    }
+
+    private static int DrawA_phi_gif()
+    {
+        process = new();
+        process.StartInfo.Arguments = $"{_sourceAnimation} {_arg1} {_arg2} {_arg3}";
+        process.StartInfo.FileName = _fileName;
+        process.Start();
+        process.WaitForExit();
+        return process.ExitCode;
+    }
+
+    private static int DrawE_phi_gif()
+    {
+        process = new();
+        process.StartInfo.Arguments = $"{_sourceAnimation} {_arg1} {_arg4} {_arg5}";
         process.StartInfo.FileName = _fileName;
         process.Start();
         process.WaitForExit();

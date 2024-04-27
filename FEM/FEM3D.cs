@@ -25,24 +25,26 @@ public class FEM3D : FEM
 
     public List<GlobalVector> Ez_3D;
 
-    public ArrayOfRibs ribsArr;
+    public ArrayOfRibs? ribsArr;
 
     private Mesh3Dim mesh3Dim;
 
     // Maybe private?
-    public List<Layer> Layers;
+    public List<Layer>? Layers;
 
     public FEM3D(Mesh3Dim mesh, TimeMesh timeMesh) : base(timeMesh, 3)
     {
         mesh3Dim = mesh;
         equationType = timeMesh[0] == timeMesh[^1] ? EquationType.Elliptic : EquationType.Parabolic;
-        Ax_3D = new(Time.Count);
-        Ay_3D = new(Time.Count);
-        Az_3D = new(Time.Count);
+        Ax_3D = [];
+        Ay_3D = [];
+        Az_3D = [];
         
-        Ex_3D = new(Time.Count);
-        Ey_3D = new(Time.Count);
-        Ez_3D = new(Time.Count);
+        Ex_3D = [];
+        Ey_3D = [];
+        Ez_3D = [];
+
+        ribsArr = mesh.arrayOfRibs;
     }
 
     public FEM3D(FEM2D fem2d) : base(fem2d.Time, 3)
@@ -66,7 +68,7 @@ public class FEM3D : FEM
     // ! Тестовая вещь.
     public void ConstructMesh()
     {
-        if (mesh == null) throw new ArgumentNullException("Mesh is null");
+        //if (mesh == null) throw new ArgumentNullException("Mesh is null");
         mesh3Dim.nodesX = [0.0D, 1.0D, 2.0D];
         mesh3Dim.nodesY = [0.0D, 1.0D, 2.0D];
         mesh3Dim.nodesZ = [0.0D, 1.0D, 2.0D, 3.0D];
@@ -82,121 +84,85 @@ public class FEM3D : FEM
 
     public void GenerateAxyz(FEM2D fem2d)
     {
-        //if (timeMesh is null) throw new ArgumentNullException();
-        if (mesh is null) throw new ArgumentNullException();
-        //if (mesh.nodesX is null) throw new ArgumentNullException();
-        //if (mesh.nodesY is null) throw new ArgumentNullException();
-        //if (mesh.nodesZ is null) throw new ArgumentNullException();
         if (fem2d.pointsArr is null) throw new ArgumentNullException();
-
-        int i = 0;
+        if (ribsArr is null) throw new ArgumentNullException();
         
-        //foreach (var t in )
-        //{
-        //    int j = 0;
-        //    Ax_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
-        //    Ay_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
-        //    Az_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
-        //    /*
-        //    foreach (var Z in mesh.nodesZ)
-        //    {
-        //        foreach (var Y in mesh.nodesY)
-        //        {
-        //            foreach (var X in mesh.nodesX)
-        //            {
-        //                var elem = fem2d.GetE_phi(Math.Sqrt(X * X + Y * Y), Z, t);
-//
-        //                Ax_3D[i][j] = -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * 
-        //                    BasisFunctions2D.GetValue(
-        //                        fem2d.A_phi[i][elem[0]], fem2d.A_phi[i][elem[1]],
-        //                        fem2d.A_phi[i][elem[2]], fem2d.A_phi[i][elem[3]],
-        //                        fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
-        //                        fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
-        //                        Math.Sqrt(X * X + Y * Y), Z);
-        //                
-        //                Ay_3D[i][j] = X / Math.Sqrt(X * X + Y * Y) * 
-        //                    BasisFunctions2D.GetValue(
-        //                        fem2d.A_phi[i][elem[0]], fem2d.A_phi[i][elem[1]],
-        //                        fem2d.A_phi[i][elem[2]], fem2d.A_phi[i][elem[3]],
-        //                        fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
-        //                        fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
-        //                        Math.Sqrt(X * X + Y * Y), Z);
-        //                
-        //                j++;
-        //            }
-        //        }
-        //    }
-        //    i++;
-        //    */
-        //}
+        for (int i = 0; i < Time.Count; i++)
+        {
+            Ax_3D.Add(new GlobalVector(ribsArr.Count));
+            Ay_3D.Add(new GlobalVector(ribsArr.Count));
+            Az_3D.Add(new GlobalVector(ribsArr.Count));
+
+            for (int j = 0; j < ribsArr.Count; j++)
+            {
+                var X = 0.5D * (ribsArr[j].a.X + ribsArr[j].b.X);
+                var Y = 0.5D * (ribsArr[j].a.Y + ribsArr[j].b.Y);
+                var Z = 0.5D * (ribsArr[j].a.Z + ribsArr[j].b.Z);
+            
+                var elem = fem2d.GetElem(Math.Sqrt(X * X + Y * Y), Z);
+            
+                Ax_3D[i][j] = -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * 
+                            BasisFunctions2D.GetValue(
+                                fem2d.A_phi[i][elem[0]], fem2d.A_phi[i][elem[1]],
+                                fem2d.A_phi[i][elem[2]], fem2d.A_phi[i][elem[3]],
+                                fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
+                                fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
+                                Math.Sqrt(X * X + Y * Y), Z);
+                        
+                Ay_3D[i][j] = X / Math.Sqrt(X * X + Y * Y) * 
+                            BasisFunctions2D.GetValue(
+                                fem2d.A_phi[i][elem[0]], fem2d.A_phi[i][elem[1]],
+                                fem2d.A_phi[i][elem[2]], fem2d.A_phi[i][elem[3]],
+                                fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
+                                fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
+                                Math.Sqrt(X * X + Y * Y), Z);               
+            }
+        }
     }
 
     private void GenerateExyz(FEM2D fem2d)
     {
-        //if (timeMesh is null) throw new ArgumentNullException();
-        if (mesh is null) throw new ArgumentNullException();
-        //if (mesh.nodesX is null) throw new ArgumentNullException();
-        //if (mesh.nodesY is null) throw new ArgumentNullException();
-        //if (mesh.nodesZ is null) throw new ArgumentNullException();
         if (fem2d.pointsArr is null) throw new ArgumentNullException();
-
-        int i = 0;
+        if (ribsArr is null) throw new ArgumentNullException();
         
-        //foreach (var t in timeMesh)
-        //{
-        //    if (t == timeMesh.Last())
-        //        continue;
-        //    int j = 0;
-        //    Ex_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
-        //    Ey_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
-        //    Ez_3D.Add(new GlobalVector(mesh.NodesAmountTotal));
-        //    /*
-        //    foreach (var Z in mesh.nodesZ)
-        //    {
-        //        foreach (var Y in mesh.nodesY)
-        //        {
-        //            foreach (var X in mesh.nodesX)
-        //            {
-        //                var elem = fem2d.GetE_phi(Math.Sqrt(X * X + Y * Y), Z, t);
-//
-        //                Ex_3D[i][j] = -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * 
-        //                    BasisFunctions2D.GetValue(
-        //                        fem2d.E_phi2D[i][elem[0]], fem2d.E_phi2D[i][elem[1]],
-        //                        fem2d.E_phi2D[i][elem[2]], fem2d.E_phi2D[i][elem[3]],
-        //                        fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
-        //                        fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
-        //                        Math.Sqrt(X * X + Y * Y), Z);
-        //                
-        //                Ey_3D[i][j] = X / Math.Sqrt(X * X + Y * Y) * 
-        //                    BasisFunctions2D.GetValue(
-        //                        fem2d.E_phi2D[i][elem[0]], fem2d.E_phi2D[i][elem[1]],
-        //                        fem2d.E_phi2D[i][elem[2]], fem2d.E_phi2D[i][elem[3]],
-        //                        fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
-        //                        fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
-        //                        Math.Sqrt(X * X + Y * Y), Z);
-        //                
-        //                j++;
-        //            }
-        //        }
-        //    }
-        //    i++;
-        //    */
-        //}
-    }
+        for (int i = 0; i < Time.Count; i++)
+        {
+            Ex_3D.Add(new GlobalVector(ribsArr.Count));
+            Ey_3D.Add(new GlobalVector(ribsArr.Count));
+            Ez_3D.Add(new GlobalVector(ribsArr.Count));
 
-    public void GenerateArrays()
-    {
-        if (mesh is null) throw new ArgumentNullException("mesh is null!");
-        //pointsArr = MeshGenerator.GenerateListOfPoints(mesh);
-        //ribsArr = MeshGenerator.GenerateListOfRibs(mesh, pointsArr);
-        //elemsArr = MeshGenerator.GenerateListOfElems(mesh);
-        //MeshGenerator.SelectRibs(ref ribsArr, ref elemsArr);
+            for (int j = 0; j < ribsArr.Count; j++)
+            {
+                var X = 0.5D * (ribsArr[j].a.X + ribsArr[j].b.X);
+                var Y = 0.5D * (ribsArr[j].a.Y + ribsArr[j].b.Y);
+                var Z = 0.5D * (ribsArr[j].a.Z + ribsArr[j].b.Z);
+            
+                var elem = fem2d.GetElem(Math.Sqrt(X * X + Y * Y), Z);
+            
+                Ex_3D[i][j] = -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * 
+                            BasisFunctions2D.GetValue(
+                                fem2d.E_phi[i][elem[0]], fem2d.E_phi[i][elem[1]],
+                                fem2d.E_phi[i][elem[2]], fem2d.E_phi[i][elem[3]],
+                                fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
+                                fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
+                                Math.Sqrt(X * X + Y * Y), Z);
+                        
+                Ey_3D[i][j] = X / Math.Sqrt(X * X + Y * Y) * 
+                            BasisFunctions2D.GetValue(
+                                fem2d.E_phi[i][elem[0]], fem2d.E_phi[i][elem[1]],
+                                fem2d.E_phi[i][elem[2]], fem2d.E_phi[i][elem[3]],
+                                fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
+                                fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
+                                Math.Sqrt(X * X + Y * Y), Z);
+                        
+            }
+        }
     }
 
     public void AddField(Layer layer)
     {
         ArgumentNullException.ThrowIfNull(layer);
-        Layers.Add(layer);
+        Layers?.Add(layer);
     }
 
     public void CommitFields()

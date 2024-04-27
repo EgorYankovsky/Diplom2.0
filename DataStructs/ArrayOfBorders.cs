@@ -48,4 +48,15 @@ public class ArrayOfBorders
             Arr.Add([.. data[i + 1].Split(" ").Select(int.Parse)]);
         SortList();
     }
+
+    public ArrayOfBorders(string path, int f)
+    {
+        Arr = [];
+        var data = File.ReadAllText(path).Split("\n");
+        Length = int.Parse(data[0]);
+        for (int i = 0; i < Length; i++)
+            Arr.Add([.. data[i + 1].Split(" ").Select(int.Parse)]);
+    }
+
+
 }

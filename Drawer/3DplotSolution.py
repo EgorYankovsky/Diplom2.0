@@ -1,12 +1,16 @@
+# Отрисовывает решение трехмерного решения скалярной задачи.
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 # Define dimensions
 Nx, Ny, Nz = 100, 300, 500
-X, Y, Z = np.meshgrid(np.arange(Nx), np.arange(Ny), -np.arange(Nz))
+X, Y, Z = np.meshgrid(np.arange(start=-2.5, stop=2.5, step=0.5),
+                      np.arange(start=-2.5, stop=2.5, step=0.5),
+                      np.arange(start=-2.5, stop=2.5, step=0.5))
 
 # Create fake data
-data = (((X+100)**2 + (Y-20)**2 + 2*Z)/1000+1)
+data = X * X + Y * Y + Z * Z
 
 kw = {
     'vmin': data.min(),
@@ -15,22 +19,36 @@ kw = {
 }
 
 # Create a figure with 3D ax
-fig = plt.figure(figsize=(5, 4))
+fig = plt.figure(figsize=(19.80, 10.80))
 ax = fig.add_subplot(111, projection='3d')
 
 # Plot contour surfaces
 _ = ax.contourf(
     X[:, :, 0], Y[:, :, 0], data[:, :, 0],
-    zdir='z', offset=0, **kw
+    zdir='z', offset=Z.min(), **kw
 )
 _ = ax.contourf(
     X[0, :, :], data[0, :, :], Z[0, :, :],
-    zdir='y', offset=0, **kw
+    zdir='y', offset=Y.min(), **kw
 )
 C = ax.contourf(
     data[:, -1, :], Y[:, -1, :], Z[:, -1, :],
     zdir='x', offset=X.max(), **kw
 )
+
+_ = ax.contourf(
+    X[:, :, -1], Y[:, :, -1], data[:, :, -1],
+    zdir='z', offset=Z.max(), **kw
+)
+_ = ax.contourf(
+    X[-1, :, :], data[-1, :, :], Z[-1, :, :],
+    zdir='y', offset=Y.max(), **kw
+)
+C = ax.contourf(
+    data[:, 0, :], Y[:, 0, :], Z[:, 0, :],
+    zdir='x', offset=X.min(), **kw
+)
+
 # --
 
 
@@ -48,10 +66,9 @@ ax.plot([xmax, xmax], [ymin, ymin], [zmin, zmax], **edges_kw)
 
 # Set labels and zticks
 ax.set(
-    xlabel='X [km]',
-    ylabel='Y [km]',
+    xlabel='X [m]',
+    ylabel='Y [m]',
     zlabel='Z [m]',
-    zticks=[0, -150, -300, -450],
 )
 
 # Set zoom and angle view

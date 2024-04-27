@@ -12,6 +12,10 @@ public static class MeshGenerator
 
     private static readonly string _borders2DPath = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Borders.poly");
 
+    private static readonly string _elems3DPath = Path.GetFullPath("../../../../Data/Subtotals/3_dim/Elems.poly");
+
+    private static readonly string _borders3DPath = Path.GetFullPath("../../../../Data/Subtotals/3_dim/Borders.poly");
+
     public static TimeMesh GenerateTimeMesh(double t0, double t1, int tn, double tk)
     {
         double[] arr = new double[tn + 1];
@@ -30,7 +34,7 @@ public static class MeshGenerator
     }
 
 #region 2Dim
-    public static void GenerateMesh(ref Mesh2Dim mesh)
+    public static void GenerateMesh(Mesh2Dim mesh)
     {
         int currentPosition = 0;
         string[] kek = mesh.infoAboutR.Split();
@@ -78,14 +82,14 @@ public static class MeshGenerator
 
     public static void ConstructMesh(ref Mesh2Dim mesh)
     {
-        GenerateMesh(ref mesh);
-        RemakeBorders(ref mesh);
-        OutputPoints(ref mesh);
-        OutputListOfElems(ref mesh);
-        GenerateListOfBorders(ref mesh);
+        GenerateMesh(mesh);
+        RemakeBorders(mesh);
+        OutputPoints(mesh);
+        OutputListOfElems(mesh);
+        OutputListOfBorders(mesh);
     }
 
-    public static void RemakeBorders(ref Mesh2Dim mesh)
+    public static void RemakeBorders(Mesh2Dim mesh)
     {
         for (int i = 0; i < mesh.borders.Count; i++)
         {
@@ -96,7 +100,7 @@ public static class MeshGenerator
         }
     }
 
-    public static void OutputPoints(ref Mesh2Dim mesh)
+    public static void OutputPoints(Mesh2Dim mesh)
     {
         using var sw = new StreamWriter(_points2DPath);
         sw.WriteLine(mesh.NodesAmountTotal);
@@ -140,7 +144,7 @@ public static class MeshGenerator
         return pnt;
     }
 
-    public static void OutputListOfElems(ref Mesh2Dim mesh)
+    public static void OutputListOfElems(Mesh2Dim mesh)
     {
         using var sw = new StreamWriter(_elems2DPath);
         int nr = mesh.NodesAmountR;
@@ -163,7 +167,7 @@ public static class MeshGenerator
         return $"{mesh.Elems[index].mu} {mesh.Elems[index].sigma}";
     }
 
-    public static void GenerateListOfBorders(ref Mesh2Dim mesh)
+    public static void OutputListOfBorders(Mesh2Dim mesh)
     {
         using var sw = new StreamWriter(_borders2DPath);
 
@@ -199,9 +203,10 @@ public static class MeshGenerator
     {
         GenerateMesh(ref mesh);
         RemakeBorders(ref mesh);
-        OutputPoints(ref mesh);
-        OutputListOfElems(mesh);
-        GenerateListOfBorders(mesh);
+        var arr = OutputPoints(ref mesh); // Долговато.
+        GenerateListOfRibs(ref mesh, arr); // Долговато.
+        OutputListOfElems(ref mesh); // Долговато.
+        OutputListOfBorders(mesh);
     }
 
     public static void GenerateMesh(ref Mesh3Dim mesh)
@@ -254,19 +259,9 @@ public static class MeshGenerator
         kek = mesh.infoAboutZ.Split();
         for (int i = 0; i < mesh.NodesZWithoutFragmentation.Length - 1; i++)
         {
-            double h = mesh.nodesZ[1 + currentPosition] - mesh.nodesZ[currentPosition];
-            double denominator = 0.0;
-
             int negr = int.Parse(kek[2 * i]);
-            for (int j = 0; j < negr; j++)
-                denominator += Math.Pow(double.Parse(kek[2 * i + 1]), j);
-            double x0 = h / denominator;
-
             for(int j = 0; j < negr - 1; j++)
-            {
-                mesh.nodesZ.Insert(currentPosition + 1, mesh.nodesZ[currentPosition] + x0 * Math.Pow(double.Parse(kek[2 * i + 1]), j));
                 currentPosition++;
-            }
             currentPosition++;
             mesh.NodesZRefs.Add(currentPosition);
         }
@@ -284,9 +279,10 @@ public static class MeshGenerator
         }
     }
 
-    public static void OutputPoints(ref Mesh3Dim mesh)
+    public static ArrayOfPoints OutputPoints(ref Mesh3Dim mesh)
     {
         using var sw = new StreamWriter(_points3DPath);
+        var arrPnt = new ArrayOfPoints(mesh.NodesAmountTotal);
         sw.WriteLine(mesh.NodesAmountTotal);
         int i = 0;
         foreach (var Z in mesh.nodesZ)
@@ -294,8 +290,11 @@ public static class MeshGenerator
                 foreach (var X in mesh.nodesX)
                 {
                     sw.WriteLine($"{SetPointType3D(new Point(X, Y, Z), mesh)}");
+                    arrPnt.Append(new Point(X, Y, Z));
                     i++;
                 }
+        sw.Close();
+        return arrPnt;
     }
     
     // ! Топорный метод.
@@ -318,32 +317,51 @@ public static class MeshGenerator
         return pnt;
     }
     
-    public static ArrayOfElems OutputListOfElems(Mesh3Dim mesh)
+    public static void OutputListOfElems(ref Mesh3Dim mesh)
     {
-        var arr = new ArrayOfElems(mesh.ElemsAmount);
+        if (mesh.arrayOfRibs is null) throw new ArgumentNullException("array of ribs didn't generated");
+        //mesh.Elems = new List<Elem>(mesh.ElemsAmount);
         
+        using var sw = new StreamWriter(_elems3DPath);
+
         int rx = mesh.NodesAmountX - 1;
         int ry = mesh.NodesAmountY - 1;
         
         int nx = mesh.NodesAmountX;
         int ny = mesh.NodesAmountY;
+        int nz = mesh.NodesAmountZ;
 
         int rxy = rx * ny + ry * nx;
         int nxy = nx * ny;
-        int nz = mesh.NodesAmountZ;
 
+        sw.WriteLine((nx - 1) * (ny - 1) * (nz - 1));
         for (int k = 0; k < nz - 1; k++)
             for (int j = 0; j < ny - 1; j++)
                 for (int i = 0; i < nx - 1; i++)
                 {
                     int curr = i + j * (nx + rx) + k * (rxy + nxy);
-                    arr.Add([               curr,               curr + rx,             curr + rx + 1,               curr + rx + nx,
-                             curr + rxy - j * rx, curr + rxy + 1 - j * rx,  curr + rxy + nx - j * rx, curr + rxy + nx + 1 - j * rx,
-                                curr + rxy + nxy,   curr + rxy + nxy + rx, curr + rxy + nxy + rx + 1,   curr + rxy + nxy + rx + nx]);
-                    arr.mui.Add(1.0D);
-                    arr.sigmai.Add(1.0D);
+                    double mui = 0.0D;
+                    double sigmai = 0.0D;
+                    (mui, sigmai) = SelectMuAndSigma(mesh, mesh.arrayOfRibs[curr + rxy - j * rx].a.Z, mesh.arrayOfRibs[curr + rxy - j * rx].b.Z);
+                    //mesh.Elems.Add(new Elem(0, curr, curr + rx, curr + rx + 1, curr + rx + nx, 
+                    //                        curr + rxy - j * rx, curr + rxy + 1 - j * rx, curr + rxy + nx - j * rx, curr + rxy + nx + 1 - j * rx,
+                    //                        curr + rxy + nxy,   curr + rxy + nxy + rx, curr + rxy + nxy + rx + 1,   curr + rxy + nxy + rx + nx,
+                    //                        mui, sigmai));
+                    sw.WriteLine($"{0} {curr} {curr + rx} {curr + rx + 1} {curr + rx + nx}" + 
+                                 $" {curr + rxy - j * rx} {curr + rxy + 1 - j * rx} {curr + rxy + nx - j * rx} {curr + rxy + nx + 1 - j * rx}" + 
+                                 $" {curr + rxy + nxy} {curr + rxy + nxy + rx} {curr + rxy + nxy + rx + 1} {curr + rxy + nxy + rx + nx} {mui} {sigmai}");
                 }
-        return arr;
+        sw.Close();
+    }
+
+    private static (double, double) SelectMuAndSigma(Mesh3Dim mesh, double z0, double z1)
+    {
+        int index = -1;
+        for (int i = 0; i < mesh.NodesZRefs.Count - 1; i++)
+            if (mesh.nodesZ[mesh.NodesZRefs[i]] <= z0 && z1 <= mesh.nodesZ[mesh.NodesZRefs[i + 1]])
+                index = i;
+        if (index == -1) throw new IndexOutOfRangeException("Failure during selecting mu and sigma");
+        return (mesh.Elems[index].mu, mesh.Elems[index].sigma);
     }
 
     public static void SelectRibs(ref ArrayOfRibs arrRibs, ref ArrayOfElems arrEl)
@@ -375,9 +393,9 @@ public static class MeshGenerator
         }
     }
     
-    public static ArrayOfBorders GenerateListOfBorders(Mesh3Dim mesh)
+    public static void OutputListOfBorders(Mesh3Dim mesh)
     {
-        var arr = new ArrayOfBorders(null);
+        using var sw = new StreamWriter(_borders3DPath);
 
         int nx = mesh.NodesAmountX;
         int ny = mesh.NodesAmountY;
@@ -386,61 +404,43 @@ public static class MeshGenerator
         int nxny = nx * ny;
         int rxy = (nx - 1) * ny + (ny - 1) * nx;
         
+        sw.WriteLine(2 * ((nx - 1) * (ny - 1) + (nx - 1) * (nz - 1) + (ny - 1) * (nz - 1)));
+        
         // XY0
         for (int i = 0; i < ny - 1; i++)
             for (int j = 0; j < nx - 1; j++)
-                arr.Add([1, 1, i * (2 * nx - 1) + j, 
-                               i * (2 * nx - 1) + j + nx - 1,
-                               i * (2 * nx - 1) + j + nx,
-                               i * (2 * nx - 1) + j + nx + nx - 1]);
+                sw.WriteLine($"{1} {1} {i * (2 * nx - 1) + j} {i * (2 * nx - 1) + j + nx - 1} {i * (2 * nx - 1) + j + nx} {i * (2 * nx - 1) + j + nx + nx - 1}");
         
         
         // X0Z
         for (int i = 0; i < nz - 1; i++)
             for (int j = 0; j < nx - 1; j++)
-                arr.Add([1, 2, i * (rxy + nxny) + j, 
-                               i * (rxy + nxny) + j + rxy,
-                               i * (rxy + nxny) + j + rxy + 1,
-                               i * (rxy + nxny) + j + rxy + nxny]);
+                sw.WriteLine($"{1} {2} {i * (rxy + nxny) + j} {i * (rxy + nxny) + j + rxy} {i * (rxy + nxny) + j + rxy + 1} {i * (rxy + nxny) + j + rxy + nxny}");
         
         
         // 0YZ
         for (int i = 0; i < nz - 1; i++)
             for (int j = 0; j < ny - 1; j++)
-                arr.Add([1, 3, nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1), 
-                               rxy + i * (rxy + nxny) + j * nx,
-                               rxy + nx + i * (rxy + nxny) + j * nx,
-                               rxy + nxny + nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1)]);
+                sw.WriteLine($"{1} {3} {nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1)} {rxy + i * (rxy + nxny) + j * nx} {rxy + nx + i * (rxy + nxny) + j * nx} {rxy + nxny + nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1)}");
+
         
         // XY1
         for (int i = 0; i < ny - 1; i++)
             for (int j = 0; j < nx - 1; j++)
-                arr.Add([1, 4, (nz - 1) * (rxy + nxny) + j + i * (2 * nx - 1),
-                               (nz - 1) * (rxy + nxny) + nx - 1 + j + i * (2 * nx - 1),
-                               (nz - 1) * (rxy + nxny) + nx + j + i * (2 * nx - 1),
-                               (nz - 1) * (rxy + nxny) + nx + nx - 1 + j + i * (2 * nx - 1)]);
+                sw.WriteLine($"{1} {4} {(nz - 1) * (rxy + nxny) + j + i * (2 * nx - 1)} {(nz - 1) * (rxy + nxny) + nx - 1 + j + i * (2 * nx - 1)} {(nz - 1) * (rxy + nxny) + nx + j + i * (2 * nx - 1)} {(nz - 1) * (rxy + nxny) + nx + nx - 1 + j + i * (2 * nx - 1)}");
         
         // X1Z
         for (int i = 0; i < nz - 1; i++)
             for (int j = 0; j < nx - 1; j++)
-                arr.Add([1, 5, (ny - 1) * nx + (ny - 1) * (nx - 1) + j + i * (rxy + nxny),
-                               (ny - 1) * nx + (ny - 1) * (nx - 1) + nxny - 1 + j + i * (rxy + nxny),
-                               (ny - 1) * nx + (ny - 1) * (nx - 1) + nxny + j + i * (rxy + nxny),
-                               (ny - 1) * nx + (ny - 1) * (nx - 1) + nxny + j + rxy + i * (rxy + nxny)]);
+                sw.WriteLine($"{1} {5} {(ny - 1) * nx + (ny - 1) * (nx - 1) + j + i * (rxy + nxny)} {(ny - 1) * nx + (ny - 1) * (nx - 1) + nxny - 1 + j + i * (rxy + nxny)} {(ny - 1) * nx + (ny - 1) * (nx - 1) + nxny + j + i * (rxy + nxny)} {(ny - 1) * nx + (ny - 1) * (nx - 1) + nxny + j + rxy + i * (rxy + nxny)}");
 
         // 1YZ
         for (int i = 0; i < nz - 1; i++)
             for (int j = 0; j < ny - 1; j++)
-                arr.Add([1, 6, nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1) + nx - 1, 
-                               rxy + i * (rxy + nxny) + j * nx + nx - 1,
-                               rxy + nx + i * (rxy + nxny) + j * nx + nx - 1,
-                               rxy + nxny + nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1) + nx - 1]);
-        
-
-        return arr;
+                sw.WriteLine($"{1} {6} {nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1) + nx - 1} {rxy + i * (rxy + nxny) + j * nx + nx - 1} {rxy + nx + i * (rxy + nxny) + j * nx + nx - 1} {rxy + nxny + nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1) + nx - 1}");
     }
     
-    public static ArrayOfRibs GenerateListOfRibs(Mesh3Dim mesh, ArrayOfPoints arrPt)
+    public static void GenerateListOfRibs(ref Mesh3Dim mesh, ArrayOfPoints arrPt)
     {
         ArgumentNullException.ThrowIfNull(arrPt);
 
@@ -449,7 +449,7 @@ public static class MeshGenerator
         int nz = mesh.NodesAmountZ;
         int nxny = nx * ny;
 
-        ArrayOfRibs arr = new(3 * nx * ny * nz - nx * ny - nx * nz - ny * nz);
+        mesh.arrayOfRibs = new(3 * nx * ny * nz - nx * ny - nx * nz - ny * nz);
 
         // Генерируем список всех ребер.
         for (int k = 0; k < nz; k++)
@@ -457,17 +457,16 @@ public static class MeshGenerator
             for (int j = 0; j < ny; j++)
             {
                 for (int i = 0; i < nx - 1; i++) 
-                    arr.Add(new Rib(arrPt[k * nxny + nx * j + i], arrPt[k * nxny + nx * j + i + 1]));
+                    mesh.arrayOfRibs.Add(new Rib(arrPt[k * nxny + nx * j + i], arrPt[k * nxny + nx * j + i + 1]));
                 if (j != ny - 1)
                     for (int i = 0; i < nx; i++)
-                        arr.Add(new Rib(arrPt[k * nxny + nx * j + i], arrPt[k * nxny + nx * (j + 1) + i]));
+                        mesh.arrayOfRibs.Add(new Rib(arrPt[k * nxny + nx * j + i], arrPt[k * nxny + nx * (j + 1) + i]));
             }
             if (k != nz - 1)
                 for (int j = 0; j < ny; j++)
                     for (int i = 0; i < nx; i++)
-                        arr.Add(new Rib(arrPt[k * nxny + nx * j + i], arrPt[(k + 1) * nxny + nx * j + i]));
+                        mesh.arrayOfRibs.Add(new Rib(arrPt[k * nxny + nx * j + i], arrPt[(k + 1) * nxny + nx * j + i]));
         }
-        return arr;
     }
 #endregion
 }

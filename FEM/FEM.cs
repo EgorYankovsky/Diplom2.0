@@ -39,15 +39,15 @@ public abstract class FEM(TimeMesh time, int dimesion)
 
     protected internal EquationType equationType;
 
-    private protected Mesh? mesh;
+    //private protected Mesh? mesh;
 
-    protected ISolver? solver;
+    public ISolver? solver;
 
     public ArrayOfElems elemsArr = dimesion == 2 ? new(_elemspath2D) : new(_elemspath3D); 
 
     public ArrayOfPoints pointsArr = dimesion == 2 ? new(_pointspath2D) : new(_pointspath3D);
 
-    public ArrayOfBorders bordersArr = dimesion == 2 ? new(_borderspath2D) : new(_borderspath3D);
+    public ArrayOfBorders bordersArr = dimesion == 2 ? new(_borderspath2D) : new(_borderspath3D, 3);
 
     public GlobalMatrix? Matrix;
 

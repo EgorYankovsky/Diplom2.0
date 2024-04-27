@@ -26,6 +26,15 @@ public record Elem
         return ans + $"{mu} " + $"{sigma} ";
     }
 
+    public Elem(int areaNum, int a, int b, int c, int d, int e, int f,
+                int g, int h, int i, int j, int k, int l, 
+                double mu, double sigma)
+    {
+        AreaNum = areaNum;
+        Arr = [a, b, c, d, e, f, g, h, i, j, k, l];
+        this.mu = mu; this.sigma = sigma;
+    }
+
     public Elem(int areaNum, int a, int b, int c, int d,
                 int e, int f, int g, int h, double mu,
                 double sigma)

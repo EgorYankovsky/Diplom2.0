@@ -1,5 +1,4 @@
-﻿
-using Project;
+﻿using Project;
 using System.Globalization;
 using Dumpify;
 using Solver;
@@ -28,6 +27,15 @@ string SubtotalsPath = Path.GetFullPath("../../../../Data/Subtotals/");
 string AnswerPath = Path.GetFullPath("../../../../Data/Output/");
 string PicturesPath = Path.GetFullPath("../../../../Drawer/Pictures/");
 
+//var A = TestClass.A;
+//var v = TestClass.b;
+//var Solver = new LU_LOS();
+//var x = Solver.Solve(A, v);
+//
+//for (int i = 0; i < x.Item1.Size; i++)
+//    Console.WriteLine(x.Item1[i]);
+//
+//return 0;
 bool isSolving2DimTask = Checker(AnswerPath);
 
 // Pre-processor. Clearing output folders.
@@ -105,16 +113,18 @@ ReadTimeMesh(TimePath);
 Mesh3Dim mesh3D = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
                       NodesZ, InfoAboutZ, Elems, Borders);
 
-var timeMesh = GenerateTimeMesh(Time.Item1, Time.Item2, tn, tk);
 Mesh2Dim mesh2D = new(NodesR, InfoAboutR, NodesZ, InfoAboutZ,
                       Elems, Math.Sqrt(Math.Pow(mesh3D.nodesX[^1], 2) + Math.Pow(mesh3D.nodesY[^1], 2)));
+
+var timeMesh = GenerateTimeMesh(Time.Item1, Time.Item2, tn, tk);
+
 // Main process of 2-dim task.
-FEM2D myFEM2D = new(mesh2D, timeMesh);
 mesh2D.SetBorders(mesh3D.borders);
 ConstructMesh(ref mesh2D);
+FEM2D myFEM2D = new(mesh2D, timeMesh);
 if (isSolving2DimTask)
 {
-    myFEM2D.SetSolver(new BCG());
+    myFEM2D.SetSolver(new LU_LOS());
     myFEM2D.Solve();
     myFEM2D.GenerateVectorEphi();
     myFEM2D.WriteData(AnswerPath);
@@ -129,17 +139,11 @@ if (isSolving2DimTask)
 else
     myFEM2D.ReadAnswer(AnswerPath);
 
-/*
-TODO:
-    1. Read generated points and elems
-*/
-
 ConstructMesh(ref mesh3D);
 FEM3D myFEM3D = new(mesh3D,  timeMesh);
 myFEM3D.ConvertResultTo3Dim(myFEM2D);
-myFEM3D.GenerateArrays();
-myFEM3D.AddField(ReadField(LayersArea));
-myFEM3D.CommitFields();
+myFEM3D.Layers = ReadFields(LayersArea);
+//myFEM3D.CommitFields();
 myFEM3D.ConstructMatrixAndVector();
 myFEM3D.SetSolver(new LOS());
 

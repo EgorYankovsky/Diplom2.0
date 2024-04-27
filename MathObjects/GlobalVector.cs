@@ -25,27 +25,11 @@ public class GlobalVector : Vector
         return Math.Sqrt(ans);
     }
 
-    public GlobalVector(GlobalVector gv)
-    {
-        _values = gv._values;
-    }
+    public GlobalVector(GlobalVector gv) => _values = (double[])gv._values.Clone();
 
-    // ? Нужен ли public?
-    public GlobalVector(int size)
-    {
-        _values = new double[size];
-    }
+    public GlobalVector(int size) => _values = new double[size];
 
-    // ? Удалить после.
-    public GlobalVector()
-    {
-
-    }
-
-    public GlobalVector(double[] arr)
-    {
-        _values = arr;
-    }
+    public GlobalVector(double[] arr) => _values = arr;
 
     public override string ToString()
     {
@@ -54,50 +38,6 @@ public class GlobalVector : Vector
         foreach (var item in _values)
             result += $"{item.ToString("E15", CultureInfo.InvariantCulture)}\n";
         return result;
-    }
-
-    public void ConsiderBoundaryConditions(ArrayOfBorders arrBrd, ArrayOfPoints arrp, double t)
-    {
-        if (_values is null) throw new Exception("_values is null");
-        foreach (var border in arrBrd)
-            switch (border[0])
-            {
-                // КУ - I-го рода
-                case 1:
-                    switch (border[1])
-                    {
-                        case 1:
-                        for (int i = 2; i < 4; i++)
-                            _values[border[i]] = Function.U1_1(arrp[border[i]], t);
-                        break;
-                        
-                        case 2:
-                        for (int i = 2; i < 4; i++)
-                            _values[border[i]] = Function.U1_2(arrp[border[i]], t);
-                        break;
-
-                        case 3:
-                        for (int i = 2; i < 4; i++)
-                            _values[border[i]] = Function.U1_3(arrp[border[i]], t);
-                        break;
-                        
-                        case 4:
-                        for (int i = 2; i < 4; i++)
-                            _values[border[i]] = Function.U1_4(arrp[border[i]], t);
-                        break;
-                        
-                        default:
-                        throw new Exception("No such bord");
-                    }
-                    break;
-                // КУ - II-го рода
-                case 2:
-                    for (int i = 2; i < 4; i++)
-                        _values[border[i]] += 0.0D;
-                    break;
-                // КУ - III-го рода
-                case 3: throw new ArgumentException("Пока нет возможности учитывать КУ III-го рода");
-            }
     }
 
     public GlobalVector(ArrayOfPoints arrPt)

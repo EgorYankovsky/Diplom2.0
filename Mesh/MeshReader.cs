@@ -87,21 +87,16 @@ public static class MeshReader
         Debug.WriteLine("Time data read correctly");
     }
 
-    public static Layer ReadField(string path)
+    public static List<Layer> ReadFields(string path)
     {
-        using var sr = new StreamReader(path);
-        double z0;
-        double z1;
-        double mu;
-        double sigma;
-
-        var arr = sr.ReadLine().Split().Select(double.Parse).ToList();
-        z0 = arr[0];
-        z1 = arr[1];
-        
-        arr = sr.ReadLine().Split().Select(double.Parse).ToList();
-        mu = arr[0];
-        sigma = arr[1];
-        return new Layer(z0, z1, mu, sigma);
+        var layers = new List<Layer>();
+        var info = File.ReadAllText(path).Split("\n");
+        var fieldsAmount = int.Parse(info[0]);
+        for (int i = 0; i < fieldsAmount; i++)
+        {
+            var fieldInfo = info[i + 1].Split(" ");
+            layers.Add(new Layer(double.Parse(fieldInfo[4]), double.Parse(fieldInfo[5]), mu0, double.Parse(fieldInfo[6])));
+        }
+        return layers;
     }
 }
