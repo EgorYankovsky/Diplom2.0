@@ -27,15 +27,6 @@ string SubtotalsPath = Path.GetFullPath("../../../../Data/Subtotals/");
 string AnswerPath = Path.GetFullPath("../../../../Data/Output/");
 string PicturesPath = Path.GetFullPath("../../../../Drawer/Pictures/");
 
-//var A = TestClass.A;
-//var v = TestClass.b;
-//var Solver = new LU_LOS();
-//var x = Solver.Solve(A, v);
-//
-//for (int i = 0; i < x.Item1.Size; i++)
-//    Console.WriteLine(x.Item1[i]);
-//
-//return 0;
 bool isSolving2DimTask = Checker(AnswerPath);
 
 // Pre-processor. Clearing output folders.
@@ -113,6 +104,12 @@ ReadTimeMesh(TimePath);
 Mesh3Dim mesh3D = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
                       NodesZ, InfoAboutZ, Elems, Borders);
 
+Mesh3Dim mesh3D_l1 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
+                         NodesZ, InfoAboutZ, Elems, Borders);
+
+mesh3D_l1 = mesh3D.Clone();
+
+
 Mesh2Dim mesh2D = new(NodesR, InfoAboutR, NodesZ, InfoAboutZ,
                       Elems, Math.Sqrt(Math.Pow(mesh3D.nodesX[^1], 2) + Math.Pow(mesh3D.nodesY[^1], 2)));
 
@@ -139,13 +136,30 @@ if (isSolving2DimTask)
 else
     myFEM2D.ReadAnswer(AnswerPath);
 
+
+// Main process of 3D task.
+var Layers = ReadFields(LayersArea);
 ConstructMesh(ref mesh3D);
-FEM3D myFEM3D = new(mesh3D,  timeMesh);
+
+FEM3D myFEM3D = new(mesh3D,  timeMesh, Layers);
 myFEM3D.ConvertResultTo3Dim(myFEM2D);
-myFEM3D.Layers = ReadFields(LayersArea);
-//myFEM3D.CommitFields();
-myFEM3D.ConstructMatrixAndVector();
-myFEM3D.SetSolver(new LOS());
+myFEM3D.WriteData(AnswerPath + $"A_phi\\Answer3D\\ConvertedTo3D\\");
+
+ReadMesh(CalculationArea, BordersInfo);
+mesh3D_l1 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
+                NodesZ, InfoAboutZ, Elems, Borders);
+
+ConstructMesh(ref mesh3D_l1, Layers[0], 0);
+FEM3D fem3D_l1 = new(mesh3D_l1, timeMesh, Layers);
+fem3D_l1.SelectCurrentLayer(0);
+fem3D_l1.ConstructMatrixes();
+fem3D_l1.SetSolver(new LU_LOS());
+fem3D_l1.Solve();
+myFEM3D.AddSolution(fem3D_l1);
+myFEM3D.WriteData(AnswerPath + $"A_phi\\Answer3D\\AfterField1\\");
+
+
+
 
 
 static bool Checker(string Answer)

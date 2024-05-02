@@ -66,13 +66,13 @@ public static class TestClass
 
     public static GlobalMatrix A = new (ig, jg, diag, al, au);
 
-    public static GlobalVector b = new ([ 1.0,  2.0,  3.0,  4.0,
+    public static GlobalVector b = new (new double[] { 1.0,  2.0,  3.0,  4.0,
                                          22.4, 19.5, 18.0, 19.8,
                                          30.3, 36.9, 28.1, 13.6,
-                                          4.0, 3.0, 2.0, 1.0]);
+                                          4.0, 3.0, 2.0, 1.0});
 
-    public static GlobalVector x = new ([ 1.0, 2.0, 3.0, 4.0,
+    public static GlobalVector x = new (new double[] { 1.0, 2.0, 3.0, 4.0,
                                           5.0, 6.0, 7.0, 8.0,
                                           8.0, 7.0, 6.0, 5.0,
-                                          4.0, 3.0, 2.0, 1.0]);
+                                          4.0, 3.0, 2.0, 1.0});
 }

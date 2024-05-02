@@ -1,47 +1,62 @@
+using System.Collections;
+
 namespace DataStructs;
 
-public class ArrayOfPoints
+public abstract class ArrayOfPoints : IEnumerable
 {
-    private List<Point> _list;
+    public abstract int GetLength();
 
-    public int Length => _list.Count;
+    public abstract IPoint? this[int i] { get; }
 
-    public Point? this[int i] => _list[i];
+    public abstract IEnumerator GetEnumerator();
 
-    public MyEnumerator GetEnumerator() => new(this);
+    public abstract void Append(IPoint p);
+}
 
-    public class MyEnumerator
-    {  
-        int nIndex;  
-        ArrayOfPoints collection;  
-        public MyEnumerator(ArrayOfPoints coll)
-        {  
-            collection = coll;  
-            nIndex = -1;  
-        }  
-    
-        public bool MoveNext()
-        {  
-            nIndex++;  
-            return nIndex < collection._list.Count;  
-        }  
-    
-        public Point Current => collection._list[nIndex];
-    }
+public class ArrayOfPoints2D : ArrayOfPoints
+{
+    private readonly List<Point2D> _list;
 
-    public void Append(Point p) => _list.Add(p);
-
-    public ArrayOfPoints(string path)
+    public ArrayOfPoints2D(string path)
     {
         _list = [];
         var data = File.ReadAllText(path).Split("\n");
         int pointsAmount = int.Parse(data[0]);
         for (int i = 0; i < pointsAmount; i++)
-            _list.Add(new Point([.. data[i + 1].Split()]));
+            _list.Add(new Point2D([.. data[i + 1].Split()]));
     }
 
-    public ArrayOfPoints(int pointsAmount)
+    public ArrayOfPoints2D(int pointsAmount) => _list = new(pointsAmount);
+
+    public override Point2D this[int i] => _list[i];
+
+    public override void Append(IPoint p) => _list.Add((Point2D)p);
+    
+    public override IEnumerator GetEnumerator() => _list.GetEnumerator();
+    
+    public override int GetLength() => _list.Count;
+}
+
+public class ArrayOfPoints3D : ArrayOfPoints
+{
+    private readonly List<Point3D> _list;
+
+    public ArrayOfPoints3D(string path)
     {
-        _list = new(pointsAmount);
+        _list = [];
+        var data = File.ReadAllText(path).Split("\n");
+        int pointsAmount = int.Parse(data[0]);
+        for (int i = 0; i < pointsAmount; i++)
+            _list.Add(new Point3D([.. data[i + 1].Split()]));
     }
+    
+    public ArrayOfPoints3D(int pointsAmount) => _list = new(pointsAmount);
+
+    public override Point3D this[int i] => _list[i];
+
+    public override void Append(IPoint p) => _list.Add((Point3D)p);
+
+    public override IEnumerator GetEnumerator() => _list.GetEnumerator();
+
+    public override int GetLength() => _list.Count;
 }

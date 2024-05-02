@@ -14,18 +14,19 @@ public enum TypeOfRib
 
 public record Rib
 {
-    public Point a;
-    public Point b;
+    public Point3D a;
+    public Point3D b;
 
     public Rib()
     {
-        a = new Point(0.0D, 0.0D, 0.0D);
-        b = new Point(1.0D, 1.0D, 1.0D);
+        a = new Point3D(0.0D, 0.0D, 0.0D);
+        b = new Point3D(1.0D, 1.0D, 1.0D);
+        typeOfRib = TypeOfRib.NotStated;
     }
 
     public TypeOfRib typeOfRib;
 
-    public Rib(Point a, Point b)
+    public Rib(Point3D a, Point3D b)
     {
         this.a = a;
         this.b = b;
@@ -43,14 +44,9 @@ public record Rib
     public double Length => Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y) + (b.Z - a.Z) * (b.Z - a.Z));
 }
 
-public class ArrayOfRibs : IEnumerable
+public class ArrayOfRibs(int size) : IEnumerable
 {
-    private List<Rib> _ribs;
-
-    public ArrayOfRibs(int size)
-    {
-        _ribs = new(size);
-    }
+    private List<Rib> _ribs = new(size);
 
     public int Count => _ribs.Count;
 

@@ -87,7 +87,7 @@ public class LocalMatrix : Matrix
         }
     }
 
-    public LocalMatrix(List<int> elem, ArrayOfPoints arrPt, TypeOfMatrixM typeOfMatrixM, double lambda = 0.0D, double gamma = 0.0D)
+    public LocalMatrix(List<int> elem, ArrayOfPoints2D arrPt, TypeOfMatrixM typeOfMatrixM, double lambda = 0.0D, double gamma = 0.0D)
     {
         _typeOfMatrixM = typeOfMatrixM;
         _rk = arrPt[elem[0]].R;
@@ -207,7 +207,7 @@ public class LocalMatrixNum : Matrix
         _z1 = z1;
     }
     
-    public LocalMatrixNum(List<int> elem, ArrayOfPoints arrPt, TypeOfMatrixM typeOfMatrixM, double lambda = 1.0D, double gamma = 1.0D)
+    public LocalMatrixNum(List<int> elem, ArrayOfPoints2D arrPt, TypeOfMatrixM typeOfMatrixM, double lambda = 1.0D, double gamma = 1.0D)
     {
         _typeOfMatrixM = typeOfMatrixM;
         _r0 = arrPt[elem[0]].R;

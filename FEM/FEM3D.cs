@@ -13,148 +13,150 @@ namespace Project;
 
 public class FEM3D : FEM
 {
-    public List<GlobalVector> Ax_3D;
+    public ArrayOfPoints3D pointsArr = new(_pointspath3D);
 
-    public List<GlobalVector> Ay_3D;
+    public List<GlobalVector> A;
 
-    public List<GlobalVector> Az_3D;
+    public List<GlobalVector> E;
 
-    public List<GlobalVector> Ex_3D;
-
-    public List<GlobalVector> Ey_3D;
-
-    public List<GlobalVector> Ez_3D;
+    public List<List<GlobalVector>> A_plus;
 
     public ArrayOfRibs? ribsArr;
 
-    private Mesh3Dim mesh3Dim;
+    private readonly Mesh3Dim mesh3Dim;
 
     // Maybe private?
-    public List<Layer>? Layers;
+    public List<Layer> Layers;
 
-    public FEM3D(Mesh3Dim mesh, TimeMesh timeMesh) : base(timeMesh, 3)
+    private Layer _currentLayer;
+
+    private GlobalMatrix? G;
+
+    private GlobalMatrix? M;
+
+    public FEM3D(Mesh3Dim mesh, TimeMesh timeMesh, List<Layer> layers) : base(timeMesh, 3)
     {
-        mesh3Dim = mesh;
         equationType = timeMesh[0] == timeMesh[^1] ? EquationType.Elliptic : EquationType.Parabolic;
-        Ax_3D = [];
-        Ay_3D = [];
-        Az_3D = [];
         
-        Ex_3D = [];
-        Ey_3D = [];
-        Ez_3D = [];
-
+        A = [];
+        E = [];
+        A_plus = new List<List<GlobalVector>>(layers.Count);
         ribsArr = mesh.arrayOfRibs;
+
+        Layers = layers;
+        _currentLayer = Layers[0];
+        //MeshGenerator.SelectRibs(ref ribsArr, ref elemsArr);
+        mesh3Dim = mesh;
     }
 
-    public FEM3D(FEM2D fem2d) : base(fem2d.Time, 3)
+    public void AddSolution(FEM3D fem)
     {
-        Ax_3D = [];
-        Ay_3D = [];
-        Az_3D = [];
-        Ex_3D = [];
-        Ey_3D = [];
-        Ez_3D = [];
-        Layers = [];
-        //mesh = new Mesh3Dim
-        //{
-        //    nodesX = [],
-        //    nodesY = [],
-        //    nodesZ = []
-        //};
-        equationType = fem2d.equationType;
-    }
-
-    // ! Тестовая вещь.
-    public void ConstructMesh()
-    {
-        //if (mesh == null) throw new ArgumentNullException("Mesh is null");
-        mesh3Dim.nodesX = [0.0D, 1.0D, 2.0D];
-        mesh3Dim.nodesY = [0.0D, 1.0D, 2.0D];
-        mesh3Dim.nodesZ = [0.0D, 1.0D, 2.0D, 3.0D];
-    }
-
-    public void ConvertResultTo3Dim(FEM2D fem2d)
-    {
-        Task TaskGenerationAxyz = Task.Run(() => GenerateAxyz(fem2d));
-        Task TaskGenerationExyz = Task.Run(() => GenerateExyz(fem2d));
-        TaskGenerationAxyz.Wait();
-        TaskGenerationExyz.Wait();
-    }
-
-    public void GenerateAxyz(FEM2D fem2d)
-    {
-        if (fem2d.pointsArr is null) throw new ArgumentNullException();
-        if (ribsArr is null) throw new ArgumentNullException();
-        
-        for (int i = 0; i < Time.Count; i++)
+        if (ribsArr is null) throw new ArgumentNullException("ribsArr is null");
+        if (fem.ribsArr is null) throw new ArgumentNullException("ribsArr is null");
+        for (int t = 0; t < Time.Count; t++)
         {
-            Ax_3D.Add(new GlobalVector(ribsArr.Count));
-            Ay_3D.Add(new GlobalVector(ribsArr.Count));
-            Az_3D.Add(new GlobalVector(ribsArr.Count));
-
-            for (int j = 0; j < ribsArr.Count; j++)
+            for (int i = 0; i < ribsArr.Count; i++)
             {
-                var X = 0.5D * (ribsArr[j].a.X + ribsArr[j].b.X);
-                var Y = 0.5D * (ribsArr[j].a.Y + ribsArr[j].b.Y);
-                var Z = 0.5D * (ribsArr[j].a.Z + ribsArr[j].b.Z);
-            
-                var elem = fem2d.GetElem(Math.Sqrt(X * X + Y * Y), Z);
-            
-                Ax_3D[i][j] = -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * 
-                            BasisFunctions2D.GetValue(
-                                fem2d.A_phi[i][elem[0]], fem2d.A_phi[i][elem[1]],
-                                fem2d.A_phi[i][elem[2]], fem2d.A_phi[i][elem[3]],
-                                fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
-                                fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
-                                Math.Sqrt(X * X + Y * Y), Z);
-                        
-                Ay_3D[i][j] = X / Math.Sqrt(X * X + Y * Y) * 
-                            BasisFunctions2D.GetValue(
-                                fem2d.A_phi[i][elem[0]], fem2d.A_phi[i][elem[1]],
-                                fem2d.A_phi[i][elem[2]], fem2d.A_phi[i][elem[3]],
-                                fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
-                                fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
-                                Math.Sqrt(X * X + Y * Y), Z);               
+                var X = 0.5 * (ribsArr[i].a.X + ribsArr[i].b.X);
+                var Y = 0.5 * (ribsArr[i].a.Y + ribsArr[i].b.Y);
+                var Z = 0.5 * (ribsArr[i].a.Z + ribsArr[i].b.Z);
+
+                var antinormal = ((ribsArr[i].b.X - ribsArr[i].a.X) / ribsArr[i].Length,
+                                  (ribsArr[i].b.Y - ribsArr[i].a.Y) / ribsArr[i].Length,
+                                  (ribsArr[i].b.Z - ribsArr[i].a.Z) / ribsArr[i].Length);
+
+                var elem = fem.GetElem(X, Y, Z);
+
+                int[] elem_local = [elem[0], elem[3], elem[8], elem[11], 
+                                    elem[1], elem[2], elem[9], elem[10], 
+                                    elem[4], elem[5], elem[6], elem[7]];
+
+                double[] q = [fem.A[t][elem[0]], fem.A[t][elem[3]], fem.A[t][elem[8]], fem.A[t][elem[11]], 
+                              fem.A[t][elem[1]], fem.A[t][elem[2]], fem.A[t][elem[9]], fem.A[t][elem[10]], 
+                              fem.A[t][elem[4]], fem.A[t][elem[5]], fem.A[t][elem[6]], fem.A[t][elem[7]]];
+                
+                var eps = (X - ribsArr[elem_local[0]].a.X) / (ribsArr[elem_local[0]].b.X - ribsArr[elem_local[0]].a.X);
+                var nu =  (Y - ribsArr[elem_local[4]].a.Y) / (ribsArr[elem_local[4]].b.Y - ribsArr[elem_local[4]].a.Y);
+                var khi = (Z - ribsArr[elem_local[8]].a.Z) / (ribsArr[elem_local[8]].b.Z - ribsArr[elem_local[8]].a.Z);
+
+                var val = BasisFunctions3DVec.GetValue(eps, nu, khi, q);
+                
+                A[t][i] += val.Item1 * antinormal.Item1 + val.Item2 * antinormal.Item2 + val.Item3 * antinormal.Item3;
             }
         }
     }
 
-    private void GenerateExyz(FEM2D fem2d)
+    internal List<int> GetElem(double x, double y, double z)
+    {
+        int i = 0;
+        for (; i < mesh3Dim.nodesX.Count - 1; i++)
+            if (mesh3Dim.nodesX[i] <= x && x <= mesh3Dim.nodesX[i + 1])
+                break;
+
+        int j = 0;
+        for (; j < mesh3Dim.nodesY.Count - 1; j++)
+            if (mesh3Dim.nodesY[j] <= y && y <= mesh3Dim.nodesY[j + 1])
+                break;
+
+        int k = 0;
+        for (; k < mesh3Dim.nodesZ.Count - 1; k++)
+            if (mesh3Dim.nodesZ[k] <= z && z <= mesh3Dim.nodesZ[k + 1])
+                break;
+
+        return elemsArr[k * (mesh3Dim.nodesX.Count - 1) * (mesh3Dim.nodesY.Count - 1) + j * (mesh3Dim.nodesX.Count - 1) + i].Arr;
+    }
+
+    public void SelectCurrentLayer(int num) => _currentLayer = Layers[num];
+
+    public void ConvertResultTo3Dim(FEM2D fem2d)
     {
         if (fem2d.pointsArr is null) throw new ArgumentNullException();
         if (ribsArr is null) throw new ArgumentNullException();
         
         for (int i = 0; i < Time.Count; i++)
         {
-            Ex_3D.Add(new GlobalVector(ribsArr.Count));
-            Ey_3D.Add(new GlobalVector(ribsArr.Count));
-            Ez_3D.Add(new GlobalVector(ribsArr.Count));
-
+            A.Add(new GlobalVector(ribsArr.Count));
+            E.Add(new GlobalVector(ribsArr.Count));
+            
             for (int j = 0; j < ribsArr.Count; j++)
             {
                 var X = 0.5D * (ribsArr[j].a.X + ribsArr[j].b.X);
                 var Y = 0.5D * (ribsArr[j].a.Y + ribsArr[j].b.Y);
                 var Z = 0.5D * (ribsArr[j].a.Z + ribsArr[j].b.Z);
-            
+
+                var antinormal = ((ribsArr[j].b.X - ribsArr[j].a.X) / ribsArr[j].Length,
+                                  (ribsArr[j].b.Y - ribsArr[j].a.Y) / ribsArr[j].Length,
+                                  (ribsArr[j].b.Z - ribsArr[j].a.Z) / ribsArr[j].Length);
+
                 var elem = fem2d.GetElem(Math.Sqrt(X * X + Y * Y), Z);
-            
-                Ex_3D[i][j] = -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * 
-                            BasisFunctions2D.GetValue(
+
+                var fa = BasisFunctions2D.GetValue(
+                                fem2d.A_phi[i][elem[0]], fem2d.A_phi[i][elem[1]],
+                                fem2d.A_phi[i][elem[2]], fem2d.A_phi[i][elem[3]],
+                                fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
+                                fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
+                                Math.Sqrt(X * X + Y * Y), Z);
+
+                var fe = BasisFunctions2D.GetValue(
                                 fem2d.E_phi[i][elem[0]], fem2d.E_phi[i][elem[1]],
                                 fem2d.E_phi[i][elem[2]], fem2d.E_phi[i][elem[3]],
                                 fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
                                 fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
                                 Math.Sqrt(X * X + Y * Y), Z);
-                        
-                Ey_3D[i][j] = X / Math.Sqrt(X * X + Y * Y) * 
-                            BasisFunctions2D.GetValue(
-                                fem2d.E_phi[i][elem[0]], fem2d.E_phi[i][elem[1]],
-                                fem2d.E_phi[i][elem[2]], fem2d.E_phi[i][elem[3]],
-                                fem2d.pointsArr[elem[0]].R, fem2d.pointsArr[elem[1]].R,
-                                fem2d.pointsArr[elem[0]].Z, fem2d.pointsArr[elem[3]].Z, 
-                                Math.Sqrt(X * X + Y * Y), Z);
-                        
+
+                //if (fe != 0.0D && (antinormal.Item1 != 0 || antinormal.Item2 != 0))
+                //    Console.WriteLine();
+
+                var Ax = X == 0 && Y == 0 ? 0.0D : -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * fa;
+                var Ay = X == 0 && Y == 0 ? 0.0D : X / Math.Sqrt(X * X + Y * Y) * fa;
+                var Az = 0.0D;
+
+                var Ex = X == 0 && Y == 0 ? 0.0D :  -1.0D * (Y / Math.Sqrt(X * X + Y * Y)) * fe;
+                var Ey = X == 0 && Y == 0 ? 0.0D :  X / Math.Sqrt(X * X + Y * Y) * fe;
+                var Ez = 0.0D;
+
+                A[i][j] = Ax * antinormal.Item1 + Ay * antinormal.Item2 + Az * antinormal.Item3;
+                E[i][j] = Ex * antinormal.Item1 + Ey * antinormal.Item2 + Ez * antinormal.Item3;
             }
         }
     }
@@ -176,109 +178,85 @@ public class FEM3D : FEM
                 double minz = Math.Min(ribsArr[elemsArr[i][^1]].a.Z, ribsArr[elemsArr[i][^1]].b.Z);
                 double maxz = Math.Max(ribsArr[elemsArr[i][^1]].a.Z, ribsArr[elemsArr[i][^1]].b.Z);
                 if (layer.z0 <= minz && maxz <= layer.z1)
-                    elemsArr.sigmai[i] = layer.sigma;
+                    elemsArr[i].sigma = layer.sigma;
             }
         }
     }
 
-    public void ConstructMatrixAndVector()
+    public void ConstructMatrixes()
     {
-        if (elemsArr is null) throw new ArgumentNullException("elemsArr is null");
-        if (bordersArr is null) throw new ArgumentNullException("bordersArr is null");
-        
+        if (ribsArr is null) throw new ArgumentNullException("ribsArr is null");
+
         var sparceMatrix = new GlobalMatrix(ribsArr.Count);
         Generator.BuildPortait(ref sparceMatrix, ribsArr.Count, elemsArr);
 
-        var G = new GlobalMatrix(sparceMatrix);
+        G = new GlobalMatrix(sparceMatrix);
         Generator.FillMatrixG(ref G, ribsArr, elemsArr);
         
-        var M = new GlobalMatrix(sparceMatrix);
+        M = new GlobalMatrix(sparceMatrix);
         Generator.FillMatrixM(ref M, ribsArr, elemsArr);
-        
-        Matrix = G + M;
-
-        var b = new GlobalVector(ribsArr.Count);
-        Generator.FillVector3D(ref b, ribsArr, elemsArr, 0.0);
-        Vector = b;
-
-        Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, ribsArr, bordersArr, 0.0D);
     }
 
     public void Solve()
     {
         if (solver is null) throw new ArgumentNullException("Solver is null");
-        if (Matrix is null) throw new ArgumentNullException("Matrix is null");
-        if (Vector is null) throw new ArgumentNullException("Vector is null");
+        if (ribsArr is null) throw new ArgumentNullException("ribs array is null");
+        if (G is null) throw new ArgumentNullException();
+        if (M is null) throw new ArgumentNullException();
+        
         Solutions = new GlobalVector[Time.Count];
         Discrepancy = new GlobalVector[Time.Count];
-        (Solutions[0], Discrepancy[0]) = solver.Solve(Matrix, Vector);
-        //
-        //if (timeMesh.Length > 1)
-        //{
-        //    for (int i = 0; i < timeMesh.Length; i++)
-        //    {
-        //        if (i == 1 || i == 0)
-        //        {
-        //            Solutions[i] = new GlobalVector(ribsArr.Count);
-        //            for (int j = 0; j < ribsArr.Count; j++)
-        //            {
-        //                var antinormal = ((ribsArr[j].b.X - ribsArr[j].a.X) / ribsArr[j].Length,
-        //                                  (ribsArr[j].b.Y - ribsArr[j].a.Y) / ribsArr[j].Length,
-        //                                  (ribsArr[j].b.Z - ribsArr[j].a.Z) / ribsArr[j].Length);
-        //                var pointat = ((ribsArr[j].b.X + ribsArr[j].a.X) / 2.0D,
-        //                               (ribsArr[j].b.Y + ribsArr[j].a.Y) / 2.0D,
-        //                               (ribsArr[j].b.Z + ribsArr[j].a.Z) / 2.0D);
+        
+        (Solutions[0], Discrepancy[0]) = (new GlobalVector(ribsArr.Count), new GlobalVector(ribsArr.Count));
 
-        //                var valueat = Function.A(pointat.Item1, pointat.Item2, pointat.Item3, timeMesh[i]);
-        //                Solutions[i][j] = valueat.Item1 * antinormal.Item1 + valueat.Item2 * antinormal.Item2 + valueat.Item3 * antinormal.Item3;
-        //            }
-        //            continue;
-        //        }
-        //        double t0 = timeMesh[i];
-        //        double t1 = timeMesh[i - 1];
-        //        double t2 = timeMesh[i - 2];
-        //        
-        //        double deltT = t0 - t2;
-        //        double deltT0 = t0 - t1;
-        //        double deltT1 = t1 - t2;
-        //    
-        //        double tau0 = (deltT + deltT0) / (deltT * deltT0);
-        //        double tau1 = deltT / (deltT1 * deltT0);
-        //        double tau2 = deltT0 / (deltT * deltT1);
-        //    
-        //        var sparceMatrix = new GlobalMatrix(ribsArr.Count);
-        //        Generator.BuildPortait(ref sparceMatrix, ribsArr.Count, elemsArr);
+        if (Time.Count > 1)
+        {
+            (Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
+            for (int i = 2; i < Time.Count; i++)
+            {
+                double t0 = Time[i];
+                double t1 = Time[i - 1];
+                double t2 = Time[i - 2];
 
-        //        var G = new GlobalMatrix(sparceMatrix);
-        //        Generator.FillMatrixG(ref G, ribsArr, elemsArr);
-        //
-        //        var M = new GlobalMatrix(sparceMatrix);
-        //        Generator.FillMatrixM(ref M, ribsArr, elemsArr);
-        //
-        //        Matrix = G + M + tau0 * M;
+                double deltT = t0 - t2;
+                double deltT0 = t0 - t1;
+                double deltT1 = t1 - t2;
 
-        //        var b = new GlobalVector(ribsArr.Count);
-        //        Generator.FillVector3D(ref b, ribsArr, elemsArr, timeMesh[i]);
-        //        Vector = b - tau2 * M * Solutions[i - 2] + tau1 * M * Solutions[i - 1];
+                double tau0 = (deltT + deltT0) / (deltT * deltT0);
+                double tau1 = deltT / (deltT1 * deltT0);
+                double tau2 = deltT0 / (deltT * deltT1);
 
-        //        Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, ribsArr, bordersArr, timeMesh[i]);
-        //        (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
-        //    }
-        //}
+                Matrix = G + tau0 * M;
+                
+                var b = new GlobalVector(ribsArr.Count);
+                Generator.FillVector3D(ref b, _currentLayer, ribsArr, elemsArr, Time[i]);
+
+                Vector = b - tau2 * M * Solutions[i - 2] + tau1 * M * Solutions[i - 1];
+                
+                Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, ribsArr, bordersArr, Time[i]);
+                (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
+            }
+        }
+        A = [.. Solutions];
+    }
+
+
+    public void CommitField(int layer)
+    {
+        if (A.Count != A_plus[layer].Count)
+            throw new ArgumentOutOfRangeException("Different sizes");
+        for (int i = 0; i < A.Count; i++)
+            A[i] += A_plus[layer][i];
     }
 
     public void WriteData(string path)
     {
         if (Solutions is null) throw new ArgumentNullException("No solutions");
-
         for (int t = 0; t < Time.Count; t++)
         {
-            using var sw = new StreamWriter(path + $"/A_phi/Answer3D/Answer_{Time[t]}.txt");
-
-            for (int i = 0; i < Solutions[t].Size; i++)
-                if (i == 38 || i == 45 || i == 67 || i == 74 || i == 41 || i == 42 || i == 70 || i == 71 || i == 52 || i == 53 || i == 56 || i == 57)
-                    sw.WriteLine($"{i} {Solutions[t][i]:E8}");
-
+            using var sw = new StreamWriter(path + $"Answer_{Time[t]}.txt");
+            for (int i = 0; i < A[t].Size; i++)
+                sw.WriteLine($"{i} {A[t][i]:E8}");
             sw.Close();
         }
     }
@@ -305,7 +283,7 @@ public class FEM3D : FEM
 
         int iter = 0;
 
-        foreach (var elem in elemsArr)
+        foreach (Elem elem in elemsArr)
         {
             int[] elem_local = [elem[0], elem[3], elem[8], elem[11],
                                 elem[1], elem[2], elem[9], elem[10],

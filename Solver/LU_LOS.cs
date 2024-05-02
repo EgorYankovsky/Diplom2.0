@@ -50,11 +50,30 @@ public class LU_LOS : ISolver
     private static GlobalVector Forward(GlobalMatrix Matrix, GlobalVector b)
     {
         var result = new GlobalVector(b);
+
         for (int i = 0; i < Matrix.Size; i++)
         {
             for (int j = Matrix._ig[i]; j < Matrix._ig[i + 1]; j++)
+            {
+                var aaa = Matrix._al[j];
+                var aaaa = result[Matrix._jg[j]];
+                var aaaaa = result[i];
+                if (double.IsNaN(aaa) || double.IsNaN(aaaa) || double.IsNaN(aaaaa) || double.IsNaN(result[i]) ||
+                    double.IsInfinity(aaaa) || double.IsInfinity(aaaaa) || double.IsInfinity(aaa) || double.IsInfinity(result[i]))
+                    Console.WriteLine();
+            
+                if (double.IsInfinity(Matrix._al[j] * result[Matrix._jg[j]]))
+                    Console.WriteLine();           
                 result[i] -= Matrix._al[j] * result[Matrix._jg[j]];
+                if (double.IsNaN(aaa) || double.IsNaN(aaaa) || double.IsNaN(aaaaa) || double.IsNaN(result[i]) ||
+                    double.IsInfinity(aaaa) || double.IsInfinity(aaaaa) || double.IsInfinity(aaa))
+                    Console.WriteLine();
+            }
+            var a = Matrix._diag[i];
+            var aa = result[i];
             result[i] /= Matrix._diag[i];
+            if (double.IsNaN(result[i]))
+                Console.WriteLine();
         }
         return result;
     }
@@ -64,12 +83,21 @@ public class LU_LOS : ISolver
         var result = new GlobalVector(b);
         for (int i = A.Size - 1; i >= 0; i--)
             for (int j = A._ig[i + 1] - 1; j >= A._ig[i]; j--)
+            {
+                var a = A._au[j];
+                var aa = result[i];
+                var aaa = A._au[j] * result[i];
                 result[A._jg[j]] -= A._au[j] * result[i];
+            }
         return result;
     }
 
     public (GlobalVector, GlobalVector) Solve(GlobalMatrix A, GlobalVector b)
     {
+        for (int i = 0; i < b.Size; i++)
+            if (double.IsNaN(b[i]) || double.IsInfinity(b[i]))
+                Console.WriteLine(i);
+
         GlobalVector x = new(b);
         GlobalVector x_ = new(b.Size);
 
@@ -77,10 +105,33 @@ public class LU_LOS : ISolver
 
         PartitialLU(LU);
 
+        for (int i = 0; i < LU._al.Length; i++)
+            if (double.IsNaN(LU._al[i]) || double.IsInfinity(LU._al[i]))
+                Console.WriteLine(i);
+
+        for (int i = 0; i < LU._au.Length; i++)
+            if (double.IsNaN(LU._au[i]) || double.IsInfinity(LU._au[i]))
+                Console.WriteLine(i);
+
         GlobalVector r = Forward(LU, b - A * x);
+        for (int i = 0; i < r.Size; i++)
+            if (double.IsNaN(r[i]) || double.IsInfinity(r[i]))
+                Console.WriteLine(i);
+
         GlobalVector z = Backward(LU, r);
+        for (int i = 0; i < z.Size; i++)
+            if (double.IsNaN(z[i]) || double.IsInfinity(z[i]))
+                Console.WriteLine(i);
+
         GlobalVector p = Forward(LU, A * z);
+        for (int i = 0; i < p.Size; i++)
+            if (double.IsNaN(p[i]) || double.IsInfinity(p[i]))
+                Console.WriteLine(i);
+
         GlobalVector tmp = new(b.Size);
+        for (int i = 0; i < tmp.Size; i++)
+            if (double.IsNaN(tmp[i]) || double.IsInfinity(tmp[i]))
+                Console.WriteLine(i);
 
         GlobalVector r_ = new(b.Size);
         GlobalVector z_ = new(b.Size);
@@ -96,7 +147,9 @@ public class LU_LOS : ISolver
             z_ = z;
             r_ = r;
             p_ = p;
-         
+
+            var ds = p_ * p_;
+
             alph = (p_ * r_) / (p_ * p_);
 
             x = x_ + alph * z_;

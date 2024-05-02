@@ -1,4 +1,5 @@
 ﻿using MathObjects;
+using DataStructs;
 using Grid;
 using System.Diagnostics;
 using Functions;
@@ -7,6 +8,8 @@ namespace Project;
 
 public class FEM2D : FEM
 {
+    public ArrayOfPoints2D pointsArr = new(_pointspath2D);
+
     public FEM2D(Mesh2Dim mesh, TimeMesh timeMesh) : base(timeMesh, 2)
     {
         mesh2Dim = mesh;
@@ -20,7 +23,7 @@ public class FEM2D : FEM
         Debug.WriteLine("Generated data submited");
     }
 
-    private Mesh2Dim mesh2Dim;
+    private readonly Mesh2Dim mesh2Dim;
 
     public GlobalVector[] A_phi;
 
@@ -34,11 +37,11 @@ public class FEM2D : FEM
         Debug.WriteLine($"\nTime layer: before BC");
         Thread.Sleep(1500);
 
-        Matrix = new GlobalMatrix(pointsArr.Length);
-        Generator.BuildPortait(ref Matrix, pointsArr.Length, elemsArr);
+        Matrix = new GlobalMatrix(pointsArr.GetLength());
+        Generator.BuildPortait(ref Matrix, pointsArr.GetLength(), elemsArr);
         Generator.FillMatrix(ref Matrix, pointsArr, elemsArr, TypeOfMatrixM.Mrr);
 
-        Vector = new GlobalVector(pointsArr.Length);
+        Vector = new GlobalVector(pointsArr.GetLength());
         Generator.FillVector(ref Vector, pointsArr, elemsArr, Time[0]);
 
         Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, pointsArr, bordersArr, Time[0]);
@@ -61,17 +64,17 @@ public class FEM2D : FEM
                 double tau1 = deltT / (deltT1 * deltT0);
                 double tau2 = deltT0 / (deltT * deltT1);
 
-                var matrix1 = new GlobalMatrix(pointsArr.Length);
-                Generator.BuildPortait(ref matrix1, pointsArr.Length, elemsArr);
+                var matrix1 = new GlobalMatrix(pointsArr.GetLength());
+                Generator.BuildPortait(ref matrix1, pointsArr.GetLength(), elemsArr);
                 Generator.FillMatrix(ref matrix1, pointsArr, elemsArr, TypeOfMatrixM.Mrr);
 
-                var M = new GlobalMatrix(pointsArr.Length); // ???
-                Generator.BuildPortait(ref M, pointsArr.Length, elemsArr);
+                var M = new GlobalMatrix(pointsArr.GetLength()); // ???
+                Generator.BuildPortait(ref M, pointsArr.GetLength(), elemsArr);
                 Generator.FillMatrix(ref M, pointsArr, elemsArr, TypeOfMatrixM.Mr);
 
                 Matrix = (tau0 * M) + matrix1;
 
-                var bi = new GlobalVector(pointsArr.Length);
+                var bi = new GlobalVector(pointsArr.GetLength());
                 Vector = bi - (tau2 * (M * Solutions[i - 2])) + (tau1 * (M * Solutions[i - 1]));
 
                 Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, pointsArr, bordersArr, Time[i]);        
@@ -259,7 +262,7 @@ public class FEM2D : FEM
 
         if (j * (mesh2Dim.nodesR.Count - 1) + i == 22500)
             return [];
-        return elemsArr[j * (mesh2Dim.nodesR.Count - 1) + i];
+        return elemsArr[j * (mesh2Dim.nodesR.Count - 1) + i].Arr;
     }
 
     public void ReadAnswer(string AnswerPath)

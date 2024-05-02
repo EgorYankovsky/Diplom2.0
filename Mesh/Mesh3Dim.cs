@@ -50,4 +50,6 @@ public class Mesh3Dim(List<double> nodesX, string infoAboutX,
     public List<Border3D> borders = borders;
 
     public ArrayOfRibs? arrayOfRibs;
+
+    public override Mesh3Dim Clone() => (Mesh3Dim)MemberwiseClone();
 }

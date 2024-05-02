@@ -1,6 +1,8 @@
-﻿namespace DataStructs;
+﻿using System.Collections;
 
-public class ArrayOfBorders
+namespace DataStructs;
+
+public class ArrayOfBorders : IEnumerable
 {
     public List<List<int>> Arr;
 
@@ -8,26 +10,7 @@ public class ArrayOfBorders
 
     public List<int> this[int i] => Arr[i];
 
-    public MyEnumerator GetEnumerator() => new(this);
-
-    public class MyEnumerator
-    {  
-        int nIndex;  
-        ArrayOfBorders collection;  
-        public MyEnumerator(ArrayOfBorders coll)
-        {  
-            collection = coll;  
-            nIndex = -1;  
-        }  
-    
-        public bool MoveNext()
-        {  
-            nIndex++;  
-            return nIndex < collection.Arr.Count;  
-        }  
-    
-        public List<int> Current => collection.Arr[nIndex];
-    }
+    public IEnumerator<List<int>> GetEnumerator() => Arr.GetEnumerator();
 
     private void SortList()
     {
@@ -38,6 +21,11 @@ public class ArrayOfBorders
     }
 
     public void Add(List<int> arr) => Arr.Add(arr);
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        throw new NotImplementedException();
+    }
 
     public ArrayOfBorders(string path)
     {
@@ -57,6 +45,4 @@ public class ArrayOfBorders
         for (int i = 0; i < Length; i++)
             Arr.Add([.. data[i + 1].Split(" ").Select(int.Parse)]);
     }
-
-
 }

@@ -59,7 +59,7 @@ public class LocalVector : Vector
 
     private double[,] _Mr = new double[2, 2];
     
-    public LocalVector(List<int>? elem, ArrayOfPoints arrPt, double t)
+    public LocalVector(List<int> elem, ArrayOfPoints2D arrPt, double t)
     {
         _r0 = arrPt[elem[0]].R;
         _r1 = arrPt[elem[1]].R;

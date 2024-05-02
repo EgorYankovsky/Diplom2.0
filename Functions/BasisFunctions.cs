@@ -38,8 +38,6 @@ public static class BasisFunctions2D
     public static double dZ1(double z1, double z0, double z) => -1.0D / (z1 - z0);
 
     public static double dZ2(double z1, double z0, double z) => 1.0D / (z1 - z0);
-  
-
 }
 
 

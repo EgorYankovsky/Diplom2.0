@@ -1,6 +1,6 @@
 using DataStructs;
 using Functions;
-using Functions;
+using static Functions.Function;
 
 namespace MathObjects;
 
@@ -11,7 +11,6 @@ public static class Generator
         m._al = new double[m._jg.Count];
         m._au = new double[m._jg.Count];
 
-        using var sw = new StreamWriter("C:\\Users\\USER\\Desktop\\fgnf.txt");
         for (int i = 0; i < arrEl.Length; i++)
         {
             List<int> currElem = [arrEl[i][0], arrEl[i][3], arrEl[i][8], arrEl[i][11],
@@ -22,7 +21,7 @@ public static class Generator
             double hy = arrRibs[currElem[4]].Length;
             double hz = arrRibs[currElem[8]].Length;
 
-            var lm = new LocalMatrixG3D(arrEl.mui[i], hx, hy, hz);
+            var lm = new LocalMatrixG3D(arrEl[i].mu, hx, hy, hz);
             Add(lm, ref m, currElem); 
         }
     }
@@ -42,47 +41,52 @@ public static class Generator
             double hy = arrRibs[currElem[4]].Length;
             double hz = arrRibs[currElem[8]].Length;
 
-            var lm = new LocalMatrixM3D(arrEl.mui[i], hx, hy, hz);
+            var lm = new LocalMatrixM3D(1.0D, hx, hy, hz);
             Add(lm, ref m, currElem);
         }
     }
 
     public static void ConsiderBoundaryConditions(ref GlobalMatrix m, ref GlobalVector v, ArrayOfRibs arrRibs, ArrayOfBorders arrBrd, double t)
     {
+        List<int> consideredBorder = [];
         foreach (var border in arrBrd)
         {
             switch (border[0])
             {
-                // КУ - I-го рода
+                // КУ - I-го рода.
                 case 1:
                 for (int i = 2; i < 6; i++)
                 {
+                    if (consideredBorder.Contains(border[i])) continue;
+
+                    consideredBorder.Add(border[i]);
                     for (int j = m._ig[border[i]]; j < m._ig[border[i] + 1]; j++)
                         m._al[j] = 0.0D;
                     m._diag[border[i]] = 1.0D;
                     for (int j = 0; j < m._jg.Count; j++)
                         if (m._jg[j] == border[i])
                             m._au[j] = 0.0D;
+                    v[border[i]] = 0.0D;
                 }
-
-                for (int i = 2; i < 6; i++)
-                {
-                    var len = arrRibs[border[i]].Length;
-                    var antinormal = ((arrRibs[border[i]].b.X - arrRibs[border[i]].a.X) / len, 
-                                      (arrRibs[border[i]].b.Y - arrRibs[border[i]].a.Y) / len,
-                                      (arrRibs[border[i]].b.Z - arrRibs[border[i]].a.Z) / len); 
-                    var xm = 0.5D * (arrRibs[border[i]].b.X + arrRibs[border[i]].a.X);
-                    var ym = 0.5D * (arrRibs[border[i]].b.Y + arrRibs[border[i]].a.Y);
-                    var zm = 0.5D * (arrRibs[border[i]].b.Z + arrRibs[border[i]].a.Z);
-                    
-                    var f = Function.A(xm, ym, zm, t);
-                    var q = antinormal.Item1 * f.Item1 + antinormal.Item2 * f.Item2 + antinormal.Item3 * f.Item3;
-                    v[border[i]] = q;
-                }
+                
+                //for (int i = 2; i < 6; i++)
+                //{
+                //    var len = arrRibs[border[i]].Length;
+                //    var antinormal = ((arrRibs[border[i]].b.X - arrRibs[border[i]].a.X) / len, 
+                //                      (arrRibs[border[i]].b.Y - arrRibs[border[i]].a.Y) / len,
+                //                      (arrRibs[border[i]].b.Z - arrRibs[border[i]].a.Z) / len); 
+                //    var xm = 0.5D * (arrRibs[border[i]].b.X + arrRibs[border[i]].a.X);
+                //    var ym = 0.5D * (arrRibs[border[i]].b.Y + arrRibs[border[i]].a.Y);
+                //    var zm = 0.5D * (arrRibs[border[i]].b.Z + arrRibs[border[i]].a.Z);
+                //    
+                //    var f = Function.A(xm, ym, zm, t);
+                //    var q = antinormal.Item1 * f.Item1 + antinormal.Item2 * f.Item2 + antinormal.Item3 * f.Item3;
+                //    v[border[i]] = 0.0D;
+                //}
                 break;
                 // КУ - II-го рода
                 case 2:
-                    for (int i = 2; i < 4; i++)
+                    for (int i = 2; i < 6; i++)
                         v[border[i]] += 0.0D;
                     break;
                 // КУ - III-го рода
@@ -91,27 +95,27 @@ public static class Generator
         }
 
         
-        foreach (var border in arrBrd)
-        {
-            for (int i = 2; i < 6; i++)
-            {
-                for (int j = 0; j < m.Size; j++)
-                {
-                    if (border[i] == j)
-                        continue;
-                    else
-                    {
-                        var k = m[j, border[i]];
-                        var f = -1.0D * k * v[border[i]];
-                        v[j] += f;
-                        m[j, border[i]] = 0.0D;
-                    }
-                }
-            }
-        }
+        //foreach (var border in arrBrd)
+        //{
+        //    for (int i = 2; i < 6; i++)
+        //    {
+        //        for (int j = 0; j < m.Size; j++)
+        //        {
+        //            if (border[i] == j)
+        //                continue;
+        //            else
+        //            {
+        //                var k = m[j, border[i]];
+        //                var f = -1.0D * k * v[border[i]];
+        //                v[j] += f;
+        //                m[j, border[i]] = 0.0D;
+        //            }
+        //        }
+        //    }
+        //}
     }
 
-    public static void FillVector3D(ref GlobalVector v, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
+    public static void FillVector3D(ref GlobalVector v, Layer currentLayer, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
     {
         for (int i = 0; i < arrEl.Length; i++)
         {
@@ -122,31 +126,46 @@ public static class Generator
             var lv = new LocalVector3D(arrRibs[currElem[0]].a.X, arrRibs[currElem[0]].b.X,
                                        arrRibs[currElem[4]].a.Y, arrRibs[currElem[4]].b.Y,
                                        arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z, t);
-            Add(lv, ref v, currElem);
+            var theorSigma = arrEl[i].sigma;
+            var sigma = SelectSigma(theorSigma, currentLayer, arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z);
+            Add(lv, ref v, sigma, currElem);
         }
     }
 
-    private static void Add(LocalVector3D lv, ref GlobalVector v, List<int> elem)
+    public static void FillVector3D(ref GlobalVector v, GlobalVector E, Layer currentLayer, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
+    {
+        for (int i = 0; i < arrEl.Length; i++)
+        {
+            List<int> currElem = [arrEl[i][0], arrEl[i][3], arrEl[i][8], arrEl[i][11],
+                                  arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
+                                  arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
+  
+            List<double> LocalE = [E[arrEl[i][0]], E[arrEl[i][3]], E[arrEl[i][8]], E[arrEl[i][11]],
+                                   E[arrEl[i][1]], E[arrEl[i][2]], E[arrEl[i][9]], E[arrEl[i][10]],
+                                   E[arrEl[i][4]], E[arrEl[i][5]], E[arrEl[i][6]], E[arrEl[i][7]]];
+
+            var theorSigma = arrEl[i].sigma;
+            var sigma = SelectSigma(theorSigma, currentLayer, arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z);
+            //if (sigma > 0) 
+            //    Console.WriteLine();
+            Add(LocalE, ref v, sigma, currElem);
+        }
+    }
+
+    private static void Add(List<double> ELocal, ref GlobalVector v, double sigma, List<int> elem)
     {
         for (int i = 0; i < 12; i++)
-            v[elem[i]] += lv[i];
-/*
-        v[elem[0]] += lv[0];
-        v[elem[1]] += lv[4];
-        v[elem[2]] += lv[5];
-        v[elem[3]] += lv[1];
-
-        v[elem[4]] += lv[8];
-        v[elem[5]] += lv[9];
-        v[elem[6]] += lv[10];
-        v[elem[7]] += lv[11];
-        
-        v[elem[8]] += lv[2];
-        v[elem[9]] += lv[6];
-        v[elem[10]] += lv[7];
-        v[elem[11]] += lv[3];
-  */
+            v[elem[i]] += sigma * ELocal[i];
     }
+
+    private static void Add(LocalVector3D lv, ref GlobalVector v, double sigma, List<int> elem)
+    {
+        for (int i = 0; i < 12; i++)
+            v[elem[i]] += sigma * lv[i];
+    }
+
+    private static double SelectSigma(double theorSigma, Layer layer, double z0, double z1) 
+            => layer.z0 <= z0 && z1 <= layer.z1 ? layer.sigma - theorSigma : 0.0D;
 
     public static void BuildPortait(ref GlobalMatrix m, int arrPtLen, ArrayOfElems arrEl)
     {
@@ -156,9 +175,9 @@ public static class Generator
         for(int i = 0; i < arrPtLen; i++)
             arr.Add([]);
 
-        foreach (var _elem in arrEl)
-            foreach (var point in _elem)
-                foreach (var pnt in _elem)
+        foreach (Elem _elem in arrEl)
+            foreach (var point in _elem.Arr)
+                foreach (var pnt in _elem.Arr)
                     if (pnt < point && Array.IndexOf(arr[point].ToArray(), pnt) == -1)
                     {
                         arr[point].Add(pnt);
@@ -175,13 +194,13 @@ public static class Generator
         m._au = new double[m._jg.Count];
     }
 
-    public static void FillMatrix(ref GlobalMatrix m, ArrayOfPoints arrPt, ArrayOfElems arrEl, TypeOfMatrixM typeOfMatrixM)
+    public static void FillMatrix(ref GlobalMatrix m, ArrayOfPoints2D arrPt, ArrayOfElems arrEl, TypeOfMatrixM typeOfMatrixM)
     {    
         m._al = new double[m._jg.Count];
         m._au = new double[m._jg.Count];
 
         for (int i = 0; i < arrEl.Length; i++)
-            Add(new LocalMatrixNum(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], arrEl.sigmai[i]), ref m, arrEl[i]);
+            Add(new LocalMatrixNum(arrEl[i].Arr, arrPt, typeOfMatrixM, arrEl[i].mu, arrEl[i].sigma), ref m, arrEl[i].Arr);
             //Add(new LocalMatrixNum(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], arrEl.sigmai[i]), ref m, arrEl[i]);
     }
 
@@ -353,13 +372,13 @@ public static class Generator
         }
     }
 
-    public static void FillVector(ref GlobalVector v, ArrayOfPoints arrPt, ArrayOfElems arrEl, double t)
+    public static void FillVector(ref GlobalVector v, ArrayOfPoints2D arrPt, ArrayOfElems arrEl, double t)
     {
         for (int i = 0; i < arrEl.Length; i++)
         {
             if (arrPt[arrEl[i][0]].R <= 10.0D && 10.0D <= arrPt[arrEl[i][3]].R &&
                 arrPt[arrEl[i][0]].Z <= 0.0D && 0.0D <= arrPt[arrEl[i][3]].Z && t <= 1.0D)
-                Add(new LocalVector(arrEl[i], arrPt, t), ref v, arrEl[i]);
+                Add(new LocalVector(arrEl[i].Arr, arrPt, t), ref v, arrEl[i].Arr);
         }
     }
 
@@ -371,7 +390,7 @@ public static class Generator
         }
     }
 
-    public static void ConsiderBoundaryConditions(ref GlobalMatrix gm, ref GlobalVector gv, ArrayOfPoints arrp, ArrayOfBorders arrBd, double t)
+    public static void ConsiderBoundaryConditions(ref GlobalMatrix gm, ref GlobalVector gv, ArrayOfPoints2D arrp, ArrayOfBorders arrBd, double t)
     {
         foreach (var border in arrBd)
         {
@@ -418,22 +437,22 @@ public static class Generator
                 {
                     case 1:
                     for (int i = 2; i < 4; i++)
-                        gv[border[i]] = Function.U1_1(arrp[border[i]], t);
+                        gv[border[i]] = U1_1(arrp[border[i]], t);
                     break;
                     
                     case 2:
                     for (int i = 2; i < 4; i++)
-                        gv[border[i]] = Function.U1_2(arrp[border[i]], t);
+                        gv[border[i]] = U1_2(arrp[border[i]], t);
                     break;
 
                     case 3:
                     for (int i = 2; i < 4; i++)
-                        gv[border[i]] = Function.U1_3(arrp[border[i]], t);
+                        gv[border[i]] = U1_3(arrp[border[i]], t);
                     break;
                     
                     case 4:
                     for (int i = 2; i < 4; i++)
-                        gv[border[i]] = Function.U1_4(arrp[border[i]], t);
+                        gv[border[i]] = U1_4(arrp[border[i]], t);
                     break;
                     
                     default:
@@ -469,7 +488,7 @@ public static class Generator
         //    }
         //}
     }
-    public static void ConsiderBoundaryConditions(ref GlobalVector v, ArrayOfPoints arrp, ArrayOfBorders arrBd, double t)
+    public static void ConsiderBoundaryConditions(ref GlobalVector v, ArrayOfPoints2D arrp, ArrayOfBorders arrBd, double t)
     {
         foreach (var border in arrBd)
             switch (border[0])
@@ -480,22 +499,22 @@ public static class Generator
                     {
                         case 1:
                         for (int i = 2; i < 4; i++)
-                            v[border[i]] = Function.U1_1(arrp[border[i]], t);
+                            v[border[i]] = U1_1(arrp[border[i]], t);
                         break;
                         
                         case 2:
                         for (int i = 2; i < 4; i++)
-                            v[border[i]] = Function.U1_2(arrp[border[i]], t);
+                            v[border[i]] = U1_2(arrp[border[i]], t);
                         break;
 
                         case 3:
                         for (int i = 2; i < 4; i++)
-                            v[border[i]] = Function.U1_3(arrp[border[i]], t);
+                            v[border[i]] = U1_3(arrp[border[i]], t);
                         break;
                         
                         case 4:
                         for (int i = 2; i < 4; i++)
-                            v[border[i]] = Function.U1_4(arrp[border[i]], t);
+                            v[border[i]] = U1_4(arrp[border[i]], t);
                         break;
                         
                         default:

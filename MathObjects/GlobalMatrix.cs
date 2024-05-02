@@ -142,9 +142,9 @@ public class GlobalMatrix : Matrix
 
     public GlobalMatrix(ArrayOfElems _arrOfElms, ArrayOfPoints _arrOfPnt, ArrayOfBorders _arrOfBord, List<double> mu0, double koef = 0.0)
     {
-        _jg = new();
-        _ig = new int[_arrOfPnt.Length + 1];
-        _diag = new double[_arrOfPnt.Length];   
+        _jg = [];
+        _ig = new int[_arrOfPnt.GetLength() + 1];
+        _diag = new double[_arrOfPnt.GetLength()];   
     }
     #endregion
 

@@ -23,17 +23,17 @@ public enum EquationType
 
 public abstract class FEM(TimeMesh time, int dimesion)
 {
-    private static string _elemspath2D = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Elems.poly");
+    protected static string _elemspath2D = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Elems.poly");
     
-    private static string _pointspath2D = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Points.poly");
+    protected static string _pointspath2D = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Points.poly");
     
-    private static string _borderspath2D = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Borders.poly");
+    protected static string _borderspath2D = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Borders.poly");
 
-    private static string _elemspath3D = Path.GetFullPath("../../../../Data/Subtotals/3_dim/Elems.poly");
+    protected static string _elemspath3D = Path.GetFullPath("../../../../Data/Subtotals/3_dim/Elems.poly");
     
-    private static string _pointspath3D = Path.GetFullPath("../../../../Data/Subtotals/3_dim/Points.poly");
+    protected static string _pointspath3D = Path.GetFullPath("../../../../Data/Subtotals/3_dim/Points.poly");
     
-    private static string _borderspath3D = Path.GetFullPath("../../../../Data/Subtotals/3_dim/Borders.poly");
+    protected static string _borderspath3D = Path.GetFullPath("../../../../Data/Subtotals/3_dim/Borders.poly");
 
     public TimeMesh Time = time;
 
@@ -43,9 +43,9 @@ public abstract class FEM(TimeMesh time, int dimesion)
 
     public ISolver? solver;
 
-    public ArrayOfElems elemsArr = dimesion == 2 ? new(_elemspath2D) : new(_elemspath3D); 
+    public ArrayOfElems elemsArr = dimesion == 2 ? new(_elemspath2D) : new(_elemspath3D, 3); 
 
-    public ArrayOfPoints pointsArr = dimesion == 2 ? new(_pointspath2D) : new(_pointspath3D);
+    //public ArrayOfPoints pointsArr = dimesion == 2 ? new(_pointspath2D) : new(_pointspath3D, 3);
 
     public ArrayOfBorders bordersArr = dimesion == 2 ? new(_borderspath2D) : new(_borderspath3D, 3);
 

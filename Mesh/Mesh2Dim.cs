@@ -72,4 +72,6 @@ public class Mesh2Dim(List<double> nodesR, string infoAboutR,
                                  NodesZWithoutFragmentation.Length - 1, 
                                  NodesZWithoutFragmentation.Length - 1));
     }
+
+    public override Mesh2Dim Clone() => (Mesh2Dim)MemberwiseClone();
 }

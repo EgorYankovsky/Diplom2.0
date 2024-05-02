@@ -1,65 +1,48 @@
+using System.Collections;
+
 namespace DataStructs;
 
-public class ArrayOfElems
+public class ArrayOfElems : IEnumerable
 {
-    public List<List<int>> Arr;
-    
-    public List<double> mui;
+    public List<Elem> elems;
 
-    public List<double> sigmai;
+    public int Length { get => elems.Count; set {} }
 
-    public int Length { get => Arr.Count; set {} }
+    public IEnumerator GetEnumerator() => elems.GetEnumerator();
 
-    public MyEnumerator GetEnumerator() => new(this);
+    public Elem this[int i] => elems[i];
 
-    public List<int> this[int i] => Arr[i];
+    public List<int> GetLinks(int i) => elems[i].Arr;
 
-    public class MyEnumerator
-    {  
-        int nIndex;  
-        ArrayOfElems collection;  
-        public MyEnumerator(ArrayOfElems coll)
-        {  
-            collection = coll;  
-            nIndex = -1;  
-        }  
-    
-        public bool MoveNext()
-        {  
-            nIndex++;  
-            return nIndex < collection.Arr.Count;  
-        }  
-    
-        public List<int> Current => collection.Arr[nIndex];
-    }
+    public double GetMu(int i) => elems[i].mu;
+
+    public double GetSigma(int i) => elems[i].sigma;
 
     public ArrayOfElems(string path)
     {
-        Arr = [];
-        mui = [];
-        sigmai = [];
-
+        elems = [];
         var data = File.ReadAllText(path).Split("\n");
         int length = int.Parse(data[0]);
         for (int i = 0; i < length; i++)
         {
             var info = data[1 + i].Split(" ");
-            Arr.Add([int.Parse(info[0]), int.Parse(info[1]), int.Parse(info[2]), int.Parse(info[3])]);
-            mui.Add(double.Parse(info[4]));
-            sigmai.Add(double.Parse(info[5]));
+            elems.Add(new Elem(0, int.Parse(info[0]), int.Parse(info[1]), int.Parse(info[2]),
+                               int.Parse(info[3]), double.Parse(info[4]), double.Parse(info[5])));
         }
     }
 
-
-    public void Add(List<int> elem)
+    public ArrayOfElems(string path, int num)
     {
-        Arr.Add(elem);
+        elems = [];
+        var data = File.ReadAllText(path).Split("\n");
+        int length = int.Parse(data[0]);
+        for (int i = 0; i < length; i++)
+        {
+            var info = data[1 + i].Split(" ");
+            List<int> linksArr = info[1 .. 13].Select(int.Parse).ToList();
+            elems.Add(new Elem(int.Parse(info[0]), linksArr, double.Parse(info[13]), double.Parse(info[14])));
+        }
     }
 
-    public ArrayOfElems(int elemsAmount)
-    {
-        Arr = new(elemsAmount);
-        mui = new();
-        sigmai = new();
-    }
+    public void Add(Elem elem) => elems.Add(elem);
 }

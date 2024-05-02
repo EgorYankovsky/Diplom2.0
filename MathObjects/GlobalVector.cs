@@ -42,6 +42,6 @@ public class GlobalVector : Vector
 
     public GlobalVector(ArrayOfPoints arrPt)
     {
-        _values = new double[arrPt.Length];
+        _values = new double[arrPt.GetLength()];
     }
 }

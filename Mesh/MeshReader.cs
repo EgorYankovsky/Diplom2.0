@@ -68,6 +68,7 @@ public static class MeshReader
         fileData = File.ReadAllText(bordersPath).Split("\n");
 
         var bordersAmount = int.Parse(fileData[0]);
+        Borders = [];
         for (int i = 0; i < bordersAmount; i++)
         {
             var info = fileData[1 + i].Split(" ").Select(int.Parse).ToArray();
