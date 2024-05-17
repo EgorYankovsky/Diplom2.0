@@ -7,6 +7,8 @@ public static class FolderManager
     public static void ClearFolder(string path)
     {
         DirectoryInfo di = new(path);
+        foreach (var dir in di.GetDirectories())
+            ClearFolder(path + dir.Name + "\\");
         foreach (FileInfo file in di.GetFiles())
             file.Delete();
     }

@@ -1,164 +1,159 @@
 ﻿using Project;
 using System.Globalization;
-using Dumpify;
 using Solver;
-using Manager;
-using System.Numerics;
 using Processor;
-using Solution;
-using MathObjects;
-using Functions;
 using Grid;
-using DataStructs;
 using static Grid.MeshReader;
 using static Grid.MeshGenerator;
 using static Manager.FolderManager;
+using DataStructs;
 
 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-DumpConfig.Default.ColorConfig.ColumnNameColor = DumpColor.FromHexString("#FF0000");
-DumpConfig.Default.ColorConfig.PropertyValueColor = DumpColor.FromHexString("#00FF00");
-DumpConfig.Default.ColorConfig.NullValueColor = DumpColor.FromHexString("#0000FF");
 
-string CalculationArea = Path.GetFullPath("../../../../Data/Input/WholeMesh.txt");
-string LayersArea = Path.GetFullPath("../../../../Data/Input/Fields.txt");
-string BordersInfo = Path.GetFullPath("../../../../Data/Input/Borders.txt");
-string TimePath = Path.GetFullPath("../../../../Data/Input/Time.txt");
-string SubtotalsPath = Path.GetFullPath("../../../../Data/Subtotals/");
-string AnswerPath = Path.GetFullPath("../../../../Data/Output/");
-string PicturesPath = Path.GetFullPath("../../../../Drawer/Pictures/");
+string InputDirectory = Path.GetFullPath("../../../../Data/Input/");
+string SubtotalsDirectory = Path.GetFullPath("../../../../Data/Subtotals/");
+string OutputDirectory = Path.GetFullPath("../../../../Data/Output/");
+string PicturesDirectory = Path.GetFullPath("../../../../Drawer/Pictures/");
 
-bool isSolving2DimTask = Checker(AnswerPath);
+bool isSolving2DimTask = Checker(OutputDirectory);
 
 // Pre-processor. Clearing output folders.
-
 if (isSolving2DimTask)
-    ClearFolders(new List<string> {SubtotalsPath + "/2_dim/",
-                                   PicturesPath + "/E_phi/",
-                                   PicturesPath + "/A_phi/",
-                                   AnswerPath + "/E_phi/Discrepancy/",
-                                   AnswerPath + "/E_phi/Answer/",
-                                   AnswerPath + "/A_phi/Discrepancy/",
-                                   AnswerPath + "/A_phi/Answer/"});
+    ClearFolders(new List<string> {SubtotalsDirectory + "/2_dim/",
+                                   PicturesDirectory + "/E_phi/",
+                                   PicturesDirectory + "/A_phi/",
+                                   OutputDirectory});
 
+ClearFolders(new List<string> {SubtotalsDirectory + "3_dim\\",
+                               OutputDirectory + "A_phi\\Answer3D\\"});
 
-/*
-int nx = 4;
-int ny = 4;
-int nz = 3;
+// Reading mesh.
+ReadMesh(InputDirectory + "WholeMesh.txt");
+ReadTimeMesh(InputDirectory + "Time.txt");
 
-List<double> nodesX = [0.0, 1.0, 2.0, 3.0];
-List<double> nodesY = [0.0, 1.0, 2.0, 3.0];
-List<double> nodesZ = [0.0, 1.0, 2.0];
-
-double xMin = nodesX[0];
-double xMax = nodesX[^1];
-double yMin = nodesY[0];
-double yMax = nodesY[^1];
-double zMin = nodesZ[0];
-double zMax = nodesZ[^1];
-
-ArrayOfPoints arrpnt = new(nx * ny * nz);
-
-foreach (var Z in nodesZ)
-    foreach (var Y in nodesY)
-        foreach (var X in nodesX)
-            arrpnt.Append(new Point(X, Y, Z));
-
-foreach (var pnt in arrpnt)
-{
-    if (pnt.Z == zMax)
-        pnt.Type = Location.BoundaryII;
-    else if (pnt.Z == zMin || pnt.X == xMin ||pnt.X == xMax || pnt.Y == yMin || pnt.Y == yMax)
-        pnt.Type = Location.BoundaryI;
-    else
-        pnt.Type = Location.Inside;
-}
-
-ArrayOfRibs arr = new(3 * nx * ny * nz - nx * ny - nx * nz - ny * nz);
-
-int nxny = nx * ny;
-
-for (int k = 0; k < nz; k++)
-{
-    for (int j = 0; j < ny; j++)
-    {
-        for (int i = 0; i < nx - 1; i++) 
-            arr.Add(new Rib(arrpnt[k * nxny + nx * j + i], arrpnt[k * nxny + nx * j + i + 1]));
-        if (j != ny - 1)
-            for (int i = 0; i < nx; i++)
-                arr.Add(new Rib(arrpnt[k * nxny + nx * j + i], arrpnt[k * nxny + nx * (j + 1) + i]));
-    }
-    if (k != nz - 1)
-        for (int j = 0; j < ny; j++)
-            for (int i = 0; i < nx; i++)
-                arr.Add(new Rib(arrpnt[k * nxny + nx * j + i], arrpnt[(k + 1) * nxny + nx * j + i]));
-}
-
-//return 0;
-*/
-
-// Genereting mesh.
-ReadMesh(CalculationArea, BordersInfo);
-ReadTimeMesh(TimePath);
+// Set recivers
+List<Point3D> recivers = [new(699.997, 0.0, -3.0), new(697.737, 0.0, -30.0),
+                          new(673.205, 0.0, -100.0), new(605.357, 0.0, -170.0)];
 
 Mesh3Dim mesh3D = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
                       NodesZ, InfoAboutZ, Elems, Borders);
 
-Mesh3Dim mesh3D_l1 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
-                         NodesZ, InfoAboutZ, Elems, Borders);
-
-mesh3D_l1 = mesh3D.Clone();
-
-
 Mesh2Dim mesh2D = new(NodesR, InfoAboutR, NodesZ, InfoAboutZ,
                       Elems, Math.Sqrt(Math.Pow(mesh3D.nodesX[^1], 2) + Math.Pow(mesh3D.nodesY[^1], 2)));
+mesh2D.SetBorders(mesh3D.borders);
 
 var timeMesh = GenerateTimeMesh(Time.Item1, Time.Item2, tn, tk);
 
 // Main process of 2-dim task.
-mesh2D.SetBorders(mesh3D.borders);
 ConstructMesh(ref mesh2D);
 FEM2D myFEM2D = new(mesh2D, timeMesh);
 if (isSolving2DimTask)
 {
-    myFEM2D.SetSolver(new LU_LOS());
+    myFEM2D.SetSolver(new LOS());
     myFEM2D.Solve();
     myFEM2D.GenerateVectorEphi();
-    myFEM2D.WriteData(AnswerPath);
-    myFEM2D.WriteDiscrepancy(AnswerPath);
+    myFEM2D.WriteData(OutputDirectory);
+    myFEM2D.WriteDiscrepancy(OutputDirectory);
+    myFEM2D.WritePointsToDraw(OutputDirectory + "ToDraw\\2_dim\\Aphi\\",
+                              OutputDirectory + "ToDraw\\2_dim\\Ephi\\");
+    myFEM2D.MeasureValuesOnReceivers(recivers, OutputDirectory + "ToDraw\\2_dim\\Receivers\\");
 
-    // Post-processor of zero-layer. Drawing A_phi and E_phi.
-    int a = Postprocessor.DrawA_phi();
-    int b = Postprocessor.DrawE_phi();
-    Console.WriteLine($"Drawing A_phi finished with code: {a}\n" +
-                      $"Drawing E_phi finished with code: {b}");
+    // Post-processor of normal layer. Drawing A_phi, E_phi and graphics.
+    //int a = Postprocessor.DrawA_phi();
+    //int b = Postprocessor.DrawE_phi();
+    //int c = Postprocessor.DrawGraphics2D();
+    //Console.WriteLine($"Drawing A_phi finished with code: {a}\n" +
+    //                  $"Drawing E_phi finished with code: {b}\n" + 
+    //                  $"Drawing graphics finished with code: {c}\n");
 }
 else
-    myFEM2D.ReadAnswer(AnswerPath);
+    myFEM2D.ReadAnswer(OutputDirectory);
 
+myFEM2D.WritePointsToDraw(OutputDirectory + "ToDraw\\2_dim\\Aphi\\",
+                          OutputDirectory + "ToDraw\\2_dim\\Ephi\\");
+myFEM2D.MeasureValuesOnReceivers(recivers, OutputDirectory + "ToDraw\\2_dim\\Receivers\\");
+
+// Post-processor of normal layer. Drawing A_phi, E_phi and graphics.
+int a = Postprocessor.DrawA_phi();
+int b = Postprocessor.DrawE_phi();
+int c = Postprocessor.DrawGraphics2D();
+Console.WriteLine($"Drawing A_phi finished with code: {a}\n" +
+                  $"Drawing E_phi finished with code: {b}\n" + 
+                  $"Drawing graphics finished with code: {c}\n");
+
+
+ConstructMesh(ref mesh3D);
+FEM3D myFEM3D = new(mesh3D,  timeMesh);
+myFEM3D.ConvertResultTo3Dim(myFEM2D);
+myFEM3D.CheckSolution(recivers);
+myFEM3D.WriteData(OutputDirectory + "A_phi\\Answer3D\\ConvertedTo3D\\");
+return 0;
 
 // Main process of 3D task.
-var Layers = ReadFields(LayersArea);
-ConstructMesh(ref mesh3D);
+List<Layer> Layers = [new Layer(0.0, 0.0, 0.0, 0.0)];
 
-FEM3D myFEM3D = new(mesh3D,  timeMesh, Layers);
-myFEM3D.ConvertResultTo3Dim(myFEM2D);
-myFEM3D.WriteData(AnswerPath + $"A_phi\\Answer3D\\ConvertedTo3D\\");
+// Solving first layer: groundwater.
+ReadField(InputDirectory + "Fields//Field1.txt");
+Mesh3Dim mesh3D_a1 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
+                         NodesZ, InfoAboutZ, Elems, Borders);
+mesh3D_a1.CommitAnomalyBorders(FieldBorders);
+ConstructMeshAnomaly(ref mesh3D_a1, SubtotalsDirectory + "3_dim\\Field0\\");
+FEM3D fem3D_a1 = new(mesh3D_a1, timeMesh, myFEM3D, TypeOfLayer.Field, 0);
+fem3D_a1.SetSolver(new LU_LOS());
+fem3D_a1.Solve();
 
-ReadMesh(CalculationArea, BordersInfo);
-mesh3D_l1 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
-                NodesZ, InfoAboutZ, Elems, Borders);
+myFEM3D.AddSolution(fem3D_a1);
+myFEM3D.GenerateVectorE();
+myFEM3D.WriteData(OutputDirectory + $"A_phi\\Answer3D\\AfterField1\\");
+return 0;
+
+// Solving first layer from -2000 < z < -1500
+//ReadMesh(CalculationArea, BordersInfo);
+Mesh3Dim mesh3D_l1 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
+                         NodesZ, InfoAboutZ, Elems, Borders);
 
 ConstructMesh(ref mesh3D_l1, Layers[0], 0);
-FEM3D fem3D_l1 = new(mesh3D_l1, timeMesh, Layers);
-fem3D_l1.SelectCurrentLayer(0);
+FEM3D fem3D_l1 = new(mesh3D_l1, timeMesh, myFEM3D, TypeOfLayer.Field, 0);
 fem3D_l1.ConstructMatrixes();
 fem3D_l1.SetSolver(new LU_LOS());
 fem3D_l1.Solve();
 myFEM3D.AddSolution(fem3D_l1);
-myFEM3D.WriteData(AnswerPath + $"A_phi\\Answer3D\\AfterField1\\");
+myFEM3D.GenerateVectorE();
+myFEM3D.WriteData(OutputDirectory + $"A_phi\\Answer3D\\AfterField1\\");
 
 
+// Solving second layer from -1500 < z < -1000
+//ReadMesh(CalculationArea, BordersInfo);
+Mesh3Dim mesh3D_l2 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
+                         NodesZ, InfoAboutZ, Elems, Borders);
+
+
+ConstructMesh(ref mesh3D_l2, Layers[1], 1);
+FEM3D fem3D_l2 = new(mesh3D_l2, timeMesh, myFEM3D, TypeOfLayer.Field, 0);
+fem3D_l2.ConstructMatrixes();
+fem3D_l2.SetSolver(new LU_LOS());
+fem3D_l2.Solve();
+myFEM3D.AddSolution(fem3D_l2);
+myFEM3D.GenerateVectorE();
+myFEM3D.WriteData(OutputDirectory + $"A_phi\\Answer3D\\AfterField2\\");
+
+// Solving third layer from -1000 < z < -500
+//ReadMesh(CalculationArea, BordersInfo);
+Mesh3Dim mesh3D_l3 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
+                         NodesZ, InfoAboutZ, Elems, Borders);
+
+ConstructMesh(ref mesh3D_l3, Layers[2], 2);
+
+FEM3D fem3D_l3 = new(mesh3D_l3, timeMesh, myFEM3D, TypeOfLayer.Field, 0);
+fem3D_l3.ConstructMatrixes();
+fem3D_l3.SetSolver(new LU_LOS());
+fem3D_l3.Solve();
+myFEM3D.AddSolution(fem3D_l3);
+myFEM3D.GenerateVectorE();
+myFEM3D.WriteData(OutputDirectory + $"A_phi\\Answer3D\\AfterField3\\");
+
+// Final answer
+myFEM3D.WriteData(OutputDirectory + $"A_phi\\Answer3D\\TotalFinal\\");
 
 
 

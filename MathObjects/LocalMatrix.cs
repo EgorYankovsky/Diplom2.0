@@ -13,9 +13,6 @@ public class LocalMatrix : Matrix
 
     private readonly double _gamma;
 
-
-    private readonly double _sigma;
-
     private readonly double _rk;
 
     private readonly double _hr;
@@ -31,7 +28,7 @@ public class LocalMatrix : Matrix
             {
                 TypeOfMatrixM.Mr =>  _gamma * (_Mr[i % 2, j % 2] * _Mz[i / 2, j / 2]),
                 TypeOfMatrixM.Mrr => _lambda * (_Gr[i % 2, j % 2] * _Mz[i / 2, j / 2] + _Mr[i % 2, j % 2] * _Gz[i / 2, j / 2]) +
-                                     _gamma * (_Mrr[i % 2, j % 2] * _Mz[i / 2, j / 2]),
+                                     _lambda * (_Mrr[i % 2, j % 2] * _Mz[i / 2, j / 2]),
                 _ => throw new Exception("Unexpected matrix"),
             };
         }
@@ -94,7 +91,7 @@ public class LocalMatrix : Matrix
         _hr = arrPt[elem[1]].R - arrPt[elem[0]].R;
         _hz = arrPt[elem[2]].Z - arrPt[elem[0]].Z;
         double _d = _rk / _hr;
-        _lambda = lambda;
+        _lambda = 1.0D / lambda;
         _gamma = gamma;
         _Mr1 = new double[2,2] {{ (1 + _d) * (1 + _d), -1.0 * _d * (1 + _d)},
                                 {-1.0 * _d * (1 + _d),              _d * _d}};

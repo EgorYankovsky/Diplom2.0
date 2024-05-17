@@ -1,6 +1,7 @@
 using DataStructs;
 using Functions;
 using static Functions.Function;
+using Grid;
 
 namespace MathObjects;
 
@@ -16,7 +17,7 @@ public static class Generator
             List<int> currElem = [arrEl[i][0], arrEl[i][3], arrEl[i][8], arrEl[i][11],
                                   arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
                                   arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
-            
+
             double hx = arrRibs[currElem[0]].Length;
             double hy = arrRibs[currElem[4]].Length;
             double hz = arrRibs[currElem[8]].Length;
@@ -146,9 +147,25 @@ public static class Generator
 
             var theorSigma = arrEl[i].sigma;
             var sigma = SelectSigma(theorSigma, currentLayer, arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z);
-            //if (sigma > 0) 
-            //    Console.WriteLine();
             Add(LocalE, ref v, sigma, currElem);
+        }
+    }
+
+    public static void FillVector3DVec(ref GlobalVector v, GlobalVector E, Mesh3Dim mesh, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
+    {
+        for (int i = 0; i < arrEl.Length; i++)
+        {
+            List<int> currElem = [arrEl[i][0], arrEl[i][3], arrEl[i][8], arrEl[i][11],
+                                  arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
+                                  arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
+
+            List<double> q = [E[arrEl[i][0]], E[arrEl[i][3]], E[arrEl[i][8]], E[arrEl[i][11]],
+                              E[arrEl[i][1]], E[arrEl[i][2]], E[arrEl[i][9]], E[arrEl[i][10]],
+                              E[arrEl[i][4]], E[arrEl[i][5]], E[arrEl[i][6]], E[arrEl[i][7]]];
+
+            var a = mesh.AnomalyBorders;
+            var theorSigma = arrEl[i].sigma;
+
         }
     }
 
@@ -165,7 +182,12 @@ public static class Generator
     }
 
     private static double SelectSigma(double theorSigma, Layer layer, double z0, double z1) 
-            => layer.z0 <= z0 && z1 <= layer.z1 ? layer.sigma - theorSigma : 0.0D;
+            => layer.Z0 <= z0 && z1 <= layer.Z1 ? layer.Sigma - theorSigma : 0.0D;
+
+    //private static double SelectSigma(double theorSigma, double layerSigma, double[] currentElem, List<int> anomalyBorders, Mesh3Dim mesh)
+    //{
+    //    if (cur)
+    //}
 
     public static void BuildPortait(ref GlobalMatrix m, int arrPtLen, ArrayOfElems arrEl)
     {
@@ -200,11 +222,11 @@ public static class Generator
         m._au = new double[m._jg.Count];
 
         for (int i = 0; i < arrEl.Length; i++)
-            Add(new LocalMatrixNum(arrEl[i].Arr, arrPt, typeOfMatrixM, arrEl[i].mu, arrEl[i].sigma), ref m, arrEl[i].Arr);
+            Add(new LocalMatrix(arrEl[i].Arr, arrPt, typeOfMatrixM, arrEl[i].mu, arrEl[i].sigma), ref m, arrEl[i].Arr);
             //Add(new LocalMatrixNum(arrEl[i], arrPt, typeOfMatrixM, arrEl.mui[i], arrEl.sigmai[i]), ref m, arrEl[i]);
     }
 
-    private static void Add(LocalMatrixNum lm, ref GlobalMatrix gm, List<int> elem)
+    private static void Add(LocalMatrix lm, ref GlobalMatrix gm, List<int> elem)
     {
         if (gm._diag is null) throw new Exception("_diag isn't initialized");
         if (gm._ig is null) throw new Exception("_ig isn't initialized");
@@ -374,12 +396,17 @@ public static class Generator
 
     public static void FillVector(ref GlobalVector v, ArrayOfPoints2D arrPt, ArrayOfElems arrEl, double t)
     {
-        for (int i = 0; i < arrEl.Length; i++)
-        {
-            if (arrPt[arrEl[i][0]].R <= 10.0D && 10.0D <= arrPt[arrEl[i][3]].R &&
-                arrPt[arrEl[i][0]].Z <= 0.0D && 0.0D <= arrPt[arrEl[i][3]].Z && t <= 1.0D)
-                Add(new LocalVector(arrEl[i].Arr, arrPt, t), ref v, arrEl[i].Arr);
-        }
+        for (int i = 0; i < arrPt.GetLength(); i++)
+            if (arrPt[i].R == 500.0D && arrPt[i].Z == 0.0D && t <= 1.0D)
+                v[i] = F(arrPt[i].R, arrPt[i].Z, t);
+
+            
+        //for (int i = 0; i < arrEl.Length; i++)
+        //{
+        //    if (arrPt[arrEl[i][0]].R <= 500.0D && 500.0D <= arrPt[arrEl[i][3]].R &&
+        //        arrPt[arrEl[i][0]].Z <= 0.0D && 0.0D <= arrPt[arrEl[i][3]].Z && t <= 1.0D)
+        //        Add(new LocalVector(arrEl[i].Arr, arrPt, t), ref v, arrEl[i].Arr);
+        //}
     }
 
     private static void Add(LocalVector lv, ref GlobalVector gv, List<int> elems)
@@ -403,6 +430,19 @@ public static class Generator
                     for (int j = gm._ig[border[i]]; j < gm._ig[border[i] + 1]; j++)
                         gm._al[j] = 0.0D;
                     gm._diag[border[i]] = 1.0D;
+                    //for (int row = 0; row < gm.Size; row++)
+                    //{
+                    //    var stB = gv[border[i]];
+                    //    for (int jj = gm._ig[row]; jj < gm._ig[row + 1]; jj++)
+                    //    {
+                    //        if (gm._jg[jj] == border[i])
+                    //        {
+                    //            stB *= -1.0D * gm._al[jj];
+                    //            gv[row] += stB;
+                    //            gm._al[jj] = 0.0D;
+                    //        }    
+                    //    }
+                    //}
                     for (int j = 0; j < gm._jg.Count; j++)
                         if (gm._jg[j] == border[i])
                             gm._au[j] = 0.0D;

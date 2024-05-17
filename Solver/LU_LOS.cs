@@ -86,14 +86,23 @@ public class LU_LOS : ISolver
             {
                 var a = A._au[j];
                 var aa = result[i];
+                if (double.IsInfinity(aa))
+                    continue;
                 var aaa = A._au[j] * result[i];
                 result[A._jg[j]] -= A._au[j] * result[i];
+                if (double.IsNaN(result[A._jg[j]]))
+                    continue;
             }
         return result;
     }
 
     public (GlobalVector, GlobalVector) Solve(GlobalMatrix A, GlobalVector b)
     {
+
+        for (int i = 0; i < A.Size; i++)
+            if (A._diag[i] == 0.0D)
+                Console.WriteLine(i);
+
         for (int i = 0; i < b.Size; i++)
             if (double.IsNaN(b[i]) || double.IsInfinity(b[i]))
                 Console.WriteLine(i);
@@ -113,7 +122,7 @@ public class LU_LOS : ISolver
             if (double.IsNaN(LU._au[i]) || double.IsInfinity(LU._au[i]))
                 Console.WriteLine(i);
 
-        GlobalVector r = Forward(LU, b - A * x);
+        GlobalVector r = Forward(LU, b - A * x); // !!!!
         for (int i = 0; i < r.Size; i++)
             if (double.IsNaN(r[i]) || double.IsInfinity(r[i]))
                 Console.WriteLine(i);

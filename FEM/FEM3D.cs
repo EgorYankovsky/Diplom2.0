@@ -1,52 +1,229 @@
-using System.Collections.Immutable;
-using System.Numerics;
 using MathObjects;
-using Solver;
 using Grid;
 using DataStructs;
-using System.Diagnostics;
 using Functions;
-using System.ComponentModel.DataAnnotations;
-using System.Timers;
+
 
 namespace Project;
 
+public enum TypeOfLayer
+{
+    Anomaly,
+
+    Field
+}
+
 public class FEM3D : FEM
 {
-    public ArrayOfPoints3D pointsArr = new(_pointspath3D);
+    private static readonly double mu0 = 4.0D * Math.PI * Math.Pow(10.0D, -7);
+
+    public ArrayOfPoints3D pointsArr;
 
     public List<GlobalVector> A;
 
     public List<GlobalVector> E;
 
-    public List<List<GlobalVector>> A_plus;
+    public List<GlobalVector> B;
+
+    public List<GlobalVector> H;
 
     public ArrayOfRibs? ribsArr;
 
     private readonly Mesh3Dim mesh3Dim;
 
-    // Maybe private?
-    public List<Layer> Layers;
-
-    private Layer _currentLayer;
-
     private GlobalMatrix? G;
+
+    private readonly FEM3D? _originalFEM;
+
+    private List<GlobalVector>? _originalE;
 
     private GlobalMatrix? M;
 
-    public FEM3D(Mesh3Dim mesh, TimeMesh timeMesh, List<Layer> layers) : base(timeMesh, 3)
+    internal static List<int> ConvertGlobalToLocalNumeration(List<int> global) => 
+            [global[0], global[3], global[8], global[11],
+             global[1], global[2], global[9], global[10],
+             global[4], global[5], global[6], global[7]];
+
+    public FEM3D(Mesh3Dim mesh, TimeMesh timeMesh) : base(timeMesh)
     {
+        string pointsPath = _3dValuesPath + $"AfterConvertation\\Points.poly";
+        string elemsPath = _3dValuesPath + $"AfterConvertation\\Elems.poly";
+        string bordersPath = _3dValuesPath + $"AfterConvertation\\Borders.poly";
+        
+        pointsArr = new ArrayOfPoints3D(pointsPath);
+        elemsArr = new(elemsPath, 3);
+        bordersArr = new (bordersPath, 3);
+        ribsArr = mesh.arrayOfRibs;
+
         equationType = timeMesh[0] == timeMesh[^1] ? EquationType.Elliptic : EquationType.Parabolic;
         
         A = [];
         E = [];
-        A_plus = new List<List<GlobalVector>>(layers.Count);
-        ribsArr = mesh.arrayOfRibs;
+        B = [];
+        H = [];
 
-        Layers = layers;
-        _currentLayer = Layers[0];
-        //MeshGenerator.SelectRibs(ref ribsArr, ref elemsArr);
         mesh3Dim = mesh;
+    }
+
+    public FEM3D(Mesh3Dim mesh, TimeMesh timeMesh, FEM3D originalFEM, TypeOfLayer type, int Num) : base(timeMesh)
+    {
+        string pointsPath = _3dValuesPath + $"{type}{Num}\\Points.poly";
+        string elemsPath = _3dValuesPath + $"{type}{Num}\\Elems.poly";
+        string bordersPath = _3dValuesPath + $"{type}{Num}\\Borders.poly";
+
+        pointsArr = new(pointsPath);
+        elemsArr = new(elemsPath, 3);
+        bordersArr = new(bordersPath, 3);
+        ribsArr = mesh.arrayOfRibs;
+        _originalFEM = originalFEM;
+        _originalE = [];
+
+        equationType = timeMesh[0] == timeMesh[^1] ? EquationType.Elliptic : EquationType.Parabolic;
+        
+        A = [];
+        E = [];
+        B = [];
+        H = [];
+        mesh3Dim = mesh;
+        ConstructMatrixes();
+        ConfirmOriginalVectorE();
+    }
+
+    public (double, double, double) GetAAt(double x, double y, double z, double t)
+    {
+        if (ribsArr is null) throw new ArgumentNullException("Array of ribs not generated");
+        for (int tt = 0; tt < Time.Count; tt++)
+            if (tt == t)
+            {
+                var elem = ConvertGlobalToLocalNumeration(GetElem(x, y, z));
+                double[] q = new double[12];
+                for (int i = 0; i < 12; i++)
+                    q[i] = A[tt][elem[i]];
+
+                double x0 = ribsArr[elem[0]].a.X;
+                double x1 = ribsArr[elem[0]].b.X;
+                double y0 = ribsArr[elem[4]].a.Y;
+                double y1 = ribsArr[elem[4]].b.Y;
+                double z0 = ribsArr[elem[8]].a.Z;
+                double z1 = ribsArr[elem[8]].b.Z;
+
+                double eps = (x - x0) / (x1 - x0);
+                double nu =  (y - y0) / (y1 - y0);
+                double khi = (z - z0) / (z1 - z0);
+                return BasisFunctions3DVec.GetValue(eps, nu, khi, q);
+            }
+        throw new Exception("Out of mesh borders");
+    }
+
+    public (double, double, double) GetEAt(double x, double y, double z, double t)
+    {
+        if (ribsArr is null) throw new ArgumentNullException("Array of ribs not generated");
+        for (int tt = 0; tt < Time.Count; tt++)
+            if (Time[tt] == t)
+            {
+                var elem = ConvertGlobalToLocalNumeration(GetElem(x, y, z));
+                double[] q = new double[12];
+                for (int i = 0; i < 12; i++)
+                    q[i] = E[tt][elem[i]];
+
+                double x0 = ribsArr[elem[0]].a.X;
+                double x1 = ribsArr[elem[0]].b.X;
+                double y0 = ribsArr[elem[4]].a.Y;
+                double y1 = ribsArr[elem[4]].b.Y;
+                double z0 = ribsArr[elem[8]].a.Z;
+                double z1 = ribsArr[elem[8]].b.Z;
+
+                double eps = (x - x0) / (x1 - x0);
+                double nu =  (y - y0) / (y1 - y0);
+                double khi = (z - z0) / (z1 - z0);
+                return BasisFunctions3DVec.GetValue(eps, nu, khi, q);
+            }
+        throw new Exception("Out of mesh borders");
+    }
+
+    public (double, double, double) GetBAt(double x, double y, double z, double t)
+    {
+        throw new Exception("");
+    }
+
+    public (double, double, double) GetHAt(double x, double y, double z, double t)
+    {
+        throw new Exception("");
+    }
+
+    public void GenerateVectorB()
+    {
+        if (A is []) throw new Exception("Vector B isn't generated");
+        if (ribsArr is null) throw new Exception("Array of ribs isn't generated");
+        
+
+        B = new(A.Count);
+        for (int t = 0; t < Time.Count; t++)
+        {
+            B[t] = new GlobalVector(ribsArr.Count);
+            for (int i = 0; i < A[t].Size; i++)
+            {
+                double ht = Math.Pow(10, -10);
+                var pnt = ribsArr[i].GetMiddlePoint();
+                
+                var rib_1 = GetAAt(pnt.X + ht, pnt.Y + ht, pnt.Z + ht, Time[t]);
+                var rib_0 = GetAAt(pnt.X - ht, pnt.Y - ht, pnt.Z - ht, Time[t]);
+
+                //var vec1 = GetAAt();
+            }
+        }
+    }
+
+    public void GenerateVectorH()
+    {
+        if (B is []) throw new Exception("Vector B isn't generated");
+        H = new(B.Count);
+        for (int t = 0; t < B.Count; t++)
+        {
+            H.Add(new GlobalVector(B[t].Size));
+            for (int i = 0; i < B[i].Size; i++)
+                H[t][i] = B[t][i] / mu0;
+
+        }
+    }
+
+    private void ConfirmOriginalVectorE()
+    {
+        if (_originalE is null) throw new Exception("original E is null");
+        if (_originalFEM is null) throw new Exception("original FEM is null");
+        if (_originalFEM.ribsArr is null) throw new Exception("original FEM ribs arr is null");
+        if (ribsArr is null) throw new Exception("original FEM ribs arr is null");
+        
+        for (int tt = 0; tt < Time.Count; tt++)
+        {
+            _originalE.Add(new GlobalVector(ribsArr.Count));
+            for (int i = 0; i < ribsArr.Count; i++)
+            {
+                var pnt = ribsArr[i].GetMiddlePoint();
+                var vec = _originalFEM.GetEAt(pnt.X, pnt.Y, pnt.Z, Time[tt]);
+                var tanget = ribsArr[i].GetTangent();
+                var qi = vec.Item1 * tanget.Item1 + vec.Item2 * tanget.Item2 + vec.Item3 * tanget.Item3;
+                _originalE[tt][i] = qi;
+            }
+        }
+    }
+
+    public void GenerateVectorE()
+    {
+        E = new(A.Count);   
+        for (int i = 0; i < A.Count; i++)
+        {
+            if (i == 0 || i == 1)
+                E.Add(new GlobalVector(A[i].Size));
+            else
+            {
+                double ti = Time[i];
+                double ti_1 = Time[i - 1];
+                double ti_2 = Time[i - 2];
+                E.Add(-1.0D / (ti_1 - ti_2) * A[i - 2] + (ti - ti_2) / ((ti_1 - ti_2) * (ti - ti_1)) * A[i - 1] - 
+                (2 * ti - ti_1 - ti_2) / ((ti - ti_2) * (ti - ti_1)) * A[i]);
+            }
+        }
     }
 
     public void AddSolution(FEM3D fem)
@@ -106,8 +283,6 @@ public class FEM3D : FEM
         return elemsArr[k * (mesh3Dim.nodesX.Count - 1) * (mesh3Dim.nodesY.Count - 1) + j * (mesh3Dim.nodesX.Count - 1) + i].Arr;
     }
 
-    public void SelectCurrentLayer(int num) => _currentLayer = Layers[num];
-
     public void ConvertResultTo3Dim(FEM2D fem2d)
     {
         if (fem2d.pointsArr is null) throw new ArgumentNullException();
@@ -161,24 +336,15 @@ public class FEM3D : FEM
         }
     }
 
-    public void AddField(Layer layer)
+    public void CheckSolution(List<Point3D> recivers)
     {
-        ArgumentNullException.ThrowIfNull(layer);
-        Layers?.Add(layer);
-    }
-
-    public void CommitFields()
-    {
-        if (elemsArr is null) throw new ArgumentNullException("elemsArr is null");
-
-        foreach (var layer in Layers)
+        GenerateVectorB();
+        GenerateVectorH();
+        for (int t = 0; t < Time.Count; t++)
         {
-            for (int i = 0; i < elemsArr.Length; i++)
+            foreach (var reciver in recivers)
             {
-                double minz = Math.Min(ribsArr[elemsArr[i][^1]].a.Z, ribsArr[elemsArr[i][^1]].b.Z);
-                double maxz = Math.Max(ribsArr[elemsArr[i][^1]].a.Z, ribsArr[elemsArr[i][^1]].b.Z);
-                if (layer.z0 <= minz && maxz <= layer.z1)
-                    elemsArr[i].sigma = layer.sigma;
+
             }
         }
     }
@@ -201,6 +367,7 @@ public class FEM3D : FEM
     {
         if (solver is null) throw new ArgumentNullException("Solver is null");
         if (ribsArr is null) throw new ArgumentNullException("ribs array is null");
+        if (_originalE is null) throw new ArgumentNullException("original E is null");
         if (G is null) throw new ArgumentNullException();
         if (M is null) throw new ArgumentNullException();
         
@@ -229,7 +396,8 @@ public class FEM3D : FEM
                 Matrix = G + tau0 * M;
                 
                 var b = new GlobalVector(ribsArr.Count);
-                Generator.FillVector3D(ref b, _currentLayer, ribsArr, elemsArr, Time[i]);
+                // ! ACHTUNG
+                Generator.FillVector3D(ref b, _originalE[i], new Layer(0.0, 0.0, 0.0, 0.0), ribsArr, elemsArr, Time[i]);
 
                 Vector = b - tau2 * M * Solutions[i - 2] + tau1 * M * Solutions[i - 1];
                 
@@ -238,15 +406,6 @@ public class FEM3D : FEM
             }
         }
         A = [.. Solutions];
-    }
-
-
-    public void CommitField(int layer)
-    {
-        if (A.Count != A_plus[layer].Count)
-            throw new ArgumentOutOfRangeException("Different sizes");
-        for (int i = 0; i < A.Count; i++)
-            A[i] += A_plus[layer][i];
     }
 
     public void WriteData(string path)
@@ -259,6 +418,50 @@ public class FEM3D : FEM
                 sw.WriteLine($"{i} {A[t][i]:E8}");
             sw.Close();
         }
+    }
+
+    public void WriteDataToDraw(string path)
+    {
+        double hx = (mesh3Dim.nodesX[^1] - mesh3Dim.nodesX[0]) / 10.0D;
+        double hy = (mesh3Dim.nodesY[^1] - mesh3Dim.nodesY[0]) / 10.0D;
+        double hz = (mesh3Dim.nodesZ[^1] - mesh3Dim.nodesZ[0]) / 10.0D;
+        
+        double x0 = mesh3Dim.nodesX[0];
+        double y0 = mesh3Dim.nodesY[0];
+        double z0 = mesh3Dim.nodesZ[0];
+        List<Point3D> points = [];
+        int i = 0;
+        int j = 0;
+        int k = 0;
+
+        while (z0 + hz * k <= mesh3Dim.nodesZ[^1])
+        {
+            j = 0;
+            while (y0 + hy * j <= mesh3Dim.nodesY[^1])
+            {
+                i = 0;
+                while (x0 + hx * i <= mesh3Dim.nodesX[^1])
+                {
+                    points.Add(new Point3D(x0 + i * hx, y0 + j * hy, z0 + k * hz));
+                    i++;
+                }
+                j++;
+            }
+            k++;
+        }
+
+        for (int t = 0; t < Time.Count; t++)
+        {
+            using var sw = new StreamWriter(path + $"Answer{t}.txt");
+            sw.WriteLine($"{mesh3Dim.nodesX[0]:E15} {mesh3Dim.nodesX[^1]:E15} {mesh3Dim.nodesY[0]:E15} {mesh3Dim.nodesY[^1]:E15} {mesh3Dim.nodesZ[0]:E15} {mesh3Dim.nodesZ[^1]:E15}");
+            foreach (var point in points)
+            {
+                var ans = GetEAt(point.X, point.Y, point.Z, Time[t]);
+                sw.WriteLine($"{point.X:E15} {point.Y:E15} {point.Z:E15} {ans.Item1:E15} {ans.Item2:E15} {ans.Item3:E15}");
+            }
+            sw.Close();
+        }
+
     }
 
     public void TestOutput(string path)

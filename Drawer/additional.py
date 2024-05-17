@@ -1,44 +1,33 @@
 import os
 
-class rib:
+class Rib:
+    
+    def get_antinormal(self):
+        rib_len = ((self.x1 - self.x0) ** 2 + (self.y1 - self.y0) ** 2 + (self.z1 - self.z0) ** 2) ** 0.5
+        return ((self.x1 - self.x0) / rib_len, 
+                (self.y1 - self.y0) / rib_len,
+                (self.z1 - self.z0) / rib_len)
 
-    def __init__(self, begin, end):
-        self.begin = begin
-        self.end = end
+    def get_middle_point(self):
+        return ((self.x1 + self.x0) * 0.5, 
+                (self.y1 + self.y0) * 0.5,
+                (self.z1 + self.z0) * 0.5)
 
-    def __init__(self, x0, y0, z0, x1, y1, z1):
-        self.x0 = float(x0)
-        self.y0 = float(y0)
-        self.z0 = float(z0)
+    def get_values_to_draw(self):
+        return (self.x0, self.y0, self.z0, self.dx, self.dy, self.dz)
 
-        self.x1 = float(x1)
-        self.y1 = float(y1)
-        self.z1 = float(z1)
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
 
-    def __init__(self, arr):
-        if len(arr) > 6:
-            self.x0 = 0.0
-            self.y0 = 0.0
-            self.z0 = 0.0
-
-            self.x1 = 0.0
-            self.y1 = 0.0
-            self.z1 = 0.0
-        elif len(arr) == 6:
-            self.x0 = float(arr[0])
-            self.y0 = float(arr[1])
-            self.z0 = float(arr[2])
-
-            self.x1 = float(arr[3])
-            self.y1 = float(arr[4])
-            self.z1 = float(arr[5])
-        else:
-            self.begin = int(arr[0])
-            self.end = int(arr[1])
-
-    def get_length(self):
-        return ((self.x1 - self.x0) ** 2 + (self.y1 - self.y0) ** 2 + (self.z1 - self.z0) ** 2) ** 0.5
-
+    def __init__(self, x0, y0, z0, dx, dy, dz):
+        self.x0 = x0
+        self.y0 = y0
+        self.z0 = z0
+        self.dx = dx
+        self.dy = dy
+        self.dz = dz
 
 
 def is_unique(arr, elem) -> bool:
@@ -47,12 +36,14 @@ def is_unique(arr, elem) -> bool:
             return False
     return True
 
+max_values = []
+
 x = []
 y = []
-r = []
 z = []
-basis = []
-ribs = []
+func = []
+ribs_arr = []
+it = 0
 
 def read_points(path):
     f = open(path, "r")
@@ -60,40 +51,27 @@ def read_points(path):
     for line in f.read().split("\n"):
         if line == '': break
         coord = line.split()
-        if len(coord == 3):
-            xi = float(line.split()[0])
-            yi = float(line.split()[1])
-            zi = float(line.split()[2])
-            if is_unique(x, xi):
-                x.append(xi)
-            if is_unique(y, yi):
-                y.append(yi)
-            if is_unique(z, zi):
-                z.append(zi)
-        if len(coord == 2):
-            ri = float(line.split()[0])
-            zi = float(line.split()[1])
-            if is_unique(r, ri):
-                r.append(ri)
-            if is_unique(z, zi):
-                z.append(zi)
+        ri = float(line.split()[0])
+        zi = float(line.split()[1])
+        if is_unique(r, ri):
+            r.append(ri)
+        if is_unique(z, zi):
+            z.append(zi)
         f.close()
 
-
-def read_basis(path_basis):
-    f = open(path_basis, 'r')
-    text = f.read().split("\n")
-    i = 0
-    it = 0
-    for ri in r:
-        i = 0
-        basis.append([])
-        for zi in z:
-            basis[it].append(float(text[it * len(z) + i]))
-            i+=1
-        it+=1
-    f.close()
-
+def read_data(path, r, z, func) -> (list, list, list): # type: ignore
+    f = open(path, 'r')
+    r_curr = []
+    z_curr = []
+    for line in f.read().split('\n'):
+        if line == '': break
+        info = line.split(" ")
+        r_curr.append(float(info[0]))
+        z_curr.append(float(info[1]))
+        func.append(float(info[2]))
+    r = list(dict.fromkeys(r_curr).keys())
+    z = list(dict.fromkeys(z_curr).keys())
+    return (r, z, func)
 
 def read_ribs(ribs_path):
     f = open(ribs_path, 'r')
@@ -102,3 +80,21 @@ def read_ribs(ribs_path):
         ribs.append(rib(line.split(" ")))
     f.close()
 
+def read_vectors(vectors_path):
+    ribs_arr.clear()
+    i = 0
+    for text in open(vectors_path, 'r').read().split("\n"):
+        if text == "":
+           break
+        text_vector = text.split(" ")
+        if i == 0:
+            max_values.append(float(text_vector[0]))
+            max_values.append(float(text_vector[1]))
+            max_values.append(float(text_vector[2]))
+            max_values.append(float(text_vector[3]))
+            max_values.append(float(text_vector[4]))
+            max_values.append(float(text_vector[5]))
+            i += 1
+        else:
+            ribs_arr.append(Rib(float(text_vector[0]), float(text_vector[1]),float(text_vector[2]),
+                                float(text_vector[3]), float(text_vector[4]),float(text_vector[5])))

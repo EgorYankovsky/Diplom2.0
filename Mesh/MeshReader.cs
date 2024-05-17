@@ -31,13 +31,15 @@ public static class MeshReader
 
     public static List<Border3D> Borders = [];
 
+    public static List<int> FieldBorders = [];
+
     public static (double, double) Time;
 
     public static int tn;
 
     public static double tk;
 
-    public static void ReadMesh(string meshPath, string bordersPath)
+    public static void ReadMesh(string meshPath)
     {
         var fileData = File.ReadAllText(meshPath).Split("\n");
         
@@ -56,6 +58,7 @@ public static class MeshReader
         R = double.Parse(fileData[8]);
 
         var elemsAmount = int.Parse(fileData[9]);
+        Elems = [];
         for (int i = 0; i < elemsAmount; i++)
         {
             var info = fileData[10 + i].Split(" ");
@@ -65,13 +68,13 @@ public static class MeshReader
                                int.Parse(info[6]), mu0, double.Parse(info[7])));
         }
 
-        fileData = File.ReadAllText(bordersPath).Split("\n");
-
-        var bordersAmount = int.Parse(fileData[0]);
+        int iter = 10 + elemsAmount;
+        var bordersAmount = int.Parse(fileData[iter]);
+        iter++;
         Borders = [];
         for (int i = 0; i < bordersAmount; i++)
         {
-            var info = fileData[1 + i].Split(" ").Select(int.Parse).ToArray();
+            var info = fileData[iter + i].Split(" ").Select(int.Parse).ToArray();
             Borders.Add(new Border3D(info[0], info[1], info[2], info[3],
                                      info[4], info[5], info[6], info[7]));
         }
@@ -88,16 +91,43 @@ public static class MeshReader
         Debug.WriteLine("Time data read correctly");
     }
 
-    public static List<Layer> ReadFields(string path)
+    public static void ReadField(string path)
     {
-        var layers = new List<Layer>();
         var info = File.ReadAllText(path).Split("\n");
-        var fieldsAmount = int.Parse(info[0]);
-        for (int i = 0; i < fieldsAmount; i++)
+
+        NodesX = [.. info[0].Split(" ").Select(double.Parse)];
+        InfoAboutX = info[1];
+    
+        NodesY = [.. info[2].Split(" ").Select(double.Parse)];
+        InfoAboutY = info[3];
+    
+        NodesZ = [.. info[4].Split(" ").Select(double.Parse)];
+        InfoAboutZ = info[5];
+    
+        var elemsAmount = int.Parse(info[6]);
+        Elems = [];
+        for (int i = 0; i < elemsAmount; i++)
         {
-            var fieldInfo = info[i + 1].Split(" ");
-            layers.Add(new Layer(double.Parse(fieldInfo[4]), double.Parse(fieldInfo[5]), mu0, double.Parse(fieldInfo[6])));
+            var infoElem = info[7 + i].Split(" ");
+            Elems.Add(new Elem(int.Parse(infoElem[0]), int.Parse(infoElem[1]),
+                               int.Parse(infoElem[2]), int.Parse(infoElem[3]), 
+                               int.Parse(infoElem[4]), int.Parse(infoElem[5]), 
+                               int.Parse(infoElem[6]), mu0, double.Parse(infoElem[7])));
+        }      
+        int iter = 7 + elemsAmount;
+        var bordersAmount = int.Parse(info[iter]);
+        iter++;
+        Borders = [];
+        for (int i = 0; i < bordersAmount; i++)
+        {
+            var infoBorder = info[iter + i].Split(" ").Select(int.Parse).ToArray();
+            Borders.Add(new Border3D(infoBorder[0], infoBorder[1], infoBorder[2], infoBorder[3],
+                                     infoBorder[4], infoBorder[5], infoBorder[6], infoBorder[7]));
         }
-        return layers;
+        iter += bordersAmount;
+        FieldBorders = [.. info[iter].Split(" ").Select(int.Parse)];
+        Debug.WriteLine("Field data read correctly");
     }
+
+    public static void ReadAnomaly(string path) => ReadField(path);
 }

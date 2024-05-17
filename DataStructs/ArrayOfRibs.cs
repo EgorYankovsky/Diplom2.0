@@ -26,6 +26,15 @@ public record Rib
 
     public TypeOfRib typeOfRib;
 
+    public Point3D GetMiddlePoint() => new(0.5 * (b.X + a.X), 0.5 * (b.Y + a.Y), 0.5 * (b.Z + a.Z));
+
+    public double GetLength() => Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y) + (b.Z - a.Z) * (b.Z - a.Z));
+
+    public (double, double, double) GetTangent() => ((b.X - a.X) / GetLength(), (b.Y - a.Y) / GetLength(), (b.Z - a.Z) / GetLength());
+
+    public override string ToString() => $"{a.X:E15} {a.Y:E15} {a.Z:E15} {b.X:E15} {b.Y:E15} {b.Z:E15} {typeOfRib}";
+
+
     public Rib(Point3D a, Point3D b)
     {
         this.a = a;

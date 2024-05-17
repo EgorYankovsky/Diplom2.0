@@ -4,20 +4,37 @@ namespace Processor;
 
 public static class Postprocessor
 {
-    private static readonly string _arg1 = Path.GetFullPath("../../../../Data/Subtotals/2_dim/Points.poly");
+    #region Generating plot of 2-dim task
+    private static readonly string _sourceToDrawPlot = "..\\..\\..\\..\\Drawer\\PictureDrawer2D.py";
 
-    private static readonly string _arg2 = Path.GetFullPath("../../../../Data/Output/A_phi/Answer/");
+    private static readonly string _readToDraw2_dim_A = Path.GetFullPath("..\\..\\..\\..\\Data\\Output\\ToDraw\\2_dim\\Aphi\\");
+    
+    private static readonly string _readToDraw2_dim_E = Path.GetFullPath("..\\..\\..\\..\\Data\\Output\\ToDraw\\2_dim\\Ephi\\");
+    
+    private static readonly string _outputDrawn2_dim_A = Path.GetFullPath("..\\..\\..\\..\\Drawer\\Pictures\\A_phi\\");
 
-    private static readonly string _arg3 = Path.GetFullPath("../../../../Drawer/Pictures/A_phi/");
+    private static readonly string _outputDrawn2_dim_E = Path.GetFullPath("..\\..\\..\\..\\Drawer\\Pictures\\E_phi\\");
+    #endregion
+
+    #region Drawing graphics of receivers
+    private static readonly string _sourceGrapher2D = "..\\..\\..\\..\\Drawer\\2D_graphicsDrawer.py";
+
+    private static readonly string _readDataForA = "..\\..\\..\\..\\Data\\Output\\ToDraw\\2_dim\\Receivers\\A.txt";
+
+    private static readonly string _readDataForE = "..\\..\\..\\..\\Data\\Output\\ToDraw\\2_dim\\Receivers\\E.txt";
+    
+    private static readonly string _writePictures = "..\\..\\..\\..\\Drawer\\Graphics\\";
+    #endregion
 
     private static readonly string _arg4 = Path.GetFullPath("../../../../Data/Output/E_phi/Answer/");
 
     private static readonly string _arg5 = Path.GetFullPath("../../../../Drawer/Pictures/E_phi/");
 
-    private static readonly string _source = "..\\..\\..\\..\\Drawer\\source.py";
+    private static readonly string _source3D = "..\\..\\..\\..\\Drawer\\3DplotVectors.py";
 
-    private static readonly string _sourceAnimation = "..\\..\\..\\..\\Drawer\\animation_creator.py";
+    private static readonly string _source3DRead = "..\\..\\..\\..\\Data\\Output\\E_phi\\ToDraw\\ConvertedTo3D\\";
 
+    private static readonly string _source3DWrite = "..\\..\\..\\..\\Drawer\\Pictures\\E_phi3D\\";
 
     private static readonly string _fileName = "python";
 
@@ -26,39 +43,47 @@ public static class Postprocessor
     public static int DrawA_phi()
     {
         process = new();
-        process.StartInfo.Arguments = $"{_source} {_arg1} {_arg2} {_arg3}";
-        process.StartInfo.FileName = _fileName;
-        process.Start();
-        process.WaitForExit();
-        int animStatus = DrawA_phi_gif();
-        return process.ExitCode & animStatus;
-    }
-
-    public static int DrawE_phi()
-    {
-        process = new();
-        process.StartInfo.Arguments = $"{_source} {_arg1} {_arg4} {_arg5}";
-        process.StartInfo.FileName = _fileName;
-        process.Start();
-        process.WaitForExit();
-        int animStatus = DrawE_phi_gif();
-        return process.ExitCode & animStatus;
-    }
-
-    private static int DrawA_phi_gif()
-    {
-        process = new();
-        process.StartInfo.Arguments = $"{_sourceAnimation} {_arg1} {_arg2} {_arg3}";
+        process.StartInfo.Arguments = $"{_sourceToDrawPlot} {_readToDraw2_dim_A} {_outputDrawn2_dim_A}";
         process.StartInfo.FileName = _fileName;
         process.Start();
         process.WaitForExit();
         return process.ExitCode;
     }
 
-    private static int DrawE_phi_gif()
+    public static int DrawE_phi()
     {
         process = new();
-        process.StartInfo.Arguments = $"{_sourceAnimation} {_arg1} {_arg4} {_arg5}";
+        process.StartInfo.Arguments = $"{_sourceToDrawPlot} {_readToDraw2_dim_E} {_outputDrawn2_dim_E}";
+        process.StartInfo.FileName = _fileName;
+        process.Start();
+        process.WaitForExit();
+        return process.ExitCode;
+    }
+
+    public static int DrawE3D()
+    {
+        process = new();
+        process.StartInfo.Arguments = $"{_source3D} {_source3DRead} {_source3DWrite}";
+        process.StartInfo.FileName = _fileName;
+        process.Start();
+        process.WaitForExit();
+        return process.ExitCode;
+    }
+
+    public static int DrawA3D()
+    {
+        process = new();
+        process.StartInfo.Arguments = $"{_source3D} {_arg4} {_arg5}";
+        process.StartInfo.FileName = _fileName;
+        process.Start();
+        process.WaitForExit();
+        return process.ExitCode;
+    }
+
+    public static int DrawGraphics2D()
+    {
+        process = new();
+        process.StartInfo.Arguments = $"{_sourceGrapher2D} {_readDataForA} {_readDataForE} {_writePictures}";
         process.StartInfo.FileName = _fileName;
         process.Start();
         process.WaitForExit();
