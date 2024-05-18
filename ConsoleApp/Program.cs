@@ -32,8 +32,8 @@ ReadMesh(InputDirectory + "WholeMesh.txt");
 ReadTimeMesh(InputDirectory + "Time.txt");
 
 // Set recivers
-List<Point3D> recivers = [new(699.997, 0.0, -3.0), new(697.737, 0.0, -30.0),
-                          new(673.205, 0.0, -100.0), new(605.357, 0.0, -170.0)];
+List<Point3D> recivers = [new(2500.0, 0.0, -100.0), new(2500.0, 0.0, -200.0),
+                          new(10.0, 0.0, -700.0), new(1000.0, 0.0, -1250.0)];
 
 Mesh3Dim mesh3D = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
                       NodesZ, InfoAboutZ, Elems, Borders);
@@ -59,46 +59,46 @@ if (isSolving2DimTask)
     myFEM2D.MeasureValuesOnReceivers(recivers, OutputDirectory + "ToDraw\\2_dim\\Receivers\\");
 
     // Post-processor of normal layer. Drawing A_phi, E_phi and graphics.
-    //int a = Postprocessor.DrawA_phi();
-    //int b = Postprocessor.DrawE_phi();
-    //int c = Postprocessor.DrawGraphics2D();
-    //Console.WriteLine($"Drawing A_phi finished with code: {a}\n" +
-    //                  $"Drawing E_phi finished with code: {b}\n" + 
-    //                  $"Drawing graphics finished with code: {c}\n");
+    int a = Postprocessor.DrawA_phi();
+    int b = Postprocessor.DrawE_phi();
+    int c = Postprocessor.DrawGraphics2D();
+    Console.WriteLine($"Drawing A_phi finished with code: {a}\n" +
+                      $"Drawing E_phi finished with code: {b}\n" + 
+                      $"Drawing graphics finished with code: {c}\n");
 }
 else
     myFEM2D.ReadAnswer(OutputDirectory);
 
-myFEM2D.WritePointsToDraw(OutputDirectory + "ToDraw\\2_dim\\Aphi\\",
-                          OutputDirectory + "ToDraw\\2_dim\\Ephi\\");
-myFEM2D.MeasureValuesOnReceivers(recivers, OutputDirectory + "ToDraw\\2_dim\\Receivers\\");
-
-// Post-processor of normal layer. Drawing A_phi, E_phi and graphics.
-int a = Postprocessor.DrawA_phi();
-int b = Postprocessor.DrawE_phi();
-int c = Postprocessor.DrawGraphics2D();
-Console.WriteLine($"Drawing A_phi finished with code: {a}\n" +
-                  $"Drawing E_phi finished with code: {b}\n" + 
-                  $"Drawing graphics finished with code: {c}\n");
-
-
 ConstructMesh(ref mesh3D);
 FEM3D myFEM3D = new(mesh3D,  timeMesh);
 myFEM3D.ConvertResultTo3Dim(myFEM2D);
-myFEM3D.CheckSolution(recivers);
+//myFEM3D.CheckSolution(recivers);
 myFEM3D.WriteData(OutputDirectory + "A_phi\\Answer3D\\ConvertedTo3D\\");
+
+// Solving first layer: groundwater.
+ReadAnomaly(InputDirectory + "Anomalies\\Anomaly1.txt");
+
+Mesh3Dim mesh3D_a1 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
+                         NodesZ, InfoAboutZ, Elems, Borders);
+mesh3D_a1.CommitAnomalyBorders(FieldBorders);
+ConstructMeshAnomaly(ref mesh3D_a1, SubtotalsDirectory + "3_dim\\Anomaly0\\");
+FEM3D fem3D_a1 = new(mesh3D_a1, timeMesh, myFEM3D, 0);
+fem3D_a1.SetSolver(new LU_LOS());
+fem3D_a1.Solve();
+
+return 0;
+myFEM3D.AddSolution(fem3D_a1);
+myFEM3D.GenerateVectorE();
+myFEM3D.WriteData(OutputDirectory + $"A_phi\\Answer3D\\AfterField1\\");
+
+
+
 return 0;
 
 // Main process of 3D task.
 List<Layer> Layers = [new Layer(0.0, 0.0, 0.0, 0.0)];
 
-// Solving first layer: groundwater.
-ReadField(InputDirectory + "Fields//Field1.txt");
-Mesh3Dim mesh3D_a1 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
-                         NodesZ, InfoAboutZ, Elems, Borders);
-mesh3D_a1.CommitAnomalyBorders(FieldBorders);
 ConstructMeshAnomaly(ref mesh3D_a1, SubtotalsDirectory + "3_dim\\Field0\\");
-FEM3D fem3D_a1 = new(mesh3D_a1, timeMesh, myFEM3D, TypeOfLayer.Field, 0);
 fem3D_a1.SetSolver(new LU_LOS());
 fem3D_a1.Solve();
 
@@ -113,47 +113,13 @@ Mesh3Dim mesh3D_l1 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
                          NodesZ, InfoAboutZ, Elems, Borders);
 
 ConstructMesh(ref mesh3D_l1, Layers[0], 0);
-FEM3D fem3D_l1 = new(mesh3D_l1, timeMesh, myFEM3D, TypeOfLayer.Field, 0);
+FEM3D fem3D_l1 = new(mesh3D_l1, timeMesh, myFEM3D, 0);
 fem3D_l1.ConstructMatrixes();
 fem3D_l1.SetSolver(new LU_LOS());
 fem3D_l1.Solve();
 myFEM3D.AddSolution(fem3D_l1);
 myFEM3D.GenerateVectorE();
 myFEM3D.WriteData(OutputDirectory + $"A_phi\\Answer3D\\AfterField1\\");
-
-
-// Solving second layer from -1500 < z < -1000
-//ReadMesh(CalculationArea, BordersInfo);
-Mesh3Dim mesh3D_l2 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
-                         NodesZ, InfoAboutZ, Elems, Borders);
-
-
-ConstructMesh(ref mesh3D_l2, Layers[1], 1);
-FEM3D fem3D_l2 = new(mesh3D_l2, timeMesh, myFEM3D, TypeOfLayer.Field, 0);
-fem3D_l2.ConstructMatrixes();
-fem3D_l2.SetSolver(new LU_LOS());
-fem3D_l2.Solve();
-myFEM3D.AddSolution(fem3D_l2);
-myFEM3D.GenerateVectorE();
-myFEM3D.WriteData(OutputDirectory + $"A_phi\\Answer3D\\AfterField2\\");
-
-// Solving third layer from -1000 < z < -500
-//ReadMesh(CalculationArea, BordersInfo);
-Mesh3Dim mesh3D_l3 = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
-                         NodesZ, InfoAboutZ, Elems, Borders);
-
-ConstructMesh(ref mesh3D_l3, Layers[2], 2);
-
-FEM3D fem3D_l3 = new(mesh3D_l3, timeMesh, myFEM3D, TypeOfLayer.Field, 0);
-fem3D_l3.ConstructMatrixes();
-fem3D_l3.SetSolver(new LU_LOS());
-fem3D_l3.Solve();
-myFEM3D.AddSolution(fem3D_l3);
-myFEM3D.GenerateVectorE();
-myFEM3D.WriteData(OutputDirectory + $"A_phi\\Answer3D\\AfterField3\\");
-
-// Final answer
-myFEM3D.WriteData(OutputDirectory + $"A_phi\\Answer3D\\TotalFinal\\");
 
 
 

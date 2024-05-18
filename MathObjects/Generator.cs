@@ -116,23 +116,6 @@ public static class Generator
         //}
     }
 
-    public static void FillVector3D(ref GlobalVector v, Layer currentLayer, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
-    {
-        for (int i = 0; i < arrEl.Length; i++)
-        {
-            List<int> currElem = [arrEl[i][0], arrEl[i][3], arrEl[i][8], arrEl[i][11],
-                                  arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
-                                  arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
-  
-            var lv = new LocalVector3D(arrRibs[currElem[0]].a.X, arrRibs[currElem[0]].b.X,
-                                       arrRibs[currElem[4]].a.Y, arrRibs[currElem[4]].b.Y,
-                                       arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z, t);
-            var theorSigma = arrEl[i].sigma;
-            var sigma = SelectSigma(theorSigma, currentLayer, arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z);
-            Add(lv, ref v, sigma, currElem);
-        }
-    }
-
     public static void FillVector3D(ref GlobalVector v, GlobalVector E, Layer currentLayer, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
     {
         for (int i = 0; i < arrEl.Length; i++)
@@ -148,24 +131,6 @@ public static class Generator
             var theorSigma = arrEl[i].sigma;
             var sigma = SelectSigma(theorSigma, currentLayer, arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z);
             Add(LocalE, ref v, sigma, currElem);
-        }
-    }
-
-    public static void FillVector3DVec(ref GlobalVector v, GlobalVector E, Mesh3Dim mesh, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
-    {
-        for (int i = 0; i < arrEl.Length; i++)
-        {
-            List<int> currElem = [arrEl[i][0], arrEl[i][3], arrEl[i][8], arrEl[i][11],
-                                  arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
-                                  arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
-
-            List<double> q = [E[arrEl[i][0]], E[arrEl[i][3]], E[arrEl[i][8]], E[arrEl[i][11]],
-                              E[arrEl[i][1]], E[arrEl[i][2]], E[arrEl[i][9]], E[arrEl[i][10]],
-                              E[arrEl[i][4]], E[arrEl[i][5]], E[arrEl[i][6]], E[arrEl[i][7]]];
-
-            var a = mesh.AnomalyBorders;
-            var theorSigma = arrEl[i].sigma;
-
         }
     }
 

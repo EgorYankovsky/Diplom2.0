@@ -91,7 +91,7 @@ public static class MeshReader
         Debug.WriteLine("Time data read correctly");
     }
 
-    public static void ReadField(string path)
+    public static void ReadAnomaly(string path)
     {
         var info = File.ReadAllText(path).Split("\n");
 
@@ -128,6 +128,4 @@ public static class MeshReader
         FieldBorders = [.. info[iter].Split(" ").Select(int.Parse)];
         Debug.WriteLine("Field data read correctly");
     }
-
-    public static void ReadAnomaly(string path) => ReadField(path);
 }

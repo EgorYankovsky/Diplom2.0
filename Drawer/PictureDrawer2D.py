@@ -11,11 +11,11 @@ l = plt.plot()
 metadata = dict(title='Movie', artist='codinglikemad')
 writer = PillowWriter(fps=30, metadata=metadata)
 
-input_path = sys.argv[1]
-output_path = sys.argv[2]
+#input_path = sys.argv[1]
+#output_path = sys.argv[2]
 
-#input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\2_dim\\Ephi\\"
-#output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E_phi\\"
+input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\2_dim\\Ephi\\"
+output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E_phi\\"
 
 i = 0
 path1 = Path(input_path)
@@ -50,7 +50,8 @@ with writer.saving(fig, output_path + "EM_field.gif", 100):
                     i+=1
                 it+=1
 
-            cbar = plt.contourf(rgrid, zgrid, fgrid, 125, cmap='plasma')
+
+            cbar = plt.contourf(rgrid, zgrid, fgrid, 125, cmap='viridis')
             plt.colorbar(cbar)
             plt.plot([min(r), min(r)], [max(z), min(z)], 'black', linewidth = 3.5)
             plt.plot([min(r), max(r)], [0.0, 0.0], '#b34b06', linewidth = 2.0)

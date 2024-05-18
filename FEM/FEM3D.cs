@@ -6,13 +6,6 @@ using Functions;
 
 namespace Project;
 
-public enum TypeOfLayer
-{
-    Anomaly,
-
-    Field
-}
-
 public class FEM3D : FEM
 {
     private static readonly double mu0 = 4.0D * Math.PI * Math.Pow(10.0D, -7);
@@ -65,11 +58,11 @@ public class FEM3D : FEM
         mesh3Dim = mesh;
     }
 
-    public FEM3D(Mesh3Dim mesh, TimeMesh timeMesh, FEM3D originalFEM, TypeOfLayer type, int Num) : base(timeMesh)
+    public FEM3D(Mesh3Dim mesh, TimeMesh timeMesh, FEM3D originalFEM, int Num) : base(timeMesh)
     {
-        string pointsPath = _3dValuesPath + $"{type}{Num}\\Points.poly";
-        string elemsPath = _3dValuesPath + $"{type}{Num}\\Elems.poly";
-        string bordersPath = _3dValuesPath + $"{type}{Num}\\Borders.poly";
+        string pointsPath = _3dValuesPath + $"Anomaly{Num}\\Points.poly";
+        string elemsPath = _3dValuesPath + $"Anomaly{Num}\\Elems.poly";
+        string bordersPath = _3dValuesPath + $"Anomaly{Num}\\Borders.poly";
 
         pointsArr = new(pointsPath);
         elemsArr = new(elemsPath, 3);
@@ -86,7 +79,6 @@ public class FEM3D : FEM
         H = [];
         mesh3Dim = mesh;
         ConstructMatrixes();
-        ConfirmOriginalVectorE();
     }
 
     public (double, double, double) GetAAt(double x, double y, double z, double t)
@@ -184,27 +176,6 @@ public class FEM3D : FEM
             for (int i = 0; i < B[i].Size; i++)
                 H[t][i] = B[t][i] / mu0;
 
-        }
-    }
-
-    private void ConfirmOriginalVectorE()
-    {
-        if (_originalE is null) throw new Exception("original E is null");
-        if (_originalFEM is null) throw new Exception("original FEM is null");
-        if (_originalFEM.ribsArr is null) throw new Exception("original FEM ribs arr is null");
-        if (ribsArr is null) throw new Exception("original FEM ribs arr is null");
-        
-        for (int tt = 0; tt < Time.Count; tt++)
-        {
-            _originalE.Add(new GlobalVector(ribsArr.Count));
-            for (int i = 0; i < ribsArr.Count; i++)
-            {
-                var pnt = ribsArr[i].GetMiddlePoint();
-                var vec = _originalFEM.GetEAt(pnt.X, pnt.Y, pnt.Z, Time[tt]);
-                var tanget = ribsArr[i].GetTangent();
-                var qi = vec.Item1 * tanget.Item1 + vec.Item2 * tanget.Item2 + vec.Item3 * tanget.Item3;
-                _originalE[tt][i] = qi;
-            }
         }
     }
 
@@ -383,23 +354,19 @@ public class FEM3D : FEM
             {
                 double t0 = Time[i];
                 double t1 = Time[i - 1];
-                double t2 = Time[i - 2];
 
-                double deltT = t0 - t2;
-                double deltT0 = t0 - t1;
-                double deltT1 = t1 - t2;
+                double deltT = t0 - t1;
 
-                double tau0 = (deltT + deltT0) / (deltT * deltT0);
-                double tau1 = deltT / (deltT1 * deltT0);
-                double tau2 = deltT0 / (deltT * deltT1);
-
+                double tau0 = 1.0D / deltT;
+                
                 Matrix = G + tau0 * M;
                 
                 var b = new GlobalVector(ribsArr.Count);
+                
                 // ! ACHTUNG
                 Generator.FillVector3D(ref b, _originalE[i], new Layer(0.0, 0.0, 0.0, 0.0), ribsArr, elemsArr, Time[i]);
 
-                Vector = b - tau2 * M * Solutions[i - 2] + tau1 * M * Solutions[i - 1];
+                Vector = b + tau0 * M * Solutions[i - 1];
                 
                 Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, ribsArr, bordersArr, Time[i]);
                 (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);

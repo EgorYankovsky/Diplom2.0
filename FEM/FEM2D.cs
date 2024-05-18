@@ -52,20 +52,20 @@ public class FEM2D : FEM
 
         if (Time.Count > 1)
         {
-            (Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
-            if (Time.Count > 2)
-            for (int i = 2; i < Time.Count; i++)
+            //(Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
+            //if (Time.Count > 2)
+            for (int i = 1; i < Time.Count; i++)
             {
                 Debug.WriteLine($"\nTime layer: {Time[i]}");
                 Thread.Sleep(1500);
 
-                double deltT = Time[i] - Time[i - 2];
-                double deltT0 = Time[i] - Time[i - 1];
-                double deltT1 = Time[i - 1] - Time[i - 2];
+                double deltT = Time[i] - Time[i - 1];
+                //double deltT0 = Time[i] - Time[i - 1];
+                //double deltT1 = Time[i - 1] - Time[i - 2];
 
-                double tau0 = (deltT + deltT0) / (deltT * deltT0);
-                double tau1 = deltT / (deltT1 * deltT0);
-                double tau2 = deltT0 / (deltT * deltT1);
+                //double tau0 = (deltT + deltT0) / (deltT * deltT0);
+                //double tau1 = deltT / (deltT1 * deltT0);
+                //double tau2 = deltT0 / (deltT * deltT1);
 
                 var matrix1 = new GlobalMatrix(pointsArr.GetLength());
                 Generator.BuildPortait(ref matrix1, pointsArr.GetLength(), elemsArr);
@@ -75,10 +75,10 @@ public class FEM2D : FEM
                 Generator.BuildPortait(ref M, pointsArr.GetLength(), elemsArr);
                 Generator.FillMatrix(ref M, pointsArr, elemsArr, TypeOfMatrixM.Mr);
 
-                Matrix = (tau0 * M) + matrix1;
+                Matrix = ((1.0D / deltT) * M) + matrix1;
 
                 var bi = new GlobalVector(pointsArr.GetLength());
-                Vector = bi - (tau2 * (M * Solutions[i - 2])) + (tau1 * (M * Solutions[i - 1]));
+                Vector = bi + ((1.0D / deltT) * (M * Solutions[i - 1]));
 
                 Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, pointsArr, bordersArr, Time[i]);        
                 (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
@@ -235,23 +235,23 @@ public class FEM2D : FEM
         E_phi = new GlobalVector[A_phi.Length];   
         for (int i = 0; i < E_phi.Length; i++)
         {
-            if (i == 0 || i == 1)
+            if (i == 0)
                 E_phi[i] = new GlobalVector(A_phi[i].Size);
             else
             {
-                double ti = Time[i];
-                double ti_1 = Time[i - 1];
-                double ti_2 = Time[i - 2];
+                //double ti = Time[i];
+                //double ti_1 = Time[i - 1];
+                //double ti_2 = Time[i - 2];
 
-                double dt0 = ti - ti_1;
-                double dt1 = ti_1 - ti_2;
-                double dt = ti - ti_2;
+                //double dt0 = ti - ti_1;
+                //double dt1 = ti_1 - ti_2;
+                //double dt = ti - ti_2;
 
-                double tau2 = dt0 / (dt * dt1);
-                double tau1 = dt / (dt0 * dt1);
-                double tau0 = (dt + dt0) / (dt * dt0);
+                //double tau2 = dt0 / (dt * dt1);
+                //double tau1 = dt / (dt0 * dt1);
+                //double tau0 = (dt + dt0) / (dt * dt0);
 
-                E_phi[i] = -1.0D * (tau2 * A_phi[i - 2] - tau1 * A_phi[i - 1] + tau0 * A_phi[i]);
+                E_phi[i] = -1.0D / (Time[i] - Time[i - 1]) * (A_phi[i] - A_phi[i - 1]);
             }
         }
     }
@@ -264,8 +264,10 @@ public class FEM2D : FEM
                 break;
         int j = 0;
         for (; j < mesh2Dim.nodesZ.Count - 1; j++)
+        {
             if (mesh2Dim.nodesZ[j] <= z && z <= mesh2Dim.nodesZ[j + 1])
                 break;
+        }
         return elemsArr[j * (mesh2Dim.nodesR.Count - 1) + i].Arr;
     }
     

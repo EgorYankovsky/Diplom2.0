@@ -155,9 +155,11 @@ public static class MeshGenerator
         sw.WriteLine((nr - 1) * (nz - 1));
         for (int k = 0; k < nz - 1; k++)
             for (int i = 0; i < nr - 1; i++)
+            {
                 sw.WriteLine($"{k * nr + i} {k * nr + i + 1} " +
                              $"{(k + 1) * nr + i} {(k + 1) * nr + i + 1} " +
                              $"{SelectMuAndSigma(mesh, k, k + 1)}");
+            }
     }
 
     private static string SelectMuAndSigma(Mesh2Dim mesh, int a, int d)
