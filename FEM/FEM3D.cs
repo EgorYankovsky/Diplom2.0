@@ -338,7 +338,7 @@ public class FEM3D : FEM
     {
         if (solver is null) throw new ArgumentNullException("Solver is null");
         if (ribsArr is null) throw new ArgumentNullException("ribs array is null");
-        if (_originalE is null) throw new ArgumentNullException("original E is null");
+        if (_originalFEM is null) throw new ArgumentNullException("original E is null");
         if (G is null) throw new ArgumentNullException();
         if (M is null) throw new ArgumentNullException();
         
@@ -350,7 +350,7 @@ public class FEM3D : FEM
         if (Time.Count > 1)
         {
             (Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
-            for (int i = 2; i < Time.Count; i++)
+            for (int i = 1; i < Time.Count; i++)
             {
                 double t0 = Time[i];
                 double t1 = Time[i - 1];
@@ -364,7 +364,7 @@ public class FEM3D : FEM
                 var b = new GlobalVector(ribsArr.Count);
                 
                 // ! ACHTUNG
-                Generator.FillVector3D(ref b, _originalE[i], new Layer(0.0, 0.0, 0.0, 0.0), ribsArr, elemsArr, Time[i]);
+                Generator.FillVector3D(ref b, _originalFEM.GetEAt, ribsArr, elemsArr, Time[i]);
 
                 Vector = b + tau0 * M * Solutions[i - 1];
                 

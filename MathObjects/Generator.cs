@@ -5,6 +5,8 @@ using Grid;
 
 namespace MathObjects;
 
+public delegate (double, double, double) Egetter(double x, double y, double z, double t);
+
 public static class Generator
 {
     public static void FillMatrixG(ref GlobalMatrix m, ArrayOfRibs arrRibs, ArrayOfElems arrEl)
@@ -70,20 +72,6 @@ public static class Generator
                     v[border[i]] = 0.0D;
                 }
                 
-                //for (int i = 2; i < 6; i++)
-                //{
-                //    var len = arrRibs[border[i]].Length;
-                //    var antinormal = ((arrRibs[border[i]].b.X - arrRibs[border[i]].a.X) / len, 
-                //                      (arrRibs[border[i]].b.Y - arrRibs[border[i]].a.Y) / len,
-                //                      (arrRibs[border[i]].b.Z - arrRibs[border[i]].a.Z) / len); 
-                //    var xm = 0.5D * (arrRibs[border[i]].b.X + arrRibs[border[i]].a.X);
-                //    var ym = 0.5D * (arrRibs[border[i]].b.Y + arrRibs[border[i]].a.Y);
-                //    var zm = 0.5D * (arrRibs[border[i]].b.Z + arrRibs[border[i]].a.Z);
-                //    
-                //    var f = Function.A(xm, ym, zm, t);
-                //    var q = antinormal.Item1 * f.Item1 + antinormal.Item2 * f.Item2 + antinormal.Item3 * f.Item3;
-                //    v[border[i]] = 0.0D;
-                //}
                 break;
                 // КУ - II-го рода
                 case 2:
@@ -94,29 +82,11 @@ public static class Generator
                 case 3: throw new ArgumentException("Пока нет возможности учитывать КУ III-го рода");
             }
         }
-
-        
-        //foreach (var border in arrBrd)
-        //{
-        //    for (int i = 2; i < 6; i++)
-        //    {
-        //        for (int j = 0; j < m.Size; j++)
-        //        {
-        //            if (border[i] == j)
-        //                continue;
-        //            else
-        //            {
-        //                var k = m[j, border[i]];
-        //                var f = -1.0D * k * v[border[i]];
-        //                v[j] += f;
-        //                m[j, border[i]] = 0.0D;
-        //            }
-        //        }
-        //    }
-        //}
     }
 
-    public static void FillVector3D(ref GlobalVector v, GlobalVector E, Layer currentLayer, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
+
+    /*
+    public static void FillVector3D(ref GlobalVector v, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
     {
         for (int i = 0; i < arrEl.Length; i++)
         {
@@ -124,13 +94,28 @@ public static class Generator
                                   arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
                                   arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
   
-            List<double> LocalE = [E[arrEl[i][0]], E[arrEl[i][3]], E[arrEl[i][8]], E[arrEl[i][11]],
-                                   E[arrEl[i][1]], E[arrEl[i][2]], E[arrEl[i][9]], E[arrEl[i][10]],
-                                   E[arrEl[i][4]], E[arrEl[i][5]], E[arrEl[i][6]], E[arrEl[i][7]]];
+            var lv = new LocalVector3D(arrRibs[currElem[0]].a.X, arrRibs[currElem[0]].b.X,
+                                       arrRibs[currElem[4]].a.Y, arrRibs[currElem[4]].b.Y,
+                                       arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z, t);
+            Add(lv, ref v, currElem);
+        }
+    }
+    */
 
-            var theorSigma = arrEl[i].sigma;
-            var sigma = SelectSigma(theorSigma, currentLayer, arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z);
-            Add(LocalE, ref v, sigma, currElem);
+    public static void FillVector3D(ref GlobalVector v, Egetter egetter, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
+    {
+        for (int i = 0; i < arrEl.Length; i++)
+        {
+            List<int> currElem = [arrEl[i][0], arrEl[i][3], arrEl[i][8], arrEl[i][11],
+                                  arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
+                                  arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
+  
+            var sigma = arrEl[i].sigma;
+            var lv = new LocalVector3D(egetter, arrRibs[currElem[0]].a.X, arrRibs[currElem[0]].b.X,
+                                       arrRibs[currElem[4]].a.Y, arrRibs[currElem[4]].b.Y,
+                                       arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z, t);
+
+            Add(lv, ref v, sigma, currElem);
         }
     }
 
