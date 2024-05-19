@@ -20,9 +20,19 @@ public static class Generator
                                   arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
                                   arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
 
-            double hx = arrRibs[currElem[0]].Length;
-            double hy = arrRibs[currElem[4]].Length;
-            double hz = arrRibs[currElem[8]].Length;
+            double hx = 0.0;
+            double hy = 0.0;
+            double hz = 0.0;
+
+            foreach (var rib in currElem)
+            {
+                if (rib != -1 && hx == 0 && arrRibs[rib].GetTangent().Item1 != 0)
+                    hx = arrRibs[rib].Length;
+                if (rib != -1 && hy == 0 && arrRibs[rib].GetTangent().Item2 != 0)
+                    hy = arrRibs[rib].Length;
+                if (rib != -1 && hz == 0 && arrRibs[rib].GetTangent().Item3 != 0)
+                    hz = arrRibs[rib].Length;
+            }
 
             var lm = new LocalMatrixG3D(arrEl[i].mu, hx, hy, hz);
             Add(lm, ref m, currElem); 
@@ -40,9 +50,19 @@ public static class Generator
                                   arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
                                   arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
             
-            double hx = arrRibs[currElem[0]].Length;
-            double hy = arrRibs[currElem[4]].Length;
-            double hz = arrRibs[currElem[8]].Length;
+            double hx = 0.0D;
+            double hy = 0.0D;
+            double hz = 0.0D;
+
+            foreach (var rib in currElem)
+            {
+                if (rib != -1 && hx == 0 && arrRibs[rib].GetTangent().Item1 != 0)
+                    hx = arrRibs[rib].Length;
+                if (rib != -1 && hy == 0 && arrRibs[rib].GetTangent().Item2 != 0)
+                    hy = arrRibs[rib].Length;
+                if (rib != -1 && hz == 0 && arrRibs[rib].GetTangent().Item3 != 0)
+                    hz = arrRibs[rib].Length;
+            }
 
             var lm = new LocalMatrixM3D(1.0D, hx, hy, hz);
             Add(lm, ref m, currElem);
@@ -110,10 +130,35 @@ public static class Generator
                                   arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
                                   arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
   
+            double x0 = double.NaN;
+            double x1 = double.NaN;
+            double y0 = double.NaN;
+            double y1 = double.NaN;
+            double z0 = double.NaN;
+            double z1 = double.NaN;
+
+            foreach (var rib in currElem)
+            {
+                if (rib != -1 && double.IsNaN(x0) && double.IsNaN(x1) && arrRibs[rib].GetTangent().Item1 != 0)
+                {
+                    x0 = arrRibs[rib].a.X;
+                    x1 = arrRibs[rib].b.X;
+                }
+                if (rib != -1 && double.IsNaN(y0) && double.IsNaN(y1) && arrRibs[rib].GetTangent().Item2 != 0)
+                {
+                    y0 = arrRibs[rib].a.Y;
+                    y1 = arrRibs[rib].b.Y;
+                }
+                if (rib != -1 && double.IsNaN(z0) && double.IsNaN(z1) &&arrRibs[rib].GetTangent().Item3 != 0)
+                {
+                    z0 = arrRibs[rib].a.Z;
+                    z1 = arrRibs[rib].b.Z;
+                }
+            }
+
+
             var sigma = arrEl[i].sigma;
-            var lv = new LocalVector3D(egetter, arrRibs[currElem[0]].a.X, arrRibs[currElem[0]].b.X,
-                                       arrRibs[currElem[4]].a.Y, arrRibs[currElem[4]].b.Y,
-                                       arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z, t);
+            var lv = new LocalVector3D(egetter, x0, x1, y0, y1, z0, z1, t);
 
             Add(lv, ref v, sigma, currElem);
         }
@@ -128,7 +173,8 @@ public static class Generator
     private static void Add(LocalVector3D lv, ref GlobalVector v, double sigma, List<int> elem)
     {
         for (int i = 0; i < 12; i++)
-            v[elem[i]] += sigma * lv[i];
+            if(elem[i] != -1) 
+                v[elem[i]] += sigma * lv[i];
     }
 
     private static double SelectSigma(double theorSigma, Layer layer, double z0, double z1) 
@@ -230,33 +276,39 @@ public static class Generator
         int ii = 0;
         foreach (var i in elem)
         {
-            int jj = 0;
-            foreach (var j in elem)
+            if (i != -1)
             {
-                int ind = 0;
-                double val = 0.0D;
-                switch(i - j)
+                int jj = 0;
+                foreach (var j in elem)
                 {
-                    case 0:
-                        val = lm[ii, jj];
-                        gm._diag[i] += lm[ii, jj];
-                        break;
-                    case < 0:
-                        ind = gm._ig[j];
-                        for (; ind <= gm._ig[j + 1] - 1; ind++)
-                            if (gm._jg[ind] == i) break;
-                        val = lm[ii, jj];
-                        gm._au[ind] += lm[ii, jj];
-                        break;
-                    case > 0:
-                        ind = gm._ig[i];
-                        for (; ind <= gm._ig[i + 1] - 1; ind++)
-                            if (gm._jg[ind] == j) break;
-                        val = lm[ii, jj];
-                        gm._al[ind] += lm[ii, jj];
-                        break;
+                    if (j != -1)
+                    {
+                        int ind = 0;
+                        double val = 0.0D;
+                        switch(i - j)
+                        {
+                            case 0:
+                                val = lm[ii, jj];
+                                gm._diag[i] += lm[ii, jj];
+                                break;
+                            case < 0:
+                                ind = gm._ig[j];
+                                for (; ind <= gm._ig[j + 1] - 1; ind++)
+                                    if (gm._jg[ind] == i) break;
+                                val = lm[ii, jj];
+                                gm._au[ind] += lm[ii, jj];
+                                break;
+                            case > 0:
+                                ind = gm._ig[i];
+                                for (; ind <= gm._ig[i + 1] - 1; ind++)
+                                    if (gm._jg[ind] == j) break;
+                                val = lm[ii, jj];
+                                gm._al[ind] += lm[ii, jj];
+                                break;
+                        }
+                    }
+                    jj++;
                 }
-                jj++;
             }
             ii++;
         }
@@ -273,33 +325,39 @@ public static class Generator
         int ii = 0;
         foreach (var i in elem)
         {
-            int jj = 0;
-            foreach (var j in elem)
+            if (i != -1)
             {
-                int ind = 0;
-                double val = 0.0D;
-                switch(i - j)
+                int jj = 0;
+                foreach (var j in elem)
                 {
-                    case 0:
-                        val = lm[ii, jj];
-                        gm._diag[i] += lm[ii, jj];
-                        break;
-                    case < 0:
-                        ind = gm._ig[j];
-                        for (; ind <= gm._ig[j + 1] - 1; ind++)
-                            if (gm._jg[ind] == i) break;
-                        val = lm[ii, jj];
-                        gm._au[ind] += lm[ii, jj];
-                        break;
-                    case > 0:
-                        ind = gm._ig[i];
-                        for (; ind <= gm._ig[i + 1] - 1; ind++)
-                            if (gm._jg[ind] == j) break;
-                        val = lm[ii, jj];
-                        gm._al[ind] += lm[ii, jj];
-                        break;
+                    if (j != -1)
+                    {
+                        int ind = 0;
+                        double val = 0.0D;
+                        switch(i - j)
+                        {
+                            case 0:
+                                val = lm[ii, jj];
+                                gm._diag[i] += lm[ii, jj];
+                                break;
+                            case < 0:
+                                ind = gm._ig[j];
+                                for (; ind <= gm._ig[j + 1] - 1; ind++)
+                                    if (gm._jg[ind] == i) break;
+                                val = lm[ii, jj];
+                                gm._au[ind] += lm[ii, jj];
+                                break;
+                            case > 0:
+                                ind = gm._ig[i];
+                                for (; ind <= gm._ig[i + 1] - 1; ind++)
+                                    if (gm._jg[ind] == j) break;
+                                val = lm[ii, jj];
+                                gm._al[ind] += lm[ii, jj];
+                                break;
+                        }
+                    }
+                    jj++;
                 }
-                jj++;
             }
             ii++;
         }

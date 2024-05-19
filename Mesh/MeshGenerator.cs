@@ -231,9 +231,9 @@ public static class MeshGenerator
         GenerateNodesAnomaly(ref mesh);
         RemakeBorders(ref mesh);
         var arr = OutputPoints(ref mesh, path); // Долговато.
-        GenerateListOfRibs(ref mesh, arr, path);
-        OutputListOfElems(ref mesh, path); // Долговато.
-        OutputListOfBorders(mesh, path);
+        var arr1 = GenerateListOfRibs(ref mesh, arr, path);
+        OutputListOfElems(ref mesh, arr1, path); // Долговато.
+        //OutputListOfBorders(mesh, path);
     }
 
     public static void GenerateNodesAnomaly(ref Mesh3Dim mesh)
@@ -555,7 +555,7 @@ public static class MeshGenerator
         return pnt;
     }
     
-    public static void OutputListOfElems(ref Mesh3Dim mesh, string path)
+    public static void OutputListOfElems(ref Mesh3Dim mesh, ArrayOfRibs arrRibs, string path)
     {
         if (mesh.arrayOfRibs is null) throw new ArgumentNullException("array of ribs didn't generated");
         //mesh.Elems = new List<Elem>(mesh.ElemsAmount);
@@ -580,13 +580,27 @@ public static class MeshGenerator
                     int curr = i + j * (nx + rx) + k * (rxy + nxy);
                     double mui = 0.0D;
                     double sigmai = 0.0D;
+
                     (mui, sigmai) = SelectMuAndSigma(mesh,
                                                      mesh.arrayOfRibs[curr].a.X, mesh.arrayOfRibs[curr + rxy + nxy + rx + nx].b.X,
                                                      mesh.arrayOfRibs[curr + rx].a.Y, mesh.arrayOfRibs[curr + rxy + nxy + rx + 1].b.Y,
                                                      mesh.arrayOfRibs[curr + rxy - j * rx].a.Z, mesh.arrayOfRibs[curr + rxy + nx + 1 - j * rx].b.Z);
-                    sw.WriteLine($"{0} {curr} {curr + rx} {curr + rx + 1} {curr + rx + nx}" + 
-                                 $" {curr + rxy - j * rx} {curr + rxy + 1 - j * rx} {curr + rxy + nx - j * rx} {curr + rxy + nx + 1 - j * rx}" + 
-                                 $" {curr + rxy + nxy} {curr + rxy + nxy + rx} {curr + rxy + nxy + rx + 1} {curr + rxy + nxy + rx + nx} {mui} {sigmai}");
+
+                    List<int> arr_i = [               curr,               curr + rx,             curr + rx + 1,               curr + rx + nx,
+                                        curr + rxy - j * rx, curr + rxy + 1 - j * rx,  curr + rxy + nx - j * rx, curr + rxy + nx + 1 - j * rx,
+                                        curr + rxy + nxy,   curr + rxy + nxy + rx, curr + rxy + nxy + rx + 1,   curr + rxy + nxy + rx + nx];
+
+                    for (int ii = 0; ii < arr_i.Count; ii++)
+                    {
+                        if (arrRibs[arr_i[ii]].typeOfRib == TypeOfRib.BoundaryI)
+                        {
+                            arr_i[ii] = -1;
+                        }
+                    }
+
+                    sw.WriteLine($"{0} {arr_i[0]} {arr_i[1]} {arr_i[2]} {arr_i[3]}" + 
+                                    $" {arr_i[4]} {arr_i[5]} {arr_i[6]} {arr_i[7]}" + 
+                                    $" {arr_i[8]} {arr_i[9]} {arr_i[10]} {arr_i[11]} {mui} {sigmai}");
                 }
         sw.Close();
     }
@@ -785,7 +799,7 @@ public static class MeshGenerator
                 sw.WriteLine($"{1} {6} {nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1) + nx - 1} {rxy + i * (rxy + nxny) + j * nx + nx - 1} {rxy + nx + i * (rxy + nxny) + j * nx + nx - 1} {rxy + nxny + nx - 1 + i * (rxy + nxny) + j * (2 * nx - 1) + nx - 1}");
     }
     
-    public static void GenerateListOfRibs(ref Mesh3Dim mesh, ArrayOfPoints3D arrPt, string path)
+    public static ArrayOfRibs GenerateListOfRibs(ref Mesh3Dim mesh, ArrayOfPoints3D arrPt, string path)
     {
         ArgumentNullException.ThrowIfNull(arrPt);
 
@@ -818,6 +832,7 @@ public static class MeshGenerator
         for (int i = 0; i < mesh.arrayOfRibs.Count; i++)
             sw.WriteLine(mesh.arrayOfRibs[i]);
         sw.Close();
+        return mesh.arrayOfRibs;
     }
 
     public static void GenerateListOfRibs(ref Mesh3Dim mesh, ArrayOfPoints3D arrPt, int layerNum = -1)

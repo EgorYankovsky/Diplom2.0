@@ -62,11 +62,11 @@ public class FEM3D : FEM
     {
         string pointsPath = _3dValuesPath + $"Anomaly{Num}\\Points.poly";
         string elemsPath = _3dValuesPath + $"Anomaly{Num}\\Elems.poly";
-        string bordersPath = _3dValuesPath + $"Anomaly{Num}\\Borders.poly";
+        //string bordersPath = _3dValuesPath + $"Anomaly{Num}\\Borders.poly";
 
         pointsArr = new(pointsPath);
         elemsArr = new(elemsPath, 3);
-        bordersArr = new(bordersPath, 3);
+        //bordersArr = new(bordersPath, 3);
         ribsArr = mesh.arrayOfRibs;
         _originalFEM = originalFEM;
         _originalE = [];
@@ -368,7 +368,7 @@ public class FEM3D : FEM
 
                 Vector = b + tau0 * M * Solutions[i - 1];
                 
-                Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, ribsArr, bordersArr, Time[i]);
+                //Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, ribsArr, bordersArr, Time[i]);
                 (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
             }
         }
