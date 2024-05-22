@@ -233,7 +233,7 @@ public static class MeshGenerator
         var arr = OutputPoints(ref mesh, path); // Долговато.
         var arr1 = GenerateListOfRibs(ref mesh, arr, path);
         OutputListOfElems(ref mesh, arr1, path); // Долговато.
-        //OutputListOfBorders(mesh, path);
+        OutputListOfBorders(mesh, path);
     }
 
     public static void GenerateNodesAnomaly(ref Mesh3Dim mesh)
@@ -582,21 +582,22 @@ public static class MeshGenerator
                     double sigmai = 0.0D;
 
                     (mui, sigmai) = SelectMuAndSigma(mesh,
-                                                     mesh.arrayOfRibs[curr].a.X, mesh.arrayOfRibs[curr + rxy + nxy + rx + nx].b.X,
-                                                     mesh.arrayOfRibs[curr + rx].a.Y, mesh.arrayOfRibs[curr + rxy + nxy + rx + 1].b.Y,
-                                                     mesh.arrayOfRibs[curr + rxy - j * rx].a.Z, mesh.arrayOfRibs[curr + rxy + nx + 1 - j * rx].b.Z);
+                                                     mesh.arrayOfRibs[curr].a.X, mesh.arrayOfRibs[curr].b.X,
+                                                     mesh.arrayOfRibs[curr + rx].a.Y, mesh.arrayOfRibs[curr + rx].b.Y,
+                                                     mesh.arrayOfRibs[curr + rxy - j * rx].a.Z, mesh.arrayOfRibs[curr + rxy - j * rx].b.Z);
 
-                    List<int> arr_i = [               curr,               curr + rx,             curr + rx + 1,               curr + rx + nx,
+
+                    List<int> arr_i = [                curr,               curr + rx,             curr + rx + 1,               curr + rx + nx,
                                         curr + rxy - j * rx, curr + rxy + 1 - j * rx,  curr + rxy + nx - j * rx, curr + rxy + nx + 1 - j * rx,
-                                        curr + rxy + nxy,   curr + rxy + nxy + rx, curr + rxy + nxy + rx + 1,   curr + rxy + nxy + rx + nx];
+                                           curr + rxy + nxy,   curr + rxy + nxy + rx, curr + rxy + nxy + rx + 1,   curr + rxy + nxy + rx + nx];
 
-                    for (int ii = 0; ii < arr_i.Count; ii++)
-                    {
-                        if (arrRibs[arr_i[ii]].typeOfRib == TypeOfRib.BoundaryI)
-                        {
-                            arr_i[ii] = -1;
-                        }
-                    }
+                    //for (int ii = 0; ii < arr_i.Count; ii++)
+                    //{
+                    //    if (arrRibs[arr_i[ii]].typeOfRib == TypeOfRib.BoundaryI)
+                    //    {
+                    //        arr_i[ii] = -1;
+                    //    }
+                    //}
 
                     sw.WriteLine($"{0} {arr_i[0]} {arr_i[1]} {arr_i[2]} {arr_i[3]}" + 
                                     $" {arr_i[4]} {arr_i[5]} {arr_i[6]} {arr_i[7]}" + 
@@ -654,8 +655,9 @@ public static class MeshGenerator
             {
                 mu = mesh.Elems[i].mu;
                 sigma = mesh.Elems[i].sigma;
+                return (mu, sigma);
             }
-        return (mu, sigma);
+        throw new Exception("Out of ranges");
     }
 
     private static (double, double) SelectMuAndSigma(Mesh3Dim mesh, double z0, double z1)

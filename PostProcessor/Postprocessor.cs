@@ -60,20 +60,20 @@ public static class Postprocessor
         return process.ExitCode;
     }
 
-    public static int DrawE3D()
+    public static int DrawE3D(string _readToDraw3_dim_E, string _outputDrawn3_dim_E)
     {
         process = new();
-        process.StartInfo.Arguments = $"{_source3D} {_source3DRead} {_source3DWrite}";
+        process.StartInfo.Arguments = $"{_sourceToDrawPlot} {_readToDraw3_dim_E} {_outputDrawn3_dim_E}";
         process.StartInfo.FileName = _fileName;
         process.Start();
         process.WaitForExit();
         return process.ExitCode;
     }
 
-    public static int DrawA3D()
+    public static int DrawA3D(string _readToDraw3_dim_A, string _outputDrawn3_dim_A)
     {
         process = new();
-        process.StartInfo.Arguments = $"{_source3D} {_arg4} {_arg5}";
+        process.StartInfo.Arguments = $"{_sourceToDrawPlot} {_readToDraw3_dim_A} {_outputDrawn3_dim_A}";
         process.StartInfo.FileName = _fileName;
         process.Start();
         process.WaitForExit();

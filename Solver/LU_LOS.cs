@@ -107,7 +107,7 @@ public class LU_LOS : ISolver
             if (double.IsNaN(b[i]) || double.IsInfinity(b[i]))
                 Console.WriteLine(i);
 
-        GlobalVector x = new(b);
+        GlobalVector x = new(b.Size);
         GlobalVector x_ = new(b.Size);
 
         GlobalMatrix LU = new(A);
@@ -126,6 +126,8 @@ public class LU_LOS : ISolver
         for (int i = 0; i < r.Size; i++)
             if (double.IsNaN(r[i]) || double.IsInfinity(r[i]))
                 Console.WriteLine(i);
+        var r0 = new GlobalVector(r);
+
 
         GlobalVector z = Backward(LU, r);
         for (int i = 0; i < z.Size; i++)
@@ -171,8 +173,8 @@ public class LU_LOS : ISolver
             p = tmp + beta * p_;
 
             iter++;
-            Console.WriteLine($"{r.Norma() / b.Norma():E15}");
-        } while (iter < _maxIter && r.Norma() / b.Norma() >= _eps);
+            Console.WriteLine($"{(r.Norma() * r.Norma()) / (r0.Norma() * r0.Norma()):E15}");
+        } while (iter < _maxIter && (r.Norma() * r.Norma()) / (r0.Norma() * r0.Norma()) >= _eps * _eps);
 
         Console.WriteLine(
         $@"Computing finished!

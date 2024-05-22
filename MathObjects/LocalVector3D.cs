@@ -50,7 +50,7 @@ public class LocalVector3D(Egetter egetter, double x0, double x1, double y0, dou
         }
     }
 
-    private void Generate()
+    public void Generate()
     {
         double ScalarMult((double, double, double) a, (double, double, double) b) 
         => a.Item1 * b.Item1 + a.Item2 * b.Item2 + a.Item3 * b.Item3;

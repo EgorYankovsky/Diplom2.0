@@ -26,6 +26,8 @@ public class FEM3D : FEM
 
     private GlobalMatrix? G;
 
+    List<FEM3D> additionalFields = [];
+
     private readonly FEM3D? _originalFEM;
 
     private List<GlobalVector>? _originalE;
@@ -62,11 +64,11 @@ public class FEM3D : FEM
     {
         string pointsPath = _3dValuesPath + $"Anomaly{Num}\\Points.poly";
         string elemsPath = _3dValuesPath + $"Anomaly{Num}\\Elems.poly";
-        //string bordersPath = _3dValuesPath + $"Anomaly{Num}\\Borders.poly";
+        string bordersPath = _3dValuesPath + $"Anomaly{Num}\\Borders.poly";
 
         pointsArr = new(pointsPath);
         elemsArr = new(elemsPath, 3);
-        //bordersArr = new(bordersPath, 3);
+        bordersArr = new(bordersPath, 3);
         ribsArr = mesh.arrayOfRibs;
         _originalFEM = originalFEM;
         _originalE = [];
@@ -85,7 +87,7 @@ public class FEM3D : FEM
     {
         if (ribsArr is null) throw new ArgumentNullException("Array of ribs not generated");
         for (int tt = 0; tt < Time.Count; tt++)
-            if (tt == t)
+            if (Time[tt] == t)
             {
                 var elem = ConvertGlobalToLocalNumeration(GetElem(x, y, z));
                 double[] q = new double[12];
@@ -184,55 +186,22 @@ public class FEM3D : FEM
         E = new(A.Count);   
         for (int i = 0; i < A.Count; i++)
         {
-            if (i == 0 || i == 1)
+            if (i == 0)
                 E.Add(new GlobalVector(A[i].Size));
             else
             {
-                double ti = Time[i];
-                double ti_1 = Time[i - 1];
-                double ti_2 = Time[i - 2];
-                E.Add(-1.0D / (ti_1 - ti_2) * A[i - 2] + (ti - ti_2) / ((ti_1 - ti_2) * (ti - ti_1)) * A[i - 1] - 
-                (2 * ti - ti_1 - ti_2) / ((ti - ti_2) * (ti - ti_1)) * A[i]);
+                //double ti = Time[i];
+                //double ti_1 = Time[i - 1];
+                //double ti_2 = Time[i - 2];
+                E.Add(-1.0D / (Time[i] - Time[i - 1]) * (A[i] - A[i - 1]));
+
+                //E.Add(-1.0D / (ti_1 - ti_2) * A[i - 2] + (ti - ti_2) / ((ti_1 - ti_2) * (ti - ti_1)) * A[i - 1] - 
+                //(2 * ti - ti_1 - ti_2) / ((ti - ti_2) * (ti - ti_1)) * A[i]);
             }
         }
     }
 
-    public void AddSolution(FEM3D fem)
-    {
-        if (ribsArr is null) throw new ArgumentNullException("ribsArr is null");
-        if (fem.ribsArr is null) throw new ArgumentNullException("ribsArr is null");
-        for (int t = 0; t < Time.Count; t++)
-        {
-            for (int i = 0; i < ribsArr.Count; i++)
-            {
-                var X = 0.5 * (ribsArr[i].a.X + ribsArr[i].b.X);
-                var Y = 0.5 * (ribsArr[i].a.Y + ribsArr[i].b.Y);
-                var Z = 0.5 * (ribsArr[i].a.Z + ribsArr[i].b.Z);
-
-                var antinormal = ((ribsArr[i].b.X - ribsArr[i].a.X) / ribsArr[i].Length,
-                                  (ribsArr[i].b.Y - ribsArr[i].a.Y) / ribsArr[i].Length,
-                                  (ribsArr[i].b.Z - ribsArr[i].a.Z) / ribsArr[i].Length);
-
-                var elem = fem.GetElem(X, Y, Z);
-
-                int[] elem_local = [elem[0], elem[3], elem[8], elem[11], 
-                                    elem[1], elem[2], elem[9], elem[10], 
-                                    elem[4], elem[5], elem[6], elem[7]];
-
-                double[] q = [fem.A[t][elem[0]], fem.A[t][elem[3]], fem.A[t][elem[8]], fem.A[t][elem[11]], 
-                              fem.A[t][elem[1]], fem.A[t][elem[2]], fem.A[t][elem[9]], fem.A[t][elem[10]], 
-                              fem.A[t][elem[4]], fem.A[t][elem[5]], fem.A[t][elem[6]], fem.A[t][elem[7]]];
-                
-                var eps = (X - ribsArr[elem_local[0]].a.X) / (ribsArr[elem_local[0]].b.X - ribsArr[elem_local[0]].a.X);
-                var nu =  (Y - ribsArr[elem_local[4]].a.Y) / (ribsArr[elem_local[4]].b.Y - ribsArr[elem_local[4]].a.Y);
-                var khi = (Z - ribsArr[elem_local[8]].a.Z) / (ribsArr[elem_local[8]].b.Z - ribsArr[elem_local[8]].a.Z);
-
-                var val = BasisFunctions3DVec.GetValue(eps, nu, khi, q);
-                
-                A[t][i] += val.Item1 * antinormal.Item1 + val.Item2 * antinormal.Item2 + val.Item3 * antinormal.Item3;
-            }
-        }
-    }
+    public void AddSolution(FEM3D fem) => additionalFields.Add(fem);
 
     internal List<int> GetElem(double x, double y, double z)
     {
@@ -325,13 +294,13 @@ public class FEM3D : FEM
         if (ribsArr is null) throw new ArgumentNullException("ribsArr is null");
 
         var sparceMatrix = new GlobalMatrix(ribsArr.Count);
-        Generator.BuildPortait(ref sparceMatrix, ribsArr.Count, elemsArr);
+        Generator.BuildPortait(ref sparceMatrix, ribsArr.Count, elemsArr, true);
 
         G = new GlobalMatrix(sparceMatrix);
         Generator.FillMatrixG(ref G, ribsArr, elemsArr);
         
         M = new GlobalMatrix(sparceMatrix);
-        Generator.FillMatrixM(ref M, ribsArr, elemsArr);
+        Generator.FillMatrixM(ref M, ribsArr, elemsArr, mesh3Dim, _originalFEM.mesh3Dim);
     }
 
     public void Solve()
@@ -349,7 +318,6 @@ public class FEM3D : FEM
 
         if (Time.Count > 1)
         {
-            (Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
             for (int i = 1; i < Time.Count; i++)
             {
                 double t0 = Time[i];
@@ -364,11 +332,11 @@ public class FEM3D : FEM
                 var b = new GlobalVector(ribsArr.Count);
                 
                 // ! ACHTUNG
-                Generator.FillVector3D(ref b, _originalFEM.GetEAt, ribsArr, elemsArr, Time[i]);
+                Generator.FillVector3D(ref b, _originalFEM.GetEAt, ribsArr, elemsArr, mesh3Dim, _originalFEM.mesh3Dim, Time[i]);
 
                 Vector = b + tau0 * M * Solutions[i - 1];
                 
-                //Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, ribsArr, bordersArr, Time[i]);
+                Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, ribsArr, bordersArr, Time[i]);
                 (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
             }
         }
@@ -384,6 +352,122 @@ public class FEM3D : FEM
             for (int i = 0; i < A[t].Size; i++)
                 sw.WriteLine($"{i} {A[t][i]:E8}");
             sw.Close();
+        }
+    }
+
+    public void WriteDataToDraw2DimSolution(string path)
+    {
+        double hx = 2 * 3182 / 300.0D;
+        double hy = (mesh3Dim.nodesY[^1] - mesh3Dim.nodesY[0]) / 300.0D;
+        double hz = (mesh3Dim.nodesZ[^1] - mesh3Dim.nodesZ[0]) / 300.0D;
+        
+        for (int t = 0; t < Time.Count; t++)
+        {
+            using var swa = new StreamWriter(path + $"A\\Answer_A_time_layer_{Time[t]}.txt");
+            for (int k = 0; k < 300; k++)
+            {
+                for (int i = 0; i < 300; i++)
+                {
+                    double xCurr = -3182 + i * hx;
+                    double yCurr = mesh3Dim.nodesY[0] + i * hy;
+                    double zCurr = mesh3Dim.nodesZ[0] + k * hz;
+                    var vec = GetAAt(xCurr, yCurr, zCurr, Time[t]);
+                    var ans = Math.Sqrt(vec.Item1 * vec.Item1 + vec.Item2 * vec.Item2);
+                    foreach (var solution in additionalFields)
+                    {
+                        var vecF = solution.GetAAt(xCurr, yCurr, zCurr, Time[t]);
+                        var ansF = Math.Sqrt(vecF.Item1 * vecF.Item1 + vecF.Item2 * vecF.Item2);
+                        ans += ansF;
+                    }
+                    var rCurr = Math.Sqrt(xCurr * xCurr + yCurr * yCurr);
+                    if (i < 150)
+                    {
+                        rCurr *= -1;
+                        ans *= -1;
+                    }
+                    swa.WriteLine($"{rCurr:E15} {zCurr:E15} {ans:E15}");
+                }
+            }
+            swa.Close();
+        }
+
+        for (int t = 0; t < Time.Count; t++)
+        {
+            using var swe = new StreamWriter(path + $"E\\Answer_E_time_layer_{Time[t]}.txt");
+            for (int k = 0; k < 300; k++)
+            {
+                for (int i = 0; i < 300; i++)
+                {
+                    double xCurr = -3182 + i * hx;
+                    double yCurr = mesh3Dim.nodesY[0] + i * hy;
+                    double zCurr = mesh3Dim.nodesZ[0] + k * hz;
+                    var vec = GetEAt(xCurr, yCurr, zCurr, Time[t]);
+                    var ans = Math.Sqrt(vec.Item1 * vec.Item1 + vec.Item2 * vec.Item2);
+                    foreach (var solution in additionalFields)
+                    {
+                        var vecF = solution.GetEAt(xCurr, yCurr, zCurr, Time[t]);
+                        var ansF = Math.Sqrt(vecF.Item1 * vecF.Item1 + vecF.Item2 * vecF.Item2);
+                        ans += ansF;    
+                    }
+                    var rCurr = Math.Sqrt(xCurr * xCurr + yCurr * yCurr);
+                    if (i < 150)
+                    {
+                        rCurr *= -1;
+                        ans *= -1;
+                    }
+                    swe.WriteLine($"{rCurr:E15} {zCurr:E15} {ans:E15}");                }
+            }
+            swe.Close();
+        }
+    }
+
+    public void WriteDataAtLine(string path)
+    {
+        double x0 = -1177.5;
+        double hy = (mesh3Dim.nodesY[^1] - mesh3Dim.nodesY[0]) / 300.0D;
+        double z0 = -1050.0D;
+        List<double> times = [Time[0], Time[Time.Count / 2], Time[^1]];
+        for (int t = 0; t < times.Count; t++)
+        {
+            using var swa = new StreamWriter(path + $"A_With_anomaly_{times[t]}.txt");
+
+            for (int i = 0; i < 300; i++)
+            {
+                double xCurr = x0;
+                double yCurr = mesh3Dim.nodesY[0] + i * hy;
+                double zCurr = z0;
+                var vec = GetAAt(xCurr, yCurr, zCurr, times[t]);
+                var ans = vec.Item1;
+                foreach (var solution in additionalFields)
+                {
+                    var vecF = solution.GetAAt(xCurr, yCurr, zCurr, Time[t]);
+                    var ansF = vec.Item1;
+                    ans += ansF;
+                }
+                swa.WriteLine($"{yCurr:E15} {ans:E15}");
+            }
+            swa.Close();
+        }
+
+        for (int t = 0; t < times.Count; t++)
+        {
+            using var swe = new StreamWriter(path + $"E_With_anomaly_{times[t]}.txt");
+            for (int i = 0; i < 300; i++)
+            {
+                double xCurr = x0;
+                double yCurr = mesh3Dim.nodesY[0] + i * hy;
+                double zCurr = z0;
+                var vec = GetEAt(xCurr, yCurr, zCurr, times[t]);
+                var ans = vec.Item1;
+                foreach (var solution in additionalFields)
+                {
+                    var vecF = solution.GetEAt(xCurr, yCurr, zCurr, Time[t]);
+                    var ansF = vec.Item1;
+                    ans += ansF;
+                }
+                swe.WriteLine($"{yCurr:E15} {ans:E15}");
+            }
+            swe.Close();
         }
     }
 
@@ -427,6 +511,29 @@ public class FEM3D : FEM
                 sw.WriteLine($"{point.X:E15} {point.Y:E15} {point.Z:E15} {ans.Item1:E15} {ans.Item2:E15} {ans.Item3:E15}");
             }
             sw.Close();
+        }
+
+    }
+
+    public void ReadData(string AnswerPath)
+    {
+        A = new(Time.Count);
+        string file = string.Empty;
+        for (int t = 0; t < Time.Count; t++)
+        {
+            file = $"Answer_{Time[t]}.txt";
+            var fileData = File.ReadAllText(AnswerPath + file).Split("\n");
+            A.Add(new GlobalVector(fileData.Length - 1));
+            for (int i = 0; i < fileData.Length - 1; i++)
+            {
+                var val = fileData[i].Split(" ")[1];
+                A[t][i] = double.Parse(val);
+            }
+            //file = $"Answer_Ephi_time={Time[t]}.dat";
+            //fileData = File.ReadAllText(AnswerPath + "E_phi/Answer/" + file).Split("\n");
+            //E[t] = new GlobalVector(fileData.Length - 1);
+            //for (int i = 0; i < fileData.Length - 1; i++)
+            //    E[t][i] = double.Parse(fileData[i]);
         }
 
     }
@@ -512,5 +619,67 @@ public class FEM3D : FEM
         sw.WriteLine($"Avg disc: {absDiscX / iter:E15} {absDiscY / iter:E15} {absDiscZ / iter:E15}");
         sw.WriteLine($"Rel disc: {Math.Sqrt(relDiscX / relDivX):E15} {Math.Sqrt(relDiscY / relDivY):E15} {Math.Sqrt(relDiscZ / relDivZ):E15}");
         sw.Close();
+    }
+
+    public void MeasureValuesOnReceivers(List<Point3D> recivers, string OutputPath)
+    {
+        using var sw_a = new StreamWriter(OutputPath + "A.txt");
+        using var sw_e = new StreamWriter(OutputPath + "E.txt");
+
+        for (int t = 0; t < Time.Count; t++)
+        {
+            var a_a = GetAAt(recivers[0].X, recivers[0].Y, recivers[0].Z, Time[t]);
+            var b_a = GetAAt(recivers[1].X, recivers[1].Y, recivers[1].Z, Time[t]);
+            var c_a = GetAAt(recivers[2].X, recivers[2].Y, recivers[2].Z, Time[t]);
+            var d_a = GetAAt(recivers[3].X, recivers[3].Y, recivers[3].Z, Time[t]);
+
+            var f_a_a = Math.Sqrt(a_a.Item1 * a_a.Item1 + a_a.Item2 * a_a.Item2 + a_a.Item3 * a_a.Item3);
+            var f_b_a = Math.Sqrt(b_a.Item1 * b_a.Item1 + b_a.Item2 * b_a.Item2 + b_a.Item3 * b_a.Item3);
+            var f_c_a = Math.Sqrt(c_a.Item1 * c_a.Item1 + c_a.Item2 * c_a.Item2 + c_a.Item3 * c_a.Item3);
+            var f_d_a = Math.Sqrt(d_a.Item1 * d_a.Item1 + d_a.Item2 * d_a.Item2 + d_a.Item3 * d_a.Item3);
+
+            var a_e = GetEAt(recivers[0].X, recivers[0].Y, recivers[0].Z, Time[t]);
+            var b_e = GetEAt(recivers[1].X, recivers[1].Y, recivers[1].Z, Time[t]);
+            var c_e = GetEAt(recivers[2].X, recivers[2].Y, recivers[2].Z, Time[t]);
+            var d_e = GetEAt(recivers[3].X, recivers[3].Y, recivers[3].Z, Time[t]);
+            
+            var f_a_e = Math.Sqrt(a_e.Item1 * a_e.Item1 + a_e.Item2 * a_e.Item2 + a_e.Item3 * a_e.Item3);
+            var f_b_e = Math.Sqrt(b_e.Item1 * b_e.Item1 + b_e.Item2 * b_e.Item2 + b_e.Item3 * b_e.Item3);
+            var f_c_e = Math.Sqrt(c_e.Item1 * c_e.Item1 + c_e.Item2 * c_e.Item2 + c_e.Item3 * c_e.Item3);
+            var f_d_e = Math.Sqrt(d_e.Item1 * d_e.Item1 + d_e.Item2 * d_e.Item2 + d_e.Item3 * d_e.Item3);
+
+            foreach (var solution in additionalFields)
+            {
+                var a_a_l = solution.GetAAt(recivers[0].X, recivers[0].Y, recivers[0].Z, Time[t]);
+                var b_a_l = solution.GetAAt(recivers[1].X, recivers[1].Y, recivers[1].Z, Time[t]);
+                var c_a_l = solution.GetAAt(recivers[2].X, recivers[2].Y, recivers[2].Z, Time[t]);
+                var d_a_l = solution.GetAAt(recivers[3].X, recivers[3].Y, recivers[3].Z, Time[t]);
+
+                var f_a_a_l = Math.Sqrt(a_a_l.Item1 * a_a_l.Item1 + a_a_l.Item2 * a_a_l.Item2 + a_a_l.Item3 * a_a_l.Item3);
+                var f_b_a_l = Math.Sqrt(b_a_l.Item1 * b_a_l.Item1 + b_a_l.Item2 * b_a_l.Item2 + b_a_l.Item3 * b_a_l.Item3);
+                var f_c_a_l = Math.Sqrt(c_a_l.Item1 * c_a_l.Item1 + c_a_l.Item2 * c_a_l.Item2 + c_a_l.Item3 * c_a_l.Item3);
+                var f_d_a_l = Math.Sqrt(d_a_l.Item1 * d_a_l.Item1 + d_a_l.Item2 * d_a_l.Item2 + d_a_l.Item3 * d_a_l.Item3);
+
+                var a_e_l = solution.GetAAt(recivers[0].X, recivers[0].Y, recivers[0].Z, Time[t]);
+                var b_e_l = solution.GetAAt(recivers[1].X, recivers[1].Y, recivers[1].Z, Time[t]);
+                var c_e_l = solution.GetAAt(recivers[2].X, recivers[2].Y, recivers[2].Z, Time[t]);
+                var d_e_l = solution.GetAAt(recivers[3].X, recivers[3].Y, recivers[3].Z, Time[t]);
+
+                var f_a_e_l = Math.Sqrt(a_e_l.Item1 * a_e_l.Item1 + a_e_l.Item2 * a_e_l.Item2 + a_e_l.Item3 * a_e_l.Item3);
+                var f_b_e_l = Math.Sqrt(b_e_l.Item1 * b_e_l.Item1 + b_e_l.Item2 * b_e_l.Item2 + b_e_l.Item3 * b_e_l.Item3);
+                var f_c_e_l = Math.Sqrt(c_e_l.Item1 * c_e_l.Item1 + c_e_l.Item2 * c_e_l.Item2 + c_e_l.Item3 * c_e_l.Item3);
+                var f_d_e_l = Math.Sqrt(d_e_l.Item1 * d_e_l.Item1 + d_e_l.Item2 * d_e_l.Item2 + d_e_l.Item3 * d_e_l.Item3);
+
+                f_a_e += f_a_e_l;
+                f_b_e += f_b_e_l;
+                f_c_e += f_c_e_l;
+                f_d_e += f_d_e_l;
+            }
+
+            sw_a.WriteLine($"{Time[t]} {f_a_a} {f_b_a} {f_c_a} {f_d_a}");
+            sw_e.WriteLine($"{Time[t]} {f_a_e} {f_b_e} {f_c_e} {f_d_e}");
+        }
+        sw_a.Close();
+        sw_e.Close();
     }
 }

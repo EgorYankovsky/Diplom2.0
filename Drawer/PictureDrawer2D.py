@@ -9,13 +9,17 @@ fig = plt.figure(figsize=(19, 3.9))
 l = plt.plot()
 
 metadata = dict(title='Movie', artist='codinglikemad')
-writer = PillowWriter(fps=30, metadata=metadata)
+writer = PillowWriter(fps=7, metadata=metadata)
 
 #input_path = sys.argv[1]
 #output_path = sys.argv[2]
 
-input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\2_dim\\Ephi\\"
-output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E_phi\\"
+#input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\2_dim\\Ephi\\"
+#output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E_phi\\"
+
+input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\3_dim\\E\\"
+output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E3d\\"
+
 
 i = 0
 path1 = Path(input_path)
@@ -38,6 +42,16 @@ with writer.saving(fig, output_path + "EM_field.gif", 100):
             for zi in z:
                 plt.plot([min(r), max(r)], [zi, zi], 'black', linewidth = 0.5)
 
+            plt.plot([2548, 2548], [-180, -80], 'black', linewidth=2.0)
+            plt.plot([2731, 2731], [-180, -80], 'black', linewidth=2.0)
+            plt.plot([2548, 2731], [-80, -80], 'black', linewidth=2.0)
+            plt.plot([2548, 2731], [-180, -180], 'black', linewidth=2.0)
+
+            plt.plot([-2605, -2605], [-1250, -800], 'black', linewidth=2.0)
+            plt.plot([-2415, -2415], [-1250, -800], 'black', linewidth=2.0)
+            plt.plot([-2605, -2415], [-800, -800], 'black', linewidth=2.0)
+            plt.plot([-2605, -2415], [-1250, -1250], 'black', linewidth=2.0)
+
             rgrid, zgrid = np.meshgrid(r, z)
             fgrid = []
             i = 0
@@ -51,7 +65,7 @@ with writer.saving(fig, output_path + "EM_field.gif", 100):
                 it+=1
 
 
-            cbar = plt.contourf(rgrid, zgrid, fgrid, 125, cmap='viridis')
+            cbar = plt.contourf(rgrid, zgrid, fgrid, 125, cmap='jet')
             plt.colorbar(cbar)
             plt.plot([min(r), min(r)], [max(z), min(z)], 'black', linewidth = 3.5)
             plt.plot([min(r), max(r)], [0.0, 0.0], '#b34b06', linewidth = 2.0)

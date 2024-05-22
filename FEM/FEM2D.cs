@@ -410,4 +410,12 @@ public class FEM2D : FEM
             swe.Close();
         }
     }
+
+    public void WritePointsToDrawDownZ(List<Point3D> recivers, string pathA, string pathE)
+    {
+        foreach(var reciver in recivers)
+        {
+            
+        }
+    }
 }

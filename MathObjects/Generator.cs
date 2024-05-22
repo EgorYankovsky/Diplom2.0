@@ -39,7 +39,7 @@ public static class Generator
         }
     }
 
-    public static void FillMatrixM(ref GlobalMatrix m, ArrayOfRibs arrRibs, ArrayOfElems arrEl)
+    public static void FillMatrixM(ref GlobalMatrix m, ArrayOfRibs arrRibs, ArrayOfElems arrEl, Mesh3Dim currentMesh, Mesh3Dim mainMesh)
     {
         m._al = new double[m._jg.Count];
         m._au = new double[m._jg.Count];
@@ -50,23 +50,63 @@ public static class Generator
                                   arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
                                   arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
             
-            double hx = 0.0D;
-            double hy = 0.0D;
-            double hz = 0.0D;
+
+            double x0 = double.NaN;
+            double x1 = double.NaN;
+            double y0 = double.NaN;
+            double y1 = double.NaN;
+            double z0 = double.NaN;
+            double z1 = double.NaN;
 
             foreach (var rib in currElem)
             {
-                if (rib != -1 && hx == 0 && arrRibs[rib].GetTangent().Item1 != 0)
-                    hx = arrRibs[rib].Length;
-                if (rib != -1 && hy == 0 && arrRibs[rib].GetTangent().Item2 != 0)
-                    hy = arrRibs[rib].Length;
-                if (rib != -1 && hz == 0 && arrRibs[rib].GetTangent().Item3 != 0)
-                    hz = arrRibs[rib].Length;
+                if (rib != -1 && double.IsNaN(x0) && double.IsNaN(x1) && arrRibs[rib].GetTangent().Item1 != 0)
+                {
+                    x0 = arrRibs[rib].a.X;
+                    x1 = arrRibs[rib].b.X;
+                }
+                if (rib != -1 && double.IsNaN(y0) && double.IsNaN(y1) && arrRibs[rib].GetTangent().Item2 != 0)
+                {
+                    y0 = arrRibs[rib].a.Y;
+                    y1 = arrRibs[rib].b.Y;
+                }
+                if (rib != -1 && double.IsNaN(z0) && double.IsNaN(z1) &&arrRibs[rib].GetTangent().Item3 != 0)
+                {
+                    z0 = arrRibs[rib].a.Z;
+                    z1 = arrRibs[rib].b.Z;
+                }
             }
 
-            var lm = new LocalMatrixM3D(1.0D, hx, hy, hz);
+            double hx = x1 - x0;
+            double hy = y1 - y0;
+            double hz = z1 - z0;
+
+            var sigma = SelectSigma(x0, x1, y0, y1, z0, z1, currentMesh, mainMesh);
+
+            var lm = new LocalMatrixM3D(sigma, hx, hy, hz);
             Add(lm, ref m, currElem);
         }
+    }
+
+    public static double SelectSigma(double x0, double x1, double y0, double y1, double z0, double z1, Mesh3Dim currentMesh, Mesh3Dim mainMesh, bool forVector = false)
+    {
+        double sigma = 0.0D;
+
+        if (currentMesh.nodesX[currentMesh.AnomalyBorders[0]] <= x0 && x1 <= currentMesh.nodesX[currentMesh.AnomalyBorders[1]] &&
+            currentMesh.nodesY[currentMesh.AnomalyBorders[2]] <= y0 && y1 <= currentMesh.nodesY[currentMesh.AnomalyBorders[3]] &&
+            currentMesh.nodesZ[currentMesh.AnomalyBorders[4]] <= z0 && z1 <= currentMesh.nodesZ[currentMesh.AnomalyBorders[5]] && !forVector)
+        {
+            foreach (var gg in currentMesh.Elems)
+                if (gg.sigma >= 1.0)
+                    sigma = gg.sigma;
+        }
+        else
+        {
+            for (int i = 0; i < mainMesh.NodesZWithoutFragmentation.Length - 1; i++)
+                if (mainMesh.NodesZWithoutFragmentation[i] <= z0 && z1 <= mainMesh.NodesZWithoutFragmentation[i + 1])
+                    sigma = mainMesh.Elems[i].sigma;
+        }
+        return sigma;
     }
 
     public static void ConsiderBoundaryConditions(ref GlobalMatrix m, ref GlobalVector v, ArrayOfRibs arrRibs, ArrayOfBorders arrBrd, double t)
@@ -104,25 +144,7 @@ public static class Generator
         }
     }
 
-
-    /*
-    public static void FillVector3D(ref GlobalVector v, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
-    {
-        for (int i = 0; i < arrEl.Length; i++)
-        {
-            List<int> currElem = [arrEl[i][0], arrEl[i][3], arrEl[i][8], arrEl[i][11],
-                                  arrEl[i][1], arrEl[i][2], arrEl[i][9], arrEl[i][10],
-                                  arrEl[i][4], arrEl[i][5], arrEl[i][6], arrEl[i][7]];
-  
-            var lv = new LocalVector3D(arrRibs[currElem[0]].a.X, arrRibs[currElem[0]].b.X,
-                                       arrRibs[currElem[4]].a.Y, arrRibs[currElem[4]].b.Y,
-                                       arrRibs[currElem[8]].a.Z, arrRibs[currElem[8]].b.Z, t);
-            Add(lv, ref v, currElem);
-        }
-    }
-    */
-
-    public static void FillVector3D(ref GlobalVector v, Egetter egetter, ArrayOfRibs arrRibs, ArrayOfElems arrEl, double t)
+    public static void FillVector3D(ref GlobalVector v, Egetter egetter, ArrayOfRibs arrRibs, ArrayOfElems arrEl, Mesh3Dim currentMesh, Mesh3Dim mainMesh, double t)
     {
         for (int i = 0; i < arrEl.Length; i++)
         {
@@ -156,18 +178,13 @@ public static class Generator
                 }
             }
 
+            var originalSigma = SelectSigma(x0, x1, y0, y1, z0, z1, currentMesh, mainMesh, true);
+            var currentSigma = arrEl[i].sigma;
 
-            var sigma = arrEl[i].sigma;
             var lv = new LocalVector3D(egetter, x0, x1, y0, y1, z0, z1, t);
 
-            Add(lv, ref v, sigma, currElem);
+            Add(lv, ref v, currentSigma - originalSigma, currElem);
         }
-    }
-
-    private static void Add(List<double> ELocal, ref GlobalVector v, double sigma, List<int> elem)
-    {
-        for (int i = 0; i < 12; i++)
-            v[elem[i]] += sigma * ELocal[i];
     }
 
     private static void Add(LocalVector3D lv, ref GlobalVector v, double sigma, List<int> elem)
@@ -177,15 +194,7 @@ public static class Generator
                 v[elem[i]] += sigma * lv[i];
     }
 
-    private static double SelectSigma(double theorSigma, Layer layer, double z0, double z1) 
-            => layer.Z0 <= z0 && z1 <= layer.Z1 ? layer.Sigma - theorSigma : 0.0D;
-
-    //private static double SelectSigma(double theorSigma, double layerSigma, double[] currentElem, List<int> anomalyBorders, Mesh3Dim mesh)
-    //{
-    //    if (cur)
-    //}
-
-    public static void BuildPortait(ref GlobalMatrix m, int arrPtLen, ArrayOfElems arrEl)
+    public static void BuildPortait(ref GlobalMatrix m, int arrPtLen, ArrayOfElems arrEl, bool isVec = false)
     {
         List<List<int>> arr = [];
 
