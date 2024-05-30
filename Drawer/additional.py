@@ -68,7 +68,7 @@ def read_data(path, r, z, func) -> (list, list, list): # type: ignore
         info = line.split(" ")
         r_curr.append(float(info[0]))
         z_curr.append(float(info[1]))
-        func.append(float(info[2]))
+        func.append(abs(float(info[2])))
     r = list(dict.fromkeys(r_curr).keys())
     z = list(dict.fromkeys(z_curr).keys())
     return (r, z, func)

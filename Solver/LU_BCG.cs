@@ -1,5 +1,4 @@
-
-/*using System.Diagnostics;
+using System.Diagnostics;
 using MathObjects;
 
 namespace Solver;
@@ -102,7 +101,8 @@ public class LU_BCG : ISolver
         double discrepancy = 1;
         double prPrev = p * residual;
 
-        for (int i = 1; i <= _maxIter && discrepancy > _eps; i++)
+         int i = 1;
+        for (; i <= _maxIter && discrepancy > _eps; i++)
         {
             var L_AU_z = Forward(LU, A * Backward(LU, z));
             double alpha = prPrev / (s * L_AU_z);
@@ -112,7 +112,7 @@ public class LU_BCG : ISolver
             
             //var L_ATU_s = SparseMatrix.TransposedMatrixMult(_matrix, s);
             //var L_ATU_s = Backward(reMatrixLU, _matrix * Forward(reMatrixLU, s));
-            var L_ATU_s = Forward(LU, SparseMatrix.TransposedMatrixMult(_matrix, Backward(reMatrixLU, s)));
+            var L_ATU_s = Forward(LU, A.Transpose() * Backward(LU, s));
             p = p - alpha * L_ATU_s;
             
             double pr = p * residual;
@@ -121,46 +121,20 @@ public class LU_BCG : ISolver
             
             z = residual + beta * z;
             s = p + beta * s;
-            discrepancy = residual.Norm() / vecNorm;
+            discrepancy = residual.Norma() / vecNorm;
         }
 
-      _solution = Backward(reMatrixLU, _solution);
+      _solution = Backward(LU, _solution);
 
       sw.Stop();
-      SolvationTime = sw.ElapsedMilliseconds;
-
-      return _solution;
-
-        do
-        {
-            x_ = x;
-            z_ = z;
-            r_ = r;
-            s_ = s;
-            p_ = p;
-
-            var Az = A * z_;
-            alph = (p_ * r_) / (s_ * Az);
-            
-            x = x_ + alph * z_;
-            r = r_ - alph * Az;
-            p = p_ - alph * A.Transpose() * s_;
-
-            beta = (p * r) / (p_ * r_);
-
-            z = r + beta * z_;
-            s = p + beta * s_;
-
-            iter++;
-            Console.WriteLine($"{r.Norma() / b.Norma():E15}");
-        } while (iter < _maxIter && r.Norma() / b.Norma() >= _eps);
-        sw.Stop();
+      var SolvationTime = sw.ElapsedMilliseconds;
 
         Console.WriteLine(
             $"Computing finished!\n" +
-            $"Total iterations: {iter}\n" +
+            $"Total iterations: {i}\n" +
             $"Time ms: {sw.ElapsedMilliseconds}\n" +
-            $"Relative residuality: {r.Norma() / b.Norma():E15}\n");
-        return (x, x_);
+            $"Relative residuality: {residual.Norma() / b.Norma():E15}\n");
+
+      return (_solution, _solution);
     }
-}*/
+}

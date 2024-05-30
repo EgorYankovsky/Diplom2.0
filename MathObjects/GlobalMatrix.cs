@@ -24,11 +24,11 @@ public class GlobalMatrix : Matrix
     #endregion
 
     #region Переопределение математических операций
-    public static GlobalVector operator *(GlobalMatrix _gm, GlobalVector _gv) => MathOperations.MultiplyPar(_gm, _gv);
+    public static GlobalVector operator *(GlobalMatrix _gm, GlobalVector _gv) => MathOperations.Multiply(_gm, _gv);
 
-    public static GlobalMatrix operator *(double a, GlobalMatrix gm) => MathOperations.MultiplyPar(a, gm);
+    public static GlobalMatrix operator *(double a, GlobalMatrix gm) => MathOperations.Multiply(a, gm);
 
-    public static GlobalMatrix operator +(GlobalMatrix gm1, GlobalMatrix gm2) => MathOperations.SumPar(gm1, gm2);
+    public static GlobalMatrix operator +(GlobalMatrix gm1, GlobalMatrix gm2) => MathOperations.Sum(gm1, gm2);
     #endregion
 
     public int Size

@@ -37,6 +37,9 @@ public class FEM2D : FEM
         if (solver is null) throw new ArgumentNullException("solver is null !");
         if (Time is null) throw new ArgumentNullException("Time is null!");
 
+        Stopwatch solutionStopwatch = new();
+        solutionStopwatch.Start();
+
         Debug.WriteLine($"\nTime layer: before BC");
         Thread.Sleep(1500);
 
@@ -52,20 +55,20 @@ public class FEM2D : FEM
 
         if (Time.Count > 1)
         {
-            //(Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
-            //if (Time.Count > 2)
-            for (int i = 1; i < Time.Count; i++)
+            (Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
+            if (Time.Count > 2)
+            for (int i = 2; i < Time.Count; i++)
             {
-                Debug.WriteLine($"\nTime layer: {Time[i]}");
+                Console.WriteLine($"\n {i} / {Time.Count - 1}. Time layer: {Time[i]}");
                 Thread.Sleep(1500);
 
-                double deltT = Time[i] - Time[i - 1];
-                //double deltT0 = Time[i] - Time[i - 1];
-                //double deltT1 = Time[i - 1] - Time[i - 2];
+                double deltT = Time[i] - Time[i - 2];
+                double deltT0 = Time[i] - Time[i - 1];
+                double deltT1 = Time[i - 1] - Time[i - 2];
 
-                //double tau0 = (deltT + deltT0) / (deltT * deltT0);
-                //double tau1 = deltT / (deltT1 * deltT0);
-                //double tau2 = deltT0 / (deltT * deltT1);
+                double tau0 = (deltT + deltT0) / (deltT * deltT0);
+                double tau1 = deltT / (deltT1 * deltT0);
+                double tau2 = deltT0 / (deltT * deltT1);
 
                 var matrix1 = new GlobalMatrix(pointsArr.GetLength());
                 Generator.BuildPortait(ref matrix1, pointsArr.GetLength(), elemsArr);
@@ -75,17 +78,19 @@ public class FEM2D : FEM
                 Generator.BuildPortait(ref M, pointsArr.GetLength(), elemsArr);
                 Generator.FillMatrix(ref M, pointsArr, elemsArr, TypeOfMatrixM.Mr);
 
-                Matrix = ((1.0D / deltT) * M) + matrix1;
+                Matrix = (tau0 * M) + matrix1;
 
                 var bi = new GlobalVector(pointsArr.GetLength());
-                Vector = bi + ((1.0D / deltT) * (M * Solutions[i - 1]));
+                Vector = bi + (tau1 * (M * Solutions[i - 1])) - (tau2 * (M * Solutions[i - 2]));
 
                 Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, pointsArr, bordersArr, Time[i]);        
                 (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
             }
         }
         A_phi = Solutions;
-        Debug.WriteLine("Lin eq solved");
+        solutionStopwatch.Stop();
+        var milseconds = solutionStopwatch.ElapsedMilliseconds;
+        Console.WriteLine($"Lin eq solved for {milseconds / 60000} min {(milseconds % 60000) / 1000} sec");
     }
 
     public void WriteData()
@@ -235,23 +240,25 @@ public class FEM2D : FEM
         E_phi = new GlobalVector[A_phi.Length];   
         for (int i = 0; i < E_phi.Length; i++)
         {
-            if (i == 0)
+            if (i == 0 || i == 1)
                 E_phi[i] = new GlobalVector(A_phi[i].Size);
             else
             {
-                //double ti = Time[i];
-                //double ti_1 = Time[i - 1];
-                //double ti_2 = Time[i - 2];
+                //E_phi[i] = -1.0D / (Time[i] - Time[i - 1]) * (A_phi[i] - A_phi[i - 1]);
 
-                //double dt0 = ti - ti_1;
-                //double dt1 = ti_1 - ti_2;
-                //double dt = ti - ti_2;
+                double ti = Time[i];
+                double ti_1 = Time[i - 1];
+                double ti_2 = Time[i - 2];
 
-                //double tau2 = dt0 / (dt * dt1);
-                //double tau1 = dt / (dt0 * dt1);
-                //double tau0 = (dt + dt0) / (dt * dt0);
+                double dt0 = ti - ti_1;
+                double dt1 = ti_1 - ti_2;
+                double dt = ti - ti_2;
 
-                E_phi[i] = -1.0D / (Time[i] - Time[i - 1]) * (A_phi[i] - A_phi[i - 1]);
+                double tau2 = dt0 / (dt * dt1);
+                double tau1 = dt / (dt0 * dt1);
+                double tau0 = (dt + dt0) / (dt * dt0);
+                
+                E_phi[i] = -1.0D * (tau0 * A_phi[i] - tau1 * A_phi[i - 1] + tau2 * A_phi[i - 2]);
             }
         }
     }
@@ -382,7 +389,7 @@ public class FEM2D : FEM
 
         for (int t = 0; t < Time.Count; t++)
         {
-            using var swa = new StreamWriter(pathA + $"Answer_A_time_layer_{Time[t]}.txt");
+            using var swa = new StreamWriter(pathA + $"Answer_A_time_layer_{t}.txt");
             for (int j = 0; j < 150; j++)
             {
                 for (int i = 0; i < 150; i++)
@@ -397,7 +404,7 @@ public class FEM2D : FEM
 
         for (int t = 0; t < Time.Count; t++)
         {
-            using var swe = new StreamWriter(pathE + $"Answer_E_time_layer_{Time[t]}.txt");
+            using var swe = new StreamWriter(pathE + $"Answer_E_time_layer_{t}.txt");
             for (int j = 0; j < 150; j++)
             {
                 for (int i = 0; i < 150; i++)
@@ -408,14 +415,6 @@ public class FEM2D : FEM
                 }
             }
             swe.Close();
-        }
-    }
-
-    public void WritePointsToDrawDownZ(List<Point3D> recivers, string pathA, string pathE)
-    {
-        foreach(var reciver in recivers)
-        {
-            
         }
     }
 }

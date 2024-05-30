@@ -7,13 +7,13 @@ namespace MathObjects;
 public class GlobalVector : Vector
 {
     #region Переопределение математических операций.
-    public static GlobalVector operator -(GlobalVector gv1, GlobalVector gv2) => MathOperations.DiffPar(gv1, gv2);
+    public static GlobalVector operator -(GlobalVector gv1, GlobalVector gv2) => MathOperations.Diff(gv1, gv2);
 
-    public static GlobalVector operator +(GlobalVector gv1, GlobalVector gv2) => MathOperations.SumPar(gv1, gv2);
+    public static GlobalVector operator +(GlobalVector gv1, GlobalVector gv2) => MathOperations.Sum(gv1, gv2);
 
-    public static GlobalVector operator *(double a, GlobalVector gv) => MathOperations.MultiplyPar(a, gv);
+    public static GlobalVector operator *(double a, GlobalVector gv) => MathOperations.Multiply(a, gv);
     
-    public static double operator *(GlobalVector gv1, GlobalVector gv2) => MathOperations.MultiplyPar(gv1, gv2);
+    public static double operator *(GlobalVector gv1, GlobalVector gv2) => MathOperations.Multiply(gv1, gv2);
     #endregion
 
     public double Norma()

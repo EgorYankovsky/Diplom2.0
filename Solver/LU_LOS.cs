@@ -8,7 +8,7 @@ public class LU_LOS : ISolver
 
     private const double _eps = 1E-15;
 
-    private void PartitialLU(GlobalMatrix A)
+    private static void PartitialLU(GlobalMatrix A)
     {
         for (int i = 0; i < A.Size; i++)
         {
@@ -35,15 +35,28 @@ public class LU_LOS : ISolver
                 }
 
                 A._al[j] -= sumL;
+
+                // Неполная факторизация!
+                //A._al[j] /= A._diag[jCol];
+                
+                if (double.IsNaN(A._al[j]) || double.IsInfinity(A._al[j]))
+                    Console.WriteLine();
+
                 A._au[j] -= sumU;
                 A._au[j] /= A._diag[jCol];
+                if (double.IsNaN(A._au[j]) || double.IsInfinity(A._au[j]))
+                    Console.WriteLine();
             }
 
             double sumD = 0.0;
             for (int j = A._ig[i]; j < A._ig[i + 1]; j++)
                 sumD += A._al[j] * A._au[j];
 
+            //A._diag[i] = Math.Sqrt(A._diag[i] - sumD);
             A._diag[i] -= sumD;
+            if (double.IsNaN(A._diag[i]) || double.IsInfinity(A._diag[i]))
+                Console.WriteLine();
+
         }
     }
 
@@ -140,9 +153,6 @@ public class LU_LOS : ISolver
                 Console.WriteLine(i);
 
         GlobalVector tmp = new(b.Size);
-        for (int i = 0; i < tmp.Size; i++)
-            if (double.IsNaN(tmp[i]) || double.IsInfinity(tmp[i]))
-                Console.WriteLine(i);
 
         GlobalVector r_ = new(b.Size);
         GlobalVector z_ = new(b.Size);
@@ -173,7 +183,8 @@ public class LU_LOS : ISolver
             p = tmp + beta * p_;
 
             iter++;
-            Console.WriteLine($"{(r.Norma() * r.Norma()) / (r0.Norma() * r0.Norma()):E15}");
+            if (iter % 10 == 0)
+                Console.WriteLine($"{(r.Norma() * r.Norma()) / (r0.Norma() * r0.Norma()):E15}");
         } while (iter < _maxIter && (r.Norma() * r.Norma()) / (r0.Norma() * r0.Norma()) >= _eps * _eps);
 
         Console.WriteLine(

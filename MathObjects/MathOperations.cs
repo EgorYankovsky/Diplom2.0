@@ -1,4 +1,4 @@
-using Campy;
+using System.Threading.Tasks;
 
 namespace MathObjects;
 
@@ -20,9 +20,8 @@ public static class MathOperations
     {
         if (gv1.Size != gv2.Size)
             throw new Exception("Найти разность векторов не возможно, т.к. они имеют разные размеры.");
-        
         GlobalVector gv = new(gv1.Size);
-        Campy.Parallel.For(gv1.Size, i => {
+        Parallel.For(0, gv1.Size, i => {
             gv[i] = gv1[i] - gv2[i];
         });
         return gv;
@@ -46,7 +45,7 @@ public static class MathOperations
             throw new Exception("Найти разность векторов не возможно, т.к. они имеют разные размеры.");
         
         GlobalVector gv = new(gv1.Size);
-        Campy.Parallel.For(gv1.Size, i => {
+        Parallel.For(0, gv1.Size, i => {
             gv[i] = gv1[i] + gv2[i];
         });
         return gv;
@@ -63,7 +62,7 @@ public static class MathOperations
     public static GlobalVector MultiplyPar(double a, GlobalVector gv)
     {
         GlobalVector _gv = new(gv.Size);
-        Campy.Parallel.For(gv.Size, i => {
+        Parallel.For(0, gv.Size, i => {
             _gv[i] = a * gv[i];
         });
         return _gv;
@@ -82,7 +81,7 @@ public static class MathOperations
     {
         if (gv1.Size != gv2.Size) throw new Exception("Невозможно найти скалярное умножение векторов, из-за разности в размерах.");
         double ans = 0.0D;
-        Campy.Parallel.For(gv1.Size, i => {
+        Parallel.For(0, gv1.Size, i => {
             ans = gv1[i] * gv2[i];
         });
         return ans;
@@ -109,6 +108,26 @@ public static class MathOperations
         return ans;
     }
 
+    public static GlobalVector CustomMultiply(GlobalMatrix _gm, GlobalVector _gv)
+    {
+        //Console.WriteLine(_gm.Size);
+        //Console.WriteLine(_gv.Size);
+        if (_gm.Size != _gv.Size)
+            throw new Exception("Невозможно перемножить матрицу на вектор.");
+        GlobalVector ans = new(_gv.Size);
+
+        for (int i = 0; i < _gv.Size; i++)
+        {
+            for (int j = _gm._ig[i]; j < _gm._ig[i + 1]; j++)
+            {
+                ans[i] += _gm._al[j] * _gv[_gm._jg[j]];
+                ans[_gm._jg[j]] += _gm._au[j] * _gv[i];
+            }
+            ans[i] += _gm._diag[i] * _gv[i];
+        }
+        return ans;
+    }
+
 
     public static GlobalVector MultiplyPar(GlobalMatrix _gm, GlobalVector _gv)
     {
@@ -118,14 +137,16 @@ public static class MathOperations
             throw new Exception("Невозможно перемножить матрицу на вектор.");
         GlobalVector ans = new(_gv.Size);
 
-        Campy.Parallel.For(_gm.Size, i => {
-            for (int j = 0; j < _gm._ig[i + 1] - _gm._ig[i]; j++)
-            {
+        for (int i = 0; i < _gv.Size; i++)
+        {
+            Parallel.For(0, _gm._ig[i + 1] - _gm._ig[i], j => {
                 ans[i] += _gm._al[_gm._ig[i] + j] * _gv[_gm._jg[_gm._ig[i] + j]];
+            });
+            Parallel.For(0, _gm._ig[i + 1] - _gm._ig[i], j => {
                 ans[_gm._jg[_gm._ig[i] + j]] += _gm._au[_gm._ig[i] + j] * _gv[i];
-            }
+            });
             ans[i] += _gm._diag[i] * _gv[i];
-        });
+        }
         return ans;
     }
 
@@ -149,7 +170,7 @@ public static class MathOperations
     public static GlobalMatrix MultiplyPar(double a, GlobalMatrix gm)
     {
         var ans = new GlobalMatrix(gm);
-        Campy.Parallel.For(ans.Size, i => {
+        Parallel.For(0, ans.Size, i => {
             for (int j = 0; j < ans._ig[i + 1] - ans._ig[i]; j++)
             {
                 ans._al[ans._ig[i] + j] *= a;
@@ -183,7 +204,7 @@ public static class MathOperations
         if (!gm1.CheckPortrait(gm2)) throw new ArgumentException("Different matrixes portrait!");
         GlobalMatrix ans = new(gm1);
 
-        Campy.Parallel.For(ans.Size, i => {
+        Parallel.For(0, ans.Size, i => {
             for (int j = 0; j < ans._ig[i + 1] - ans._ig[i]; j++)
             {
                 ans._al[ans._ig[i] + j] += gm2._al[gm2._ig[i] + j];

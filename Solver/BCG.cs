@@ -58,7 +58,9 @@ public class BCG : ISolver
             s = p + beta * s_;
 
             iter++;
-            Console.WriteLine($"{r.Norma() / b.Norma():E15}");
+
+            if (iter % 10 == 0)
+                Console.WriteLine($"{r.Norma() / b.Norma():E15}");
         } while (iter < _maxIter && r.Norma() / b.Norma() >= _eps);
         sw.Stop();
 

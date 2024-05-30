@@ -414,7 +414,7 @@ public static class Generator
     public static void FillVector(ref GlobalVector v, ArrayOfPoints2D arrPt, ArrayOfElems arrEl, double t)
     {
         for (int i = 0; i < arrPt.GetLength(); i++)
-            if (arrPt[i].R == 500.0D && arrPt[i].Z == 0.0D && t <= 1.0D)
+            if (arrPt[i].R == 500.0D && arrPt[i].Z == 0.0D && t <= 0.0D)
                 v[i] = F(arrPt[i].R, arrPt[i].Z, t);
 
             

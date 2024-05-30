@@ -2,6 +2,8 @@ using MathObjects;
 using Grid;
 using DataStructs;
 using Functions;
+using System.Diagnostics;
+
 
 
 namespace Project;
@@ -311,6 +313,9 @@ public class FEM3D : FEM
         if (G is null) throw new ArgumentNullException();
         if (M is null) throw new ArgumentNullException();
         
+        Stopwatch solutionStopwatch = new();
+        solutionStopwatch.Start();
+
         Solutions = new GlobalVector[Time.Count];
         Discrepancy = new GlobalVector[Time.Count];
         
@@ -318,14 +323,19 @@ public class FEM3D : FEM
 
         if (Time.Count > 1)
         {
-            for (int i = 1; i < Time.Count; i++)
+            (Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
+            for (int i = 2; i < Time.Count; i++)
             {
-                double t0 = Time[i];
-                double t1 = Time[i - 1];
+                Console.WriteLine($"\n {i} / {Time.Count - 1}. Time layer: {Time[i]}");
+                Thread.Sleep(1500);
 
-                double deltT = t0 - t1;
+                double deltT = Time[i] - Time[i - 2];
+                double deltT0 = Time[i] - Time[i - 1];
+                double deltT1 = Time[i - 1] - Time[i - 2];
 
-                double tau0 = 1.0D / deltT;
+                double tau0 = (deltT + deltT0) / (deltT * deltT0);
+                double tau1 = deltT / (deltT1 * deltT0);
+                double tau2 = deltT0 / (deltT * deltT1);
                 
                 Matrix = G + tau0 * M;
                 
@@ -334,13 +344,17 @@ public class FEM3D : FEM
                 // ! ACHTUNG
                 Generator.FillVector3D(ref b, _originalFEM.GetEAt, ribsArr, elemsArr, mesh3Dim, _originalFEM.mesh3Dim, Time[i]);
 
-                Vector = b + tau0 * M * Solutions[i - 1];
+                Vector = b + (tau1 * (M * Solutions[i - 1])) - (tau2 * (M * Solutions[i - 2]));
                 
                 Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, ribsArr, bordersArr, Time[i]);
                 (Solutions[i], Discrepancy[i]) = solver.Solve(Matrix, Vector);
             }
         }
         A = [.. Solutions];
+        solutionStopwatch.Stop();
+        var milseconds = solutionStopwatch.ElapsedMilliseconds;
+        Console.WriteLine($"Lin eq solved for {milseconds / 60000} min {(milseconds % 60000) / 1000} sec");
+
     }
 
     public void WriteData(string path)
@@ -357,26 +371,26 @@ public class FEM3D : FEM
 
     public void WriteDataToDraw2DimSolution(string path)
     {
-        double hx = 2 * 3182 / 300.0D;
+        double hx = (mesh3Dim.nodesX[^1] - mesh3Dim.nodesX[0]) / 300.0D;
         double hy = (mesh3Dim.nodesY[^1] - mesh3Dim.nodesY[0]) / 300.0D;
         double hz = (mesh3Dim.nodesZ[^1] - mesh3Dim.nodesZ[0]) / 300.0D;
         
         for (int t = 0; t < Time.Count; t++)
         {
-            using var swa = new StreamWriter(path + $"A\\Answer_A_time_layer_{Time[t]}.txt");
+            using var swa = new StreamWriter(path + $"A\\Answer_A_time_layer_{t}.txt");
             for (int k = 0; k < 300; k++)
             {
                 for (int i = 0; i < 300; i++)
                 {
-                    double xCurr = -3182 + i * hx;
+                    double xCurr = mesh3Dim.nodesX[0] + i * hy;
                     double yCurr = mesh3Dim.nodesY[0] + i * hy;
                     double zCurr = mesh3Dim.nodesZ[0] + k * hz;
                     var vec = GetAAt(xCurr, yCurr, zCurr, Time[t]);
-                    var ans = Math.Sqrt(vec.Item1 * vec.Item1 + vec.Item2 * vec.Item2);
+                    var ans = Math.Sqrt(vec.Item1 * vec.Item1 + vec.Item2 * vec.Item2 + vec.Item3 * vec.Item3);
                     foreach (var solution in additionalFields)
                     {
                         var vecF = solution.GetAAt(xCurr, yCurr, zCurr, Time[t]);
-                        var ansF = Math.Sqrt(vecF.Item1 * vecF.Item1 + vecF.Item2 * vecF.Item2);
+                        var ansF = Math.Sqrt(vecF.Item1 * vecF.Item1 + vecF.Item2 * vecF.Item2 + vecF.Item3 * vecF.Item3);
                         ans += ansF;
                     }
                     var rCurr = Math.Sqrt(xCurr * xCurr + yCurr * yCurr);
@@ -393,20 +407,20 @@ public class FEM3D : FEM
 
         for (int t = 0; t < Time.Count; t++)
         {
-            using var swe = new StreamWriter(path + $"E\\Answer_E_time_layer_{Time[t]}.txt");
+            using var swe = new StreamWriter(path + $"E\\Answer_E_time_layer_{t}.txt");
             for (int k = 0; k < 300; k++)
             {
                 for (int i = 0; i < 300; i++)
                 {
-                    double xCurr = -3182 + i * hx;
+                    double xCurr = mesh3Dim.nodesX[0] + i * hy;
                     double yCurr = mesh3Dim.nodesY[0] + i * hy;
                     double zCurr = mesh3Dim.nodesZ[0] + k * hz;
                     var vec = GetEAt(xCurr, yCurr, zCurr, Time[t]);
-                    var ans = Math.Sqrt(vec.Item1 * vec.Item1 + vec.Item2 * vec.Item2);
+                    var ans = Math.Sqrt(vec.Item1 * vec.Item1 + vec.Item2 * vec.Item2 + vec.Item3 * vec.Item3);
                     foreach (var solution in additionalFields)
                     {
                         var vecF = solution.GetEAt(xCurr, yCurr, zCurr, Time[t]);
-                        var ansF = Math.Sqrt(vecF.Item1 * vecF.Item1 + vecF.Item2 * vecF.Item2);
+                        var ansF = Math.Sqrt(vecF.Item1 * vecF.Item1 + vecF.Item2 * vecF.Item2 + vecF.Item3 * vecF.Item3);
                         ans += ansF;    
                     }
                     var rCurr = Math.Sqrt(xCurr * xCurr + yCurr * yCurr);
