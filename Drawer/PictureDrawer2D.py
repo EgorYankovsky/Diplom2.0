@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from matplotlib.animation import PillowWriter
 
-fig = plt.figure(figsize=(19, 7.3))
+fig = plt.figure(figsize=(19, 3.9))
 l = plt.plot()
 
 metadata = dict(title='Movie', artist='codinglikemad')
@@ -15,11 +15,11 @@ writer = PillowWriter(fps=12, metadata=metadata)
 #input_path = sys.argv[1]
 #output_path = sys.argv[2]
 
-#input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\2_dim\\Ephi\\"
-#output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E_phi\\"
+input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\2_dim\\Ephi\\"
+output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E_phi\\"
 
-input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\3_dim\\E\\"
-output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E3d\\"
+#input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\3_dim\\E\\"
+#output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E3d\\"
 
 files_amount = len(os.listdir(input_path))
 
@@ -74,8 +74,8 @@ with writer.saving(fig, output_path + "EM_field.gif", 100):
                 plt.colorbar(cbar)
                 plt.plot([min(r), min(r)], [max(z), min(z)], 'black', linewidth = 3.5)
                 plt.plot([min(r), max(r)], [0.0, 0.0], '#b34b06', linewidth = 2.0)
-                plt.plot([min(r), max(r)], [-500.0, -500.0], '#351e1c', linewidth = 2.0)
-                plt.plot([min(r), max(r)], [-1000.0, -1000.0], '#efede6', linewidth = 2.0)
+                plt.plot([min(r), max(r)], [-3000.0, -3000.0], '#351e1c', linewidth = 2.0)
+                plt.plot([min(r), max(r)], [-6000.0, -6000.0], '#efede6', linewidth = 2.0)
                 plt.scatter(10, 0, color='green')
                 plt.scatter(510, 0, color='blue')
                 plt.scatter(1000, 0, color='pink')

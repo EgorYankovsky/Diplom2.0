@@ -6,8 +6,8 @@ import sys
 #E_data_path = sys.argv[2]
 #output_path = sys.argv[3]
 
-A_data_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\3_dim\\Receivers\\A.txt"
-E_data_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\3_dim\\Receivers\\E.txt"
+A_data_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\2_dim\\Receivers\\A.txt"
+E_data_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\2_dim\\Receivers\\E.txt"
 output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Graphics\\"
 
 
@@ -51,7 +51,7 @@ e3 = e3[2:]
 plt.loglog(time, e0, color='green', label="E(0, y, -130, 1.0)")
 plt.loglog(time, e1, color='blue', label="(2500.0, 0.0, -200.0)")
 plt.loglog(time, e2, color='red', label="(10.0, 0.0, -700.0)")
-plt.loglog(time, e3, color='pink', label="(1000.0, 0.0, -1250.0)")
+#plt.loglog(time, e3, color='pink', label="(1000.0, 0.0, -1250.0)")
 #plt.ylim(min(e0), -1 * min(e0))
 plt.xlabel("Y [м]")
 plt.ylabel("E [В / м]")

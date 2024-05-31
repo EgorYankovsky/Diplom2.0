@@ -52,8 +52,8 @@ ReadMesh(InputDirectory + "WholeMesh.txt");
 ReadTimeMesh(InputDirectory + "Time.txt");
 
 // Set recivers
-List<Point3D> recivers = [new(273.55, 443.55, 0.0), new(510.0, 0.0, 0.0),
-                          new(243.55, -493.55, 0.0), new(2500.0, 0.0, 0.0)];
+List<Point3D> recivers = [new(1050.0, 0.0, 0.0), new(950.0, 0.0, 0.0),
+                          new(707.10, 707.10, 0.0), new(800.0, 0.0, -8000.0)];
 
 Mesh3Dim mesh3D = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
                       NodesZ, InfoAboutZ, Elems, Borders);
@@ -69,7 +69,7 @@ ConstructMesh(ref mesh2D);
 FEM2D myFEM2D = new(mesh2D, timeMesh);
 if (isSolving2DimTask)
 {
-    myFEM2D.SetSolver(new LOS());
+    myFEM2D.SetSolver(new LU_LOS());
     myFEM2D.Solve();
     myFEM2D.GenerateVectorEphi();
     myFEM2D.WriteData(OutputDirectory);
@@ -87,14 +87,15 @@ if (isSolving2DimTask)
     //                  $"Drawing graphics finished with code: {c}\n");
 }
 else
+{
     myFEM2D.ReadAnswer(OutputDirectory);
+    Console.WriteLine("2D answer read");
+}
 
-
-Console.WriteLine("2D answer read");
 myFEM2D.GenerateVectorEphi();
 myFEM2D.MeasureValuesOnReceivers(recivers, OutputDirectory + "ToDraw\\2_dim\\Receivers\\");
 
-//return 0;
+return 0;
 
 ConstructMesh(ref mesh3D);
 Console.WriteLine("3D mesh constructed");
