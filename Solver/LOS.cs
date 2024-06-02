@@ -2,11 +2,11 @@ using MathObjects;
 
 namespace Solver;
 
-public class LOS : ISolver
+public class LOS(int maxIter = 100_000, double eps = 1E-15) : ISolver
 {
-    private const int _maxIter = 100000;
+    private int _maxIter = maxIter;
 
-    private const double _eps = 1E-15;
+    private double _eps = eps;
 
     public (GlobalVector, GlobalVector) Solve(GlobalMatrix A, GlobalVector b)
     {

@@ -15,26 +15,6 @@ string SubtotalsDirectory = Path.GetFullPath("../../../../Data/Subtotals/");
 string OutputDirectory = Path.GetFullPath("..\\..\\..\\..\\Data\\Output\\");
 string PicturesDirectory = Path.GetFullPath("../../../../Drawer/Pictures/");
 
-//var am = TestClass.A;
-//var bm = TestClass.b;
-//var solver = new LU_LOS();
-//var solver1 = new LOS();
-//var solver2 = new BCG();
-//var q = solver.Solve(am, bm);
-//Console.WriteLine();
-//var q1 = solver1.Solve(am, bm);
-//Console.WriteLine();
-//var q2 = solver2.Solve(am, bm);
-//for (int i = 0; i < q.Item1.Size; i++)
-//   Console.WriteLine(q.Item1[i]);
-//Console.WriteLine();
-//for (int i = 0; i < q1.Item1.Size; i++)
-//   Console.WriteLine(q1.Item1[i]);
-//Console.WriteLine();
-//for (int i = 0; i < q2.Item1.Size; i++)
-//   Console.WriteLine(q2.Item1[i]);
-//return 0;
-
 bool isSolving2DimTask = Checker(OutputDirectory);
 
 // Pre-processor. Clearing output folders.
@@ -52,8 +32,8 @@ ReadMesh(InputDirectory + "WholeMesh.txt");
 ReadTimeMesh(InputDirectory + "Time.txt");
 
 // Set recivers
-List<Point3D> recivers = [new(1050.0, 0.0, 0.0), new(950.0, 0.0, 0.0),
-                          new(707.10, 707.10, 0.0), new(800.0, 0.0, -8000.0)];
+List<Point3D> recivers = [new(1000.0, 0.0, 0.0), new(10.0, 0.0, 0.0),
+                          new(707.10, 707.10, 0.0), new(1000.0, 0.0, -10.0)];
 
 Mesh3Dim mesh3D = new(NodesX, InfoAboutX, NodesY, InfoAboutY,
                       NodesZ, InfoAboutZ, Elems, Borders);
@@ -73,7 +53,6 @@ if (isSolving2DimTask)
     myFEM2D.Solve();
     myFEM2D.GenerateVectorEphi();
     myFEM2D.WriteData(OutputDirectory);
-    myFEM2D.WriteDiscrepancy(OutputDirectory);
     myFEM2D.WritePointsToDraw(OutputDirectory + "ToDraw\\2_dim\\Aphi\\",
                               OutputDirectory + "ToDraw\\2_dim\\Ephi\\");
     myFEM2D.MeasureValuesOnReceivers(recivers, OutputDirectory + "ToDraw\\2_dim\\Receivers\\");
@@ -92,10 +71,9 @@ else
     Console.WriteLine("2D answer read");
 }
 
-myFEM2D.GenerateVectorEphi();
-myFEM2D.MeasureValuesOnReceivers(recivers, OutputDirectory + "ToDraw\\2_dim\\Receivers\\");
-
 return 0;
+
+myFEM2D.MeasureValuesOnReceivers(recivers, OutputDirectory + "ToDraw\\2_dim\\Receivers\\");
 
 ConstructMesh(ref mesh3D);
 Console.WriteLine("3D mesh constructed");
@@ -116,7 +94,8 @@ ConstructMeshAnomaly(ref mesh3D_a1, SubtotalsDirectory + "3_dim\\Anomaly0\\");
 Console.WriteLine("Anomaly mesh built");
 FEM3D fem3D_a1 = new(mesh3D_a1, timeMesh, myFEM3D, 0);
 //fem3D_a1.ReadData(OutputDirectory + "A_phi/Answer3D/AfterField1/");
-fem3D_a1.SetSolver(new LOS());
+fem3D_a1.SetSolver(new LOS(100_000, 1E-13));
+//fem3D_a1.SetSolver(new LU_LOS());
 Console.WriteLine("Solving begun");
 fem3D_a1.Solve();
 Console.WriteLine("Solved");

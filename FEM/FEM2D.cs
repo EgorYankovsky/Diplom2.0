@@ -245,31 +245,18 @@ public class FEM2D : FEM
         E_phi = new GlobalVector[A_phi.Length];   
         for (int i = 0; i < E_phi.Length; i++)
         {
-            if (i == 0 || i == 1)
+            if (i == 0)
                 E_phi[i] = new GlobalVector(A_phi[i].Size);
             else
-            {
                 E_phi[i] = -1.0D / (Time[i] - Time[i - 1]) * (A_phi[i] - A_phi[i - 1]);
-
-                //double ti = Time[i];
-                //double ti_1 = Time[i - 1];
-                //double ti_2 = Time[i - 2];
-
-                //double dt0 = ti - ti_1;
-                //double dt1 = ti_1 - ti_2;
-                //double dt = ti - ti_2;
-
-                //double tau2 = dt0 / (dt * dt1);
-                //double tau1 = dt / (dt0 * dt1);
-                //double tau0 = (dt + dt0) / (dt * dt0);
-                //
-                //E_phi[i] = -1.0D * (tau0 * A_phi[i] - tau1 * A_phi[i - 1] + tau2 * A_phi[i - 2]);
-            }
         }
     }
 
-    internal List<int> GetElem(double r, double z)
+    internal List<int>? GetElem(double r, double z)
     {
+        if (r < mesh2Dim.nodesR[0] || mesh2Dim.nodesR[^1] < r || z < mesh2Dim.nodesZ[0] || mesh2Dim.nodesZ[^1] < z)
+            return null;
+
         int i = 0;
         for (; i < mesh2Dim.nodesR.Count - 1 && r >= 0.001; i++)
             if (mesh2Dim.nodesR[i] <= r && r <= mesh2Dim.nodesR[i + 1])
@@ -290,6 +277,9 @@ public class FEM2D : FEM
             if (Time[tt] == t)
             {
                 var elem = GetElem(r, z);
+                
+                if (elem is null) return 0.0D;
+
                 double[] q = new double[4];
                 for (int i = 0; i < 4; i++)
                     q[i] = A_phi[tt][elem[i]];
@@ -312,6 +302,8 @@ public class FEM2D : FEM
             if (Time[tt] == t)
             {
                 var elem = GetElem(r, z);
+                if (elem is null) return 0.0D;
+
                 double[] q = new double[4];
                 for (int i = 0; i < 4; i++)
                     q[i] = E_phi[tt][elem[i]];

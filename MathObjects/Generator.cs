@@ -120,15 +120,24 @@ public static class Generator
                 case 1:
                 for (int i = 2; i < 6; i++)
                 {
-                    if (consideredBorder.Contains(border[i])) continue;
+                    if (consideredBorder.BinarySearch(border[i]) == 0) continue;
 
                     consideredBorder.Add(border[i]);
+                    consideredBorder.Sort();
                     for (int j = m._ig[border[i]]; j < m._ig[border[i] + 1]; j++)
                         m._al[j] = 0.0D;
                     m._diag[border[i]] = 1.0D;
-                    for (int j = 0; j < m._jg.Count; j++)
-                        if (m._jg[j] == border[i])
-                            m._au[j] = 0.0D;
+                    for (int j = border[i]; j < m._ig.Length - 1; j++)
+                    {
+                        var row = m._jg[m._ig[j] .. m._ig[j + 1]];
+                        if (row.BinarySearch(border[i]) < 0) continue;
+                        for (int jj = 0; jj < row.Count; jj++)
+                            if (row[jj] == border[i])
+                                m._au[row[jj]] = 0.0D;
+                    }
+                    //for (int j = 0; j < m._jg.Count; j++)
+                    //    if (m._jg[j] == border[i])
+                    //        m._au[j] = 0.0D;
                     v[border[i]] = 0.0D;
                 }
                 
@@ -171,7 +180,7 @@ public static class Generator
                     y0 = arrRibs[rib].a.Y;
                     y1 = arrRibs[rib].b.Y;
                 }
-                if (rib != -1 && double.IsNaN(z0) && double.IsNaN(z1) &&arrRibs[rib].GetTangent().Item3 != 0)
+                if (rib != -1 && double.IsNaN(z0) && double.IsNaN(z1) && arrRibs[rib].GetTangent().Item3 != 0)
                 {
                     z0 = arrRibs[rib].a.Z;
                     z1 = arrRibs[rib].b.Z;
@@ -459,6 +468,14 @@ public static class Generator
                     //            gm._al[jj] = 0.0D;
                     //        }    
                     //    }
+                    //}
+                    //for (int j = border[i]; j < gm._ig.Length - 1; j++)
+                    //{
+                    //    var row = gm._jg[gm._ig[j] .. gm._ig[j + 1]];
+                    //    if (row.BinarySearch(border[i]) < 0) continue;
+                    //    for (int jj = 0; jj < row.Count; jj++)
+                    //        if (row[jj] == border[i])
+                    //            gm._au[gm._ig[j] + jj] = 0.0D;
                     //}
                     for (int j = 0; j < gm._jg.Count; j++)
                         if (gm._jg[j] == border[i])
