@@ -33,6 +33,8 @@ public static class MeshReader
 
     public static List<int> FieldBorders = [];
 
+    public static List<int> FieldBorders1 = [];
+
     public static (double, double) Time;
 
     public static int tn;
@@ -126,6 +128,45 @@ public static class MeshReader
         }
         iter += bordersAmount;
         FieldBorders = [.. info[iter].Split(" ").Select(int.Parse)];
+        Debug.WriteLine("Field data read correctly");
+    }
+
+    public static void ReadBothAnomalies(string path)
+    {
+        var info = File.ReadAllText(path).Split("\n");
+
+        NodesX = [.. info[0].Split(" ").Select(double.Parse)];
+        InfoAboutX = info[1];
+    
+        NodesY = [.. info[2].Split(" ").Select(double.Parse)];
+        InfoAboutY = info[3];
+    
+        NodesZ = [.. info[4].Split(" ").Select(double.Parse)];
+        InfoAboutZ = info[5];
+    
+        var elemsAmount = int.Parse(info[6]);
+        Elems = [];
+        for (int i = 0; i < elemsAmount; i++)
+        {
+            var infoElem = info[7 + i].Split(" ");
+            Elems.Add(new Elem(int.Parse(infoElem[0]), int.Parse(infoElem[1]),
+                               int.Parse(infoElem[2]), int.Parse(infoElem[3]), 
+                               int.Parse(infoElem[4]), int.Parse(infoElem[5]), 
+                               int.Parse(infoElem[6]), mu0, double.Parse(infoElem[7])));
+        }
+        int iter = 7 + elemsAmount;
+        var bordersAmount = int.Parse(info[iter]);
+        iter++;
+        Borders = [];
+        for (int i = 0; i < bordersAmount; i++)
+        {
+            var infoBorder = info[iter + i].Split(" ").Select(int.Parse).ToArray();
+            Borders.Add(new Border3D(infoBorder[0], infoBorder[1], infoBorder[2], infoBorder[3],
+                                     infoBorder[4], infoBorder[5], infoBorder[6], infoBorder[7]));
+        }
+        iter += bordersAmount;
+        FieldBorders = [.. info[iter].Split(" ").Select(int.Parse)];
+        FieldBorders1 = [.. info[iter + 1].Split(" ").Select(int.Parse)];
         Debug.WriteLine("Field data read correctly");
     }
 }

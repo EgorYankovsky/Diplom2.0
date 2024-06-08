@@ -92,6 +92,17 @@ public static class Generator
     {
         double sigma = 0.0D;
 
+        if (currentMesh.SecondAnomaly.Count > 0)
+        {
+            if (currentMesh.nodesX[currentMesh.SecondAnomaly[0]] <= x0 && x1 <= currentMesh.nodesX[currentMesh.SecondAnomaly[1]] &&
+                currentMesh.nodesY[currentMesh.SecondAnomaly[2]] <= y0 && y1 <= currentMesh.nodesY[currentMesh.SecondAnomaly[3]] &&
+                currentMesh.nodesZ[currentMesh.SecondAnomaly[4]] <= z0 && z1 <= currentMesh.nodesZ[currentMesh.SecondAnomaly[5]] && !forVector)
+            {
+                foreach (var gg in currentMesh.Elems)
+                    if (gg.sigma >= 101.0)
+                        sigma = gg.sigma;
+            }   
+        }
         if (currentMesh.nodesX[currentMesh.AnomalyBorders[0]] <= x0 && x1 <= currentMesh.nodesX[currentMesh.AnomalyBorders[1]] &&
             currentMesh.nodesY[currentMesh.AnomalyBorders[2]] <= y0 && y1 <= currentMesh.nodesY[currentMesh.AnomalyBorders[3]] &&
             currentMesh.nodesZ[currentMesh.AnomalyBorders[4]] <= z0 && z1 <= currentMesh.nodesZ[currentMesh.AnomalyBorders[5]] && !forVector)
@@ -133,11 +144,8 @@ public static class Generator
                         if (row.BinarySearch(border[i]) < 0) continue;
                         for (int jj = 0; jj < row.Count; jj++)
                             if (row[jj] == border[i])
-                                m._au[row[jj]] = 0.0D;
+                                m._au[m._ig[j] + jj] = 0.0D;
                     }
-                    //for (int j = 0; j < m._jg.Count; j++)
-                    //    if (m._jg[j] == border[i])
-                    //        m._au[j] = 0.0D;
                     v[border[i]] = 0.0D;
                 }
                 
@@ -456,19 +464,6 @@ public static class Generator
                     for (int j = gm._ig[border[i]]; j < gm._ig[border[i] + 1]; j++)
                         gm._al[j] = 0.0D;
                     gm._diag[border[i]] = 1.0D;
-                    //for (int row = 0; row < gm.Size; row++)
-                    //{
-                    //    var stB = gv[border[i]];
-                    //    for (int jj = gm._ig[row]; jj < gm._ig[row + 1]; jj++)
-                    //    {
-                    //        if (gm._jg[jj] == border[i])
-                    //        {
-                    //            stB *= -1.0D * gm._al[jj];
-                    //            gv[row] += stB;
-                    //            gm._al[jj] = 0.0D;
-                    //        }    
-                    //    }
-                    //}
                     //for (int j = border[i]; j < gm._ig.Length - 1; j++)
                     //{
                     //    var row = gm._jg[gm._ig[j] .. gm._ig[j + 1]];

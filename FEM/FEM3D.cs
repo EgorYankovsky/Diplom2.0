@@ -115,11 +115,11 @@ public class FEM3D : FEM
                 {
                     var arrCurr = solution.GetElem(x, y, z);
                     if (arrCurr is null) return (0.0D, 0.0D, 0.0D);
-                    var elemCurr = ConvertGlobalToLocalNumeration(arr);
+                    var elemCurr = ConvertGlobalToLocalNumeration(arrCurr);
 
                     double[] qCurr = new double[12];
                     for (int ii = 0; ii < 12; ii++)
-                        qCurr[ii] = solution.A[tt][elem[ii]];
+                        qCurr[ii] = solution.A[tt][elemCurr[ii]];
 
                     double x0Curr = solution.ribsArr[elemCurr[0]].a.X;
                     double x1Curr = solution.ribsArr[elemCurr[0]].b.X;
@@ -128,9 +128,9 @@ public class FEM3D : FEM
                     double z0Curr = solution.ribsArr[elemCurr[8]].a.Z;
                     double z1Curr = solution.ribsArr[elemCurr[8]].b.Z;
 
-                    double epsCurr = (x - x0Curr) / (x1 - x0Curr);
-                    double nuCurr =  (y - y0Curr) / (y1 - y0Curr);
-                    double khiCurr = (z - z0Curr) / (z1 - z0Curr);
+                    double epsCurr = (x - x0Curr) / (x1Curr - x0Curr);
+                    double nuCurr =  (y - y0Curr) / (y1Curr - y0Curr);
+                    double khiCurr = (z - z0Curr) / (z1Curr - z0Curr);
 
                     var ansCurr = BasisFunctions3DVec.GetValue(epsCurr, nuCurr, khiCurr, qCurr);
                     ans.Item1 += ansCurr.Item1;
@@ -174,11 +174,11 @@ public class FEM3D : FEM
                 {
                     var arrCurr = solution.GetElem(x, y, z);
                     if (arrCurr is null) return (0.0D, 0.0D, 0.0D);
-                    var elemCurr = ConvertGlobalToLocalNumeration(arr);
+                    var elemCurr = ConvertGlobalToLocalNumeration(arrCurr);
 
                     double[] qCurr = new double[12];
                     for (int ii = 0; ii < 12; ii++)
-                        qCurr[ii] = solution.E[tt][elem[ii]];
+                        qCurr[ii] = solution.E[tt][elemCurr[ii]];
 
                     double x0Curr = solution.ribsArr[elemCurr[0]].a.X;
                     double x1Curr = solution.ribsArr[elemCurr[0]].b.X;
@@ -187,9 +187,9 @@ public class FEM3D : FEM
                     double z0Curr = solution.ribsArr[elemCurr[8]].a.Z;
                     double z1Curr = solution.ribsArr[elemCurr[8]].b.Z;
 
-                    double epsCurr = (x - x0Curr) / (x1 - x0Curr);
-                    double nuCurr =  (y - y0Curr) / (y1 - y0Curr);
-                    double khiCurr = (z - z0Curr) / (z1 - z0Curr);
+                    double epsCurr = (x - x0Curr) / (x1Curr - x0Curr);
+                    double nuCurr =  (y - y0Curr) / (y1Curr - y0Curr);
+                    double khiCurr = (z - z0Curr) / (z1Curr - z0Curr);
 
                     var ansCurr = BasisFunctions3DVec.GetValue(epsCurr, nuCurr, khiCurr, qCurr);
                     ans.Item1 += ansCurr.Item1;
@@ -254,9 +254,12 @@ public class FEM3D : FEM
         for (int i = 0; i < A.Count; i++)
         {
             if (i == 0)
-                E.Add(new GlobalVector(A[i].Size));
+                E.Add(new GlobalVector(A[1].Size));
             else
             {
+                if (A[i - 1].Size == 0) A[i - 1] = new GlobalVector(ribsArr.Count);
+                if (A[i].Size == 0) A[i] = new GlobalVector(ribsArr.Count);
+                
                 //double ti = Time[i];
                 //double ti_1 = Time[i - 1];
                 //double ti_2 = Time[i - 2];
@@ -398,32 +401,33 @@ public class FEM3D : FEM
 
         if (Time.Count > 1)
         {
-            //(Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
-            for (int i = 1; i < Time.Count; i++)
+            (Solutions[1], Discrepancy[1]) = (Solutions[0], Discrepancy[0]);
+            for (int i = 2; i < Time.Count; i++)
             {
                 Console.WriteLine($"\n {i} / {Time.Count - 1}. Time layer: {Time[i]}");
                 Thread.Sleep(1500);
 
-                //double deltT = Time[i] - Time[i - 2];
-                //double deltT0 = Time[i] - Time[i - 1];
-                //double deltT1 = Time[i - 1] - Time[i - 2];
+                double deltT = Time[i] - Time[i - 2];
+                double deltT0 = Time[i] - Time[i - 1];
+                double deltT1 = Time[i - 1] - Time[i - 2];
 
-                //double tau0 = (deltT + deltT0) / (deltT * deltT0);
-                //double tau1 = deltT / (deltT1 * deltT0);
-                //double tau2 = deltT0 / (deltT * deltT1);
+                double tau0 = (deltT + deltT0) / (deltT * deltT0);
+                double tau1 = deltT / (deltT1 * deltT0);
+                double tau2 = deltT0 / (deltT * deltT1);
                 
-                double deltT = Time[i] - Time[i - 1];
-                double tau = 1.0D / deltT;
+                //double deltT = Time[i] - Time[i - 1];
+                //double tau = 1.0D / deltT;
 
-                Matrix = G + tau * M;
+                Matrix = G + tau0 * M;
+                //Matrix = G + tau * M;
                 
                 var b = new GlobalVector(ribsArr.Count);
                 
                 // ! ACHTUNG
                 Generator.FillVector3D(ref b, _originalFEM.GetEAt, ribsArr, elemsArr, mesh3Dim, _originalFEM.mesh3Dim, Time[i]);
 
-                //Vector = b + (tau1 * (M * Solutions[i - 1])) - (tau2 * (M * Solutions[i - 2]));
-                Vector = b + (tau * (M * Solutions[i - 1]));
+                Vector = b + (tau1 * (M * Solutions[i - 1])) - (tau2 * (M * Solutions[i - 2]));
+                //Vector = b + (tau * (M * Solutions[i - 1]));
                 //var timeVec = tau * (M * Solutions[i - 1]);
                 Generator.ConsiderBoundaryConditions(ref Matrix, ref Vector, ribsArr, bordersArr, Time[i]);
             
@@ -466,8 +470,12 @@ public class FEM3D : FEM
 
     public void WriteDataToDraw2DimSolution(string path)
     {
-        double hx = (mesh3Dim.nodesX[^1] - mesh3Dim.nodesX[0]) / 300.0D;
-        double hy = (mesh3Dim.nodesY[^1] - mesh3Dim.nodesY[0]) / 300.0D;
+        //double hx = (mesh3Dim.nodesX[^1] - mesh3Dim.nodesX[mesh3Dim.NodesAmountX / 2]) / 300.0D;
+        //double hy = (mesh3Dim.nodesY[^1] - mesh3Dim.nodesY[mesh3Dim.NodesAmountY / 2]) / 300.0D;
+        //double hz = (mesh3Dim.nodesZ[^1] - mesh3Dim.nodesZ[0]) / 300.0D;
+        
+        double hx = (5500.0D) / 300.0D;
+        double hy = (5500.0D) / 300.0D;
         double hz = (mesh3Dim.nodesZ[^1] - mesh3Dim.nodesZ[0]) / 300.0D;
         
         for (int t = 0; t < Time.Count; t++)
@@ -477,17 +485,19 @@ public class FEM3D : FEM
             {
                 for (int i = 0; i < 300; i++)
                 {
-                    double xCurr = mesh3Dim.nodesX[0] + i * hy;
-                    double yCurr = mesh3Dim.nodesY[0] + i * hy;
+                    //double xCurr = mesh3Dim.nodesX[0] + i * hx;
+                    //double yCurr = mesh3Dim.nodesY[0] + i * hy;
                     double zCurr = mesh3Dim.nodesZ[0] + k * hz;
+                    double xCurr = 0.0D + i * hx;
+                    double yCurr = 0.0D + i * hy;
                     var vec = GetAAt(xCurr, yCurr, zCurr, Time[t]);
                     var ans = Math.Sqrt(vec.Item1 * vec.Item1 + vec.Item2 * vec.Item2 + vec.Item3 * vec.Item3);
                     var rCurr = Math.Sqrt(xCurr * xCurr + yCurr * yCurr);
-                    if (i < 150)
-                    {
-                        rCurr *= -1;
-                        ans *= -1;
-                    }
+                    //if (i < 150)
+                    //{
+                    //    rCurr *= -1;
+                    //    ans *= -1;
+                    //}
                     swa.WriteLine($"{rCurr:E15} {zCurr:E15} {ans:E15}");
                 }
             }
@@ -501,17 +511,19 @@ public class FEM3D : FEM
             {
                 for (int i = 0; i < 300; i++)
                 {
-                    double xCurr = mesh3Dim.nodesX[0] + i * hy;
-                    double yCurr = mesh3Dim.nodesY[0] + i * hy;
+                    //double xCurr = mesh3Dim.nodesX[0] + i * hx;
+                    //double yCurr = mesh3Dim.nodesY[0] + i * hy;
                     double zCurr = mesh3Dim.nodesZ[0] + k * hz;
+                    double xCurr = 0.0D + i * hx;
+                    double yCurr = 0.0D + i * hy;
                     var vec = GetEAt(xCurr, yCurr, zCurr, Time[t]);
                     var ans = Math.Sqrt(vec.Item1 * vec.Item1 + vec.Item2 * vec.Item2 + vec.Item3 * vec.Item3);
                     var rCurr = Math.Sqrt(xCurr * xCurr + yCurr * yCurr);
-                    if (i < 150)
-                    {
-                        rCurr *= -1;
-                        ans *= -1;
-                    }
+                    //if (i < 150)
+                    //{
+                    //    rCurr *= -1;
+                    //    ans *= -1;
+                    //}
                     swe.WriteLine($"{rCurr:E15} {zCurr:E15} {ans:E15}");                }
             }
             swe.Close();

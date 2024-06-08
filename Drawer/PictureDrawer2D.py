@@ -15,11 +15,11 @@ writer = PillowWriter(fps=12, metadata=metadata)
 #input_path = sys.argv[1]
 #output_path = sys.argv[2]
 
-input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\2_dim\\Ephi\\"
-output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E_phi\\"
+#input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\2_dim\\Ephi\\"
+#output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E_phi\\"
 
-#input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\3_dim\\E\\"
-#output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E3d\\"
+input_path = "D:\\CodeRepos\\Diplom\\Data\\Output\\ToDraw\\3_dim\\E\\"
+output_path = "D:\\CodeRepos\\Diplom\\Drawer\\Pictures\\E3d\\"
 
 files_amount = len(os.listdir(input_path))
 
@@ -76,10 +76,10 @@ with writer.saving(fig, output_path + "EM_field.gif", 100):
                 plt.plot([min(r), max(r)], [0.0, 0.0], '#b34b06', linewidth = 2.0)
                 plt.plot([min(r), max(r)], [-3000.0, -3000.0], '#351e1c', linewidth = 2.0)
                 plt.plot([min(r), max(r)], [-6000.0, -6000.0], '#efede6', linewidth = 2.0)
-                plt.scatter(10, 0, color='green')
-                plt.scatter(510, 0, color='blue')
-                plt.scatter(1000, 0, color='pink')
-                plt.scatter(2500, 0, color='red')
+                plt.scatter(1000, 0, color='green')
+                plt.scatter(100, 0, color='blue')
+                plt.scatter(2000, 0, color='pink')
+                plt.scatter(5000, 0, color='red')
                 name = file.name.replace('.txt', '')
                 plt.savefig(output_path + name + '.png')
                 i += 1

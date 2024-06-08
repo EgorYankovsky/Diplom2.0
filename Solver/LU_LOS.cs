@@ -2,11 +2,11 @@ using MathObjects;
 
 namespace Solver;
 
-public class LU_LOS : ISolver
+public class LU_LOS(int maxIter = 100_000, double eps = 1E-15) : ISolver
 {
-    private const int _maxIter = 100_000;
+    private readonly int _maxIter = maxIter;
 
-    private const double _eps = 1E-15;
+    private readonly double _eps = eps;
 
     private static void PartitialLU(GlobalMatrix A)
     {
@@ -53,7 +53,7 @@ public class LU_LOS : ISolver
                 sumD += A._al[j] * A._au[j];
 
             //A._diag[i] = Math.Sqrt(A._diag[i] - sumD);
-            A._diag[i] -= sumD;
+            //A._diag[i] -= sumD;
             if (double.IsNaN(A._diag[i]) || double.IsInfinity(A._diag[i]))
                 Console.WriteLine();
 

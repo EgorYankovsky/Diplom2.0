@@ -33,9 +33,13 @@ public class Mesh3Dim(List<double> nodesX, string infoAboutX,
 
     public void CommitAnomalyBorders(List<int> ints) => AnomalyBorders = ints;
 
+    public void CommitSecondAnomalyBorders(List<int> ints) => SecondAnomaly = ints;
+
     public List<int> FieldBorders = [];
 
     public List<int> AnomalyBorders = [];
+
+    public List<int> SecondAnomaly = [];
 
     internal ImmutableArray<double> NodesXWithoutFragmentation { get; set; } = [.. nodesX];
 
