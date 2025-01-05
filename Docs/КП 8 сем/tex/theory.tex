@@ -1,0 +1,313 @@
+\chapter{Теоретическая часть}
+
+\section{Условие задачи}
+
+Пусть имеется некоторый круглый индукционный источник, с радиусом $R_0$ $<<$ 1000. На рисунке \ref{fig:areaExample} имеем однородные краевые условие на правой и нижней границах, и естественные на левой и верхней границах.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.75\linewidth]{images/"Образец сетки".png}
+	\caption{Образец сетки}
+	\label{fig:areaExample}
+\end{figure}
+
+Будем считать, что электромагнитное поле возбуждается круговым током, а вмещающая среда имеет круговую симметрию. Тогда при условии однородности среды по магнитной проницаемости электромагнитное поле полностью описывается одной компонентой $A_{\varphi} = A_{\varphi}(r, z, t)$ вектор-потенциала $\overline{A}$ (в цилиндрической системе координат), и эта функция $A_{\varphi}(r, z, t)$ может быть найдена из решения двумерного уравнения:
+
+\begin{equation} \label{eq_1_1}
+	-\frac{1}{\mu_0} \Delta A_{\varphi} + \frac{A_{\varphi}}{\mu_0 r^2} + \sigma \frac{\partial A_{\varphi}}{\partial t} = J_{\varphi},
+\end{equation}
+где: $J_{\varphi}$ - значение силы тока в индукционном источнике, $\delta$ - дельта-функция, для которой $\int \limits_{\Omega} J_{\varphi} \delta d \Omega = 1$ в одной из подобластей, описывающей кольцо, и равная 0 в остальных.
+
+\section{Математическая постановка}
+
+Переведем дифференциальное уравнение в частных производных \ref{eq_1_1} в вариационную постановку в форме Галеркина. Для этого домножим пробную функцию $v$, удовлетворяющую условию $v \in H^1_0$ и проинтегрируем по всей области $\Omega$:
+
+\begin{equation} \label{eq_1_2}
+	\int \limits_{\Omega} \left(-\frac{1}{\mu_0} \Delta {A_{\varphi}} + \frac{A_{\varphi}}{\mu_0 r^2} + \sigma \frac{\partial A_{\varphi}}{\partial t}\right) v d \Omega = \int \limits_{\Omega} J_{\varphi} v d \Omega,
+\end{equation}
+
+\begin{equation*}
+	\int \limits_{\Omega} \frac{1}{\mu_0} \left( -\frac{1}{r} \frac{\partial}{\partial r} \left( r \frac{\partial A_{\varphi}}{\partial r} \right) \right) v d \Omega - \int \limits_{\Omega} \frac{1}{\mu_0} \frac{\partial^2 A_{\varphi}}{\partial z^2} v d\Omega + \int \limits_{\Omega} \frac{A_{\varphi}}{\mu_0 r^2} v d \Omega + 
+\end{equation*}
+
+\begin{equation} \label{eq_1_3}
+	+ \int \limits_{\Omega} \sigma \frac{\partial A_{\varphi}}{\partial t} v d \Omega = \int \limits_{\Omega} J_{\varphi} v d \Omega.
+\end{equation}
+
+Применив формулу Гаусса-Остроградского, и принимая во внимание, что по условию задачи в некоторых местах поток через границу равен нулю, получим:
+
+\begin{equation*}
+	\int \limits_{\Omega} \frac{1}{\mu} \text{grad} A_{\varphi}^{k} \cdot \text{grad}v d \Omega + \int \limits_{\Omega} \frac{1}{\mu r^2} A_{\varphi}^{k} v d \Omega + \int \limits_{\Omega} \sigma \tau_0 A_{\varphi}^{k} v d \Omega =\int \limits_{\Omega} J_{\phi} v d \Omega +	
+\end{equation*}
+
+\begin{equation} \label{eq_1_4}
+	+ \int \limits_{\Omega} \sigma  \tau_1 A_{\varphi}^{k-1} v d \Omega - \int \limits_{\Omega} \sigma  \tau_2 A_{\varphi}^{k - 2} v d \Omega.
+\end{equation}
+
+\section{Принципы построения локальных векторов, матриц жесткости и масс}
+
+Решение будем искать, используя билинейные базисные функции, задаваемые линейными функциями на $\Omega_{ps} = [r_p, r_{p+1}] \times [z_s, z_{s+1}]$ следующего вида:
+
+\begin{equation} \label{eq_1_5}
+	R_1(r) = r \cdot \frac{r_{p + 1} - r}{r_{p + 1} - r_p}, \hspace{10mm} R_2(r) = r \cdot \frac{r - r_p}{r_{p + 1} - r_p},
+\end{equation}
+
+\begin{equation} \label{eq_1_6}
+	Z_1(z) = \frac{z_{p + 1} - z}{z_{p + 1} - z_p}, \hspace{10mm} Z_2(z) = \frac{z - z_p}{z_{p + 1} - z_p}.
+\end{equation}
+
+Тогда локальные базисные функции будут представляться в виде произведений функций (\ref{eq_1_5}) и (\ref{eq_1_6}): 
+
+\begin{equation*}
+	\psi_1(r,z) = R_1(r)Z_1(z), \hspace{20mm} \psi_2(r,z) = R_2(r)Z_1(z),
+\end{equation*}
+
+\begin{equation*}
+	\psi_3(r,z) = R_1(r)Z_2(z), \hspace{20mm} \psi_4(r,z) = R_2(r)Z_2(z).
+\end{equation*}
+
+Поскольку решаемая задача \ref{eq_1_1} имеет особый нелинейный коэффициент $\gamma = \frac{1}{r^2}$, локальные матрицы жесткости и масс для одномерной задачи выглядят следующим образом:
+
+\begin{equation*}
+	G^r = \hat{\lambda} \frac{r_k + h_k / 2}{h_k} \left(
+	\begin{array}{rr}
+		 1 & -1\\
+		-1 &  1\\
+	\end{array}
+	\right),
+\end{equation*}
+
+\begin{equation*}
+	M^r = \frac{\hat{\gamma} h_k}{6} \left( r_k \left(
+	\begin{array}{rr}
+		2 & 1\\
+		1 & 2\\
+	\end{array}
+	\right) + \frac{h_k}{2} \left(
+	\begin{array}{rr}
+		1 & 1\\
+		1 & 3\\
+	\end{array}
+	\right) \right),
+\end{equation*}
+
+
+\begin{equation*}
+    M^{rr} = \ln\left(1 + \frac{1}{d}\right)
+	\left(
+	\begin{array}{cc}
+		(1+d)^2 & -d(1+d)\\
+		-d(1+d) &  d^2\\
+	\end{array}
+	\right)
+	-d
+	\left(
+	\begin{array}{rr}
+		1 & -1\\
+		-1 & 1\\
+	\end{array}
+	\right)
+	+ \frac{1}{2}
+	\left(
+	\begin{array}{rr}
+		-3 & 1\\
+		1 & 1\\
+	\end{array}
+	\right),
+\end{equation*}
+где $d = \frac{r_k}{h_k}$.
+
+
+\begin{equation*}
+	G^z = \frac{\hat{\lambda}}{h_k} \left(
+	\begin{array}{rr}
+		1 & -1\\
+		-1 &  1\\
+	\end{array}
+	\right),
+\end{equation*}
+
+\begin{equation*}
+	M^z = \frac{\hat{\gamma} h_k}{6} \left(
+	\begin{array}{rr}
+		2 & 1\\
+		1 & 2\\
+	\end{array}
+	\right).
+\end{equation*}
+
+Тогда элементы верхнего треугольника матрицы жесткости для двумерных задач, можем представить в виде:
+
+\begin{equation*}
+	\begin{array}{ll}
+		\hat{G}_{11} = \hat{\lambda}\left(G^r_{11}M^z_{11} + M^r_{11}G^z_{11}\right), & \hat{G}_{12} = \hat{\lambda}\left(G^r_{12}M^z_{11} + M^r_{12}G^z_{11}\right),\\
+		\hat{G}_{13} = \hat{\lambda}\left(G^r_{11}M^z_{12} + M^r_{11}G^z_{12}\right), & \hat{G}_{14} = \hat{\lambda}\left(G^r_{12}M^z_{12} + M^r_{12}G^z_{12}\right),\\
+		\hat{G}_{22} = \hat{\lambda}\left(G^r_{22}M^z_{11} + M^r_{22}G^z_{11}\right), & \hat{G}_{23} = \hat{\lambda}\left(G^r_{21}M^z_{12} + M^r_{21}G^z_{12}\right),\\
+		\hat{G}_{24} = \hat{\lambda}\left(G^r_{22}M^z_{12} + M^r_{22}G^z_{12}\right), & \hat{G}_{33} = \hat{\lambda}\left(G^r_{11}M^z_{22} + M^r_{11}G^z_{22}\right),\\
+		\hat{G}_{34} = \hat{\lambda}\left(G^r_{12}M^z_{22} + M^r_{12}G^z_{22}\right), & \hat{G}_{44} = \hat{\lambda}\left(G^r_{22}M^z_{22} + M^r_{22}G^z_{22}\right).\\
+	\end{array}
+\end{equation*}
+
+Верхний треугольник элементов матрицы масс, для слагаемого с коэффициентов $\frac{1}{r^2}$ может быть представлен в виде:
+
+\begin{equation*}
+	\begin{array}{ll}
+		\hat{M}_{11} = \hat{\gamma}M^{rr}_{11}M^z_{11}, & \hat{M}_{12} = \hat{\gamma}M^{rr}_{12}M^z_{11},\\
+		\hat{M}_{13} = \hat{\gamma}M^{rr}_{11}M^z_{12}, & \hat{M}_{14} = \hat{\gamma}M^{rr}_{12}M^z_{12},\\
+		\hat{M}_{22} = \hat{\gamma}M^{rr}_{22}M^z_{11}, & \hat{M}_{23} = \hat{\gamma}M^{rr}_{21}M^z_{12},\\
+		\hat{M}_{24} = \hat{\gamma}M^{rr}_{22}M^z_{12}, & \hat{M}_{33} = \hat{\gamma}M^{rr}_{11}M^z_{22},\\
+		\hat{M}_{34} = \hat{\gamma}M^{rr}_{12}M^z_{22}, & \hat{M}_{44} = \hat{\gamma}M^{rr}_{22}M^z_{22}.\\
+	\end{array}
+\end{equation*}
+
+
+Верхние треугольники элементов матрицы масс, для слагаемых с коэффициентом $\sigma$ могут быть представлены в виде:
+
+\begin{equation*}
+	\begin{array}{ll}
+		\hat{M}_{11} = \hat{\gamma}M^{r}_{11}M^z_{11}, & \hat{M}_{12} = \hat{\gamma}M^{r}_{12}M^z_{11},\\
+		\hat{M}_{13} = \hat{\gamma}M^{r}_{11}M^z_{12}, & \hat{M}_{14} = \hat{\gamma}M^{r}_{12}M^z_{12},\\
+		\hat{M}_{22} = \hat{\gamma}M^{r}_{22}M^z_{11}, & \hat{M}_{23} = \hat{\gamma}M^{r}_{21}M^z_{12},\\
+		\hat{M}_{24} = \hat{\gamma}M^{r}_{22}M^z_{12}, & \hat{M}_{33} = \hat{\gamma}M^{r}_{11}M^z_{22},\\
+		\hat{M}_{34} = \hat{\gamma}M^{r}_{12}M^z_{22}, & \hat{M}_{44} = \hat{\gamma}M^{r}_{22}M^z_{22}.\\
+	\end{array}
+\end{equation*}
+
+Так как мы имеем сосредоточенный в точке источник $J_{\varphi}$, то получим следующее:
+
+\begin{equation} \label{eq_1_7}
+	\int \limits_{\Omega} J_{\phi} \delta d \Omega = 
+		\left \{ \begin{aligned}
+			& 1, p \in \Omega_{\epsilon}\\
+			& 0,    p \notin \Omega_{\epsilon}\\
+		\end{aligned} \right.
+\end{equation}
+
+\section{Переход к трехмерной постановке задачи}
+
+Решение задачи в $(r, z)$ координатах можно использовать в качестве первичного поля. Для этого нужно перевести полученные значения вектора-потенциала $A^0_{\varphi}$ и напряженности электрического поля  $E^0_{\varphi}$ в декартову систему координат. Найти значение $E^0_{\varphi}$ можно через следующее преобразование:
+
+\begin{equation} \label{eq_1_8}
+	E^0_{\varphi}(r, z, t) = -\frac{\partial A^0_{\varphi}(r, z, t)}{\partial t}
+\end{equation}
+
+Далее по формулам преобразования векторов из цилиндрической системы координат найдем:
+
+\begin{equation} \label{eq_1_9}
+	E_x^0(x, y, z, t) = -E_{\varphi}^0(\sqrt{x^2 + y^2}, z, t)\frac{y}{\sqrt{x^2 + y^2}},
+\end{equation}
+
+\begin{equation} \label{eq_1_10}
+	E_y^0(x, y, z, t) = E_{\varphi}^0(\sqrt{x^2 + y^2}, z, t)\frac{x}{\sqrt{x^2 + y^2}},
+\end{equation}
+
+\begin{equation} \label{eq_1_11}
+	E_z^0(x, y, z, t) = 0,
+\end{equation}
+
+\begin{equation} \label{eq_1_12}
+	A_x^0(x, y, z, t) = -A_{\varphi}^0(\sqrt{x^2 + y^2}, z, t)\frac{y}{\sqrt{x^2 + y^2}},
+\end{equation}
+
+\begin{equation} \label{eq_1_13}
+	A_y^0(x, y, z, t) = A_{\varphi}^0(\sqrt{x^2 + y^2}, z, t)\frac{x}{\sqrt{x^2 + y^2}},
+\end{equation}
+
+\begin{equation} \label{eq_1_14}
+	A_z^0(x, y, z, t) = 0.
+\end{equation}
+
+Тогда для решения задачи в трехмерных координатах, удовлетворяющей расчетной области $\Omega$, будем искать из системы уравнений:
+ 
+\begin{equation} \label{eq_1_15}
+	-\frac{1}{\mu_0} \Delta A_x + \sigma \left(\frac{\partial A_x}{\partial t} + \frac{\partial V}{\partial x}\right) = J_x,
+\end{equation}
+
+\begin{equation} \label{eq_1_16}
+	-\frac{1}{\mu_0} \Delta A_y + \sigma \left(\frac{\partial A_y}{\partial t} + \frac{\partial V}{\partial y}\right) = J_y,
+\end{equation}
+
+\begin{equation} \label{eq_1_17}
+	-\frac{1}{\mu_0} \Delta A_z + \sigma \left(\frac{\partial A_z}{\partial t} + \frac{\partial V}{\partial z}\right) = J_z,
+\end{equation}
+
+\begin{equation} \label{eq_1_18}
+	-\text{div}(\sigma \text{grad}(V)) - \text{div}\left(\sigma \frac{\partial \overrightarrow{\textbf{A}}}{\partial t}\right) = -\text{div} \overrightarrow{\textbf{J}}.
+\end{equation}
+
+Для аппроксимаци системы уравнений  (\ref{eq_1_15}) - (\ref{eq_1_18}) по времени воспользуемся трёхслойной неявной схемой. Решение на текущем временном слое будем обозначать через $\overrightarrow{\textbf{A}} = \overrightarrow{\textbf{A}}(x, y, z, t_j)$, на двух предыдущих через $\overrightarrow{\textbf{A}}^{\Leftarrow 1} = \overrightarrow{\textbf{A}}(x, y, z, t_{j-1})$ и $\overrightarrow{\textbf{A}}^{\Leftarrow 2} = \overrightarrow{\textbf{A}}(x, y, z, t_{j-2})$.
+
+Таким образом, можно получить систему дифференциальных уравнений на текущем временном слое:
+
+\begin{equation} \label{eq_1_19}
+	-\frac{1}{\mu_0} \Delta A_x + \gamma A_x + \sigma \frac{\partial V}{\partial x} = F_x,
+\end{equation}
+
+\begin{equation} \label{eq_1_20}
+	-\frac{1}{\mu_0} \Delta A_y + \gamma A_y + \sigma \frac{\partial V}{\partial y} = F_y,
+\end{equation}
+
+\begin{equation} \label{eq_1_21}
+	-\frac{1}{\mu_0} \Delta A_z + \gamma A_z + \sigma \frac{\partial V}{\partial z}= F_z,
+\end{equation}
+
+\begin{equation} \label{eq_1_22}
+	-\text{div}(\sigma \text{grad}(V)) - \text{div}(\gamma \overrightarrow{\textbf{A}}) = F^V,
+\end{equation}
+
+где коэффициент $\gamma$, вектор-функция
+
+\begin{equation*}
+	\overrightarrow{\textbf{F}} = \overrightarrow{\textbf{F}}(x, y, z) = \left(F_x(x, y, z), F_y(x, y, z), F_z(x, y, z)\right)^T.
+\end{equation*}
+
+Для трехслойной неявной схемы, коэффициент $\gamma$, вектор-функция $\overrightarrow{\textbf{F}}$ и функция $F^V$ имеют вид:
+
+\begin{equation} \label{eq_1_23}
+	\gamma = \sigma \frac{2t_j - t_{j - 1} - t_{j - 2}}{(t_j - t_{j - 1})(t_{j} - t_{j - 2})},
+\end{equation}
+
+\begin{equation} \label{eq_1_24}
+	\overrightarrow{\textbf{F}} = \overrightarrow{\textbf{J}} + \gamma_1 \overrightarrow{\textbf{A}}^{\Leftarrow 1} + \gamma_2 \overrightarrow{\textbf{A}}^{\Leftarrow 2}
+\end{equation}
+
+
+\begin{equation} \label{eq_1_25}
+	F^V = \text{div}\left(\gamma_1 \overrightarrow{\textbf{A}}^{\Leftarrow 1} + \gamma_2 \overrightarrow{\textbf{A}}^{\Leftarrow 2}\right),
+\end{equation}
+
+\begin{equation} \label{eq_1_26}
+	\gamma_1 = \sigma \frac{t_j - t_{j - 2}}{(t_{j - 1} - t_{j - 2})(t_{j} - t_{j - 1})},	
+\end{equation}
+
+\begin{equation} \label{eq_1_27}
+	\gamma_2 = -\sigma \frac{t_j - t_{j - 1}}{(t_{j} - t_{j - 2})(t_{j - 1} - t_{j - 2})}.	
+\end{equation}
+
+Переведем уравнения (\ref{eq_1_19}) - (\ref{eq_1_22}) в вариационную постановку и получим следующее:
+
+\begin{equation} \label{eq_1_28}
+	\frac{1}{\mu_0} \int \limits_{\Omega} \text{grad} A_x \cdot \text{grad} v d\Omega + \int \limits_{\Omega} \gamma A_x v d \Omega + \int \limits_{\Omega} \sigma \frac{\partial V}{\partial x} v d \Omega = \int \limits_{\Omega} F_x v d \Omega,
+\end{equation}
+
+\begin{equation} \label{eq_1_29}
+	\frac{1}{\mu_0} \int \limits_{\Omega} \text{grad} A_y \cdot \text{grad} v d\Omega + \int \limits_{\Omega} \gamma A_y v d \Omega + \int \limits_{\Omega} \sigma \frac{\partial V}{\partial y} v d \Omega = \int \limits_{\Omega} F_y v d \Omega,
+\end{equation}
+
+\begin{equation} \label{eq_1_30}
+	\frac{1}{\mu_0} \int \limits_{\Omega} \text{grad} A_z \cdot \text{grad} v d\Omega + \int \limits_{\Omega} \gamma A_z v d \Omega + \int \limits_{\Omega} \sigma \frac{\partial V}{\partial z} v d \Omega = \int \limits_{\Omega} F_z v d \Omega,
+\end{equation}
+
+\begin{equation} \label{eq_1_31}
+	\int \limits_{\Omega} \sigma \text{grad} V \cdot \text{grad} v d \Omega + \int \limits_{\Omega} \gamma \overrightarrow{\textbf{A}} \cdot \text{grad} v d \Omega = \int \limits_{\Omega} F^V v d \Omega.
+\end{equation}
+
+Также преобразуем правую часть уравнения (\ref{eq_1_31}), используя формулу интегрирования по частям. Тогда для трёхслойной схемы получим:
+
+\begin{equation} \label{eq_1_32}
+	\int \limits_{\Omega} F^V d \Omega = \int \limits_{\Omega} \gamma_1 \overrightarrow{\textbf{A}}^{\Leftarrow 1} \cdot \text{grad} v d \Omega + \int \limits_{\Omega} \gamma_2 \overrightarrow{\textbf{A}}^{\Leftarrow 2} \cdot \text{grad} v d \Omega.
+\end{equation}
+
+
+
+% Далее глава тестирования.

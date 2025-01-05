@@ -1,0 +1,21 @@
+\chapter{Теоретическая часть}
+
+\section{Многоэтапная схема разделения поля}
+
+При решении многих векторных электромагнитных задач существенного повышения точности получаемого решения можно добиться в результате использования методов, основанных на разделении из искомого поля достаточно близкого к нему поля меньшей размерности. Сначала выделяется поле, создаваемое в среде, максимально упрощённой относительно исходной. Её решение берётся в качестве основного поля первого уровня. На базе этого поля формируется задача на добавочное поле, в которую включается часть неоднородностей исходной задачи, дающих максимальный вклад в искомое решение. Используемая для нахождения этого добавочного поля сетка строится так, чтобы максимально учесть влияние источников, порождённых включёнными в на этом этапе неоднородностями.
+
+Далее в качестве основного поля будет учитываться сумма основного и добавочного на предыдущем этапе выделения. Новое добавочное поле будет формироваться из учёта следующих по влиянию на решение исходной задачи. Процесс можно продолжать до тех пор, пока не будут учтены все неоднородности среды.
+
+Если рассматривать уравнение (\ref{eq_1_6}), то выходит, что излучаемое электромагнитное поле полностью описывается вектором-потенциалом $\overrightarrow{\textbf{A}}$, где значения магнитной индукции и электрической напряжённости определяются, как $\overrightarrow{\textbf{B}} = \text{rot} \overrightarrow{\textbf{A}}$ и $\overrightarrow{\textbf{E}} = -\frac{\partial \overrightarrow{\textbf{A}}}{\partial t}$ соответственно. Тогда каждое из полей $\overrightarrow{\textbf{A}}^{0}$ (нормальное) и $\overrightarrow{\textbf{A}}^{+}$ (добавочное) будет определять значения магнитной индукции и напряжённости электрического поля: $\overrightarrow{\textbf{B}}^0 = \text{rot} \overrightarrow{\textbf{A}}^0$ и $\overrightarrow{\textbf{E}}^0 = -\frac{\partial \overrightarrow{\textbf{A}}^0}{\partial t}$ для нормального, $\overrightarrow{\textbf{B}}^+ = \text{rot} \overrightarrow{\textbf{A}}^+$ и $\overrightarrow{\textbf{E}}^+ = -\frac{\partial \overrightarrow{\textbf{A}}^+}{\partial t}$ для добавочного. В нашем случае решение $\overrightarrow{\textbf{A}}^0$ получено из решения скалярной осесимметричной задачи (\ref{eq_1_5}).
+
+Найдём вариационную постановку для уравнения ($\ref{eq_1_6}$):
+
+\begin{equation} \label{eq_2_1}
+	\frac{1}{\mu_0} \int \limits_{\Omega} \text{rot} \overrightarrow{\textbf{A}}^+ \text{rot} \overrightarrow{\Psi} d \Omega + \int \limits_{\Omega} \sigma \frac{\partial \overrightarrow{\textbf{A}}^+}{\partial t} \overrightarrow{\Psi} d \Omega = \int \limits_{\Omega}(\sigma - \sigma_n) \overrightarrow{\textbf{E}^0} \overrightarrow{\Psi} d \Omega.
+\end{equation}
+
+Из (\ref{eq_2_1}) получим матричное уравнение для добавочного поля:
+
+\begin{equation} \label{eq_2_2}
+	\left(\frac{1}{\mu_0} \hat{\textbf{G}} + \sigma \frac{1}{\Delta t} \hat{\textbf{M}} \right) \text{q}^i = (\sigma - \sigma_n) \overrightarrow{\textbf{E}}^0 \hat{\textbf{M}} + \sigma \frac{1}{\Delta t} \hat{\textbf{M}}\text{q}^{i-1}.
+\end{equation}

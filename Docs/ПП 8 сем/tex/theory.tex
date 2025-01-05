@@ -1,0 +1,328 @@
+\chapter{Теоретическая часть}
+
+\section{Условие задачи}
+
+Пусть имеется некоторый круглый индукционный источник, с радиусом $R_0$ $<<$ 10000 м. На рисунке \ref{fig:areaExample} сам источник отмечен красной точкой, однородные краевые условия на правой, левой и нижней границах выделены чёрной линией, а естественное на верхней границе выделено серой линией. Синим прямоугольником обозначена область, соответствующая воздуху, а коричневым - земным породам.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/"Area_example_2Dim".png}
+	\caption{Образец расчетной области}
+	\label{fig:areaExample}
+\end{figure}
+
+Будем считать, что электромагнитное поле возбуждается круговым током, а вмещающая среда имеет круговую симметрию. Тогда при условии однородности среды по магнитной проницаемости электромагнитное поле полностью описывается одной компонентой $A_{\varphi} = A_{\varphi}(r, z, t)$ вектор-потенциала $\overrightarrow{\textbf{A}}$ (в цилиндрической системе координат), и эта функция $A_{\varphi}(r, z, t)$ может быть найдена из решения двумерного уравнения (\ref{eq_1_1}):
+
+\begin{equation} \label{eq_1_1}
+	-\frac{1}{\mu_0} \Delta A_{\varphi} + \frac{A_{\varphi}}{\mu_0 r^2} + \sigma \frac{\partial A_{\varphi}}{\partial t} = J_{\varphi},
+\end{equation}
+где: $J_{\varphi}$ - значение силы тока в индукционном источнике, $\delta$ - дельта-функция, для которой $\int \limits_{\Omega} J_{\varphi} \delta d \Omega = 1$ в одной из подобластей, описывающей кольцо, и равная 0 в остальных.
+
+Пусть у нас имеется грубое решение этой задачи на прямоугольной сетке из 12100 узлов, изображенной на рисунке \ref{fig:2d_mesh_example}. Пример распространения вектор-потенциала $A_{\varphi}$ и напряжённости электрического поля $E_{\varphi}$ изображены на рисунках \ref{fig:Test_A_phi} и \ref{fig:Test_E_phi} соответственно:
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/"Mesh_2D_example".png}
+	\caption{Образец сетки.}
+	\label{fig:2d_mesh_example}
+\end{figure}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/"Test_A_phi".png}
+	\caption{Пример решения $A_{\varphi}$}
+	\label{fig:Test_A_phi}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/"Test_E_phi".png}
+	\caption{Пример решения $E_{\varphi}$}
+	\label{fig:Test_E_phi}
+\end{figure}
+
+\section{Математическая постановка}
+
+Решение задачи (\ref{eq_1_1}) можно использовать в качестве первичного поля. Для этого были переведены полученные значения вектора-потенциала $A^0_{\varphi}$ и напряженности электрического поля  $E^0_{\varphi}$ в декартову систему координат. Значения $E^0_{\varphi}$ были найдены по формуле (\ref{eq_1_2}):
+
+\begin{equation} \label{eq_1_2}
+	E^0_{\varphi}(r, z, t) = -\frac{\partial A^0_{\varphi}(r, z, t)}{\partial t}.
+\end{equation}
+
+Далее по формулам преобразования векторов из цилиндрической системы координат в декартову (\ref{eq_1_31111}) - (\ref{eq_1_8}) найдем:
+
+\begin{equation} \label{eq_1_31111}
+	E_x^0(x, y, z, t) = -E_{\varphi}^0(\sqrt{x^2 + y^2}, z, t)\frac{y}{\sqrt{x^2 + y^2}},
+\end{equation}
+
+\begin{equation} \label{eq_1_4}
+	E_y^0(x, y, z, t) = E_{\varphi}^0(\sqrt{x^2 + y^2}, z, t)\frac{x}{\sqrt{x^2 + y^2}},
+\end{equation}
+
+\begin{equation} \label{eq_1_5}
+	E_z^0(x, y, z, t) = 0,
+\end{equation}
+
+\begin{equation} \label{eq_1_6}
+	A_x^0(x, y, z, t) = -A_{\varphi}^0(\sqrt{x^2 + y^2}, z, t)\frac{y}{\sqrt{x^2 + y^2}},
+\end{equation}
+
+\begin{equation} \label{eq_1_7}
+	A_y^0(x, y, z, t) = A_{\varphi}^0(\sqrt{x^2 + y^2}, z, t)\frac{x}{\sqrt{x^2 + y^2}},
+\end{equation}
+
+\begin{equation} \label{eq_1_8}
+	A_z^0(x, y, z, t) = 0.
+\end{equation}
+
+Тогда решение задачи в трехмерных декартовых координатах, удовлетворяющей расчетной области $\Omega$, будем искать из следующего уравнения:
+
+\begin{equation} \label{eq_1_9}
+	\text{rot} \frac{1}{\mu} \text{rot} \overrightarrow{\textbf{A}} + \sigma \frac{\partial \overrightarrow{\textbf{A}}}{\partial t} = \overrightarrow{\textbf{E}}_{n}
+\end{equation}
+
+Используя метод разделения полей, преобразуем уравнение (\ref{eq_1_9}):
+
+\begin{equation} \label{eq_1_10}
+	\text{rot} \frac{1}{\mu} \text{rot} \overrightarrow{\textbf{A}}^{+} + \sigma \frac{\partial \overrightarrow{\textbf{A}}^{+}}{\partial t} = (\sigma - \sigma_{n}) \overrightarrow{\textbf{E}}_{n}.
+\end{equation}
+
+Эквивалентная вариационная постановка для уравнения (\ref{eq_1_10}) имеет вид:
+
+\begin{equation} \label{eq_1_11}
+	\int \limits_{\Omega} \frac{1}{\mu} \text{rot} \overrightarrow{\textbf{A}}^{+} \text{rot} \overrightarrow{\textbf{$\Psi$}} d \Omega + \int \limits_{\Omega} \sigma \frac{\overrightarrow{\textbf{A}}^{+}}{\partial t} \overrightarrow{\textbf{$\Psi$}}  d \Omega = \int \limits_{\Omega} (\sigma - \sigma_0) \overrightarrow{\textbf{E}}_{n} \overrightarrow{\textbf{$\Psi$}}  d \Omega.
+\end{equation}
+
+\section{Принципы построения локальных векторов, матриц жесткости и масс в векторном МКЭ}
+
+Решение будем искать, используя билинейные базисные вектор-функции, задаваемые линейными функциями на параллелепипиде $\Omega_{rsp} = [x_r, x_{r+1}] \times [y_s, y_{s+1}] \times [z_p, z_{p+1}]$ следующего вида:
+
+\begin{equation} \label{eq_1_12}
+	X_1(x) = \frac{x_{r + 1} - x}{x_{r + 1} - x_r}, \hspace{10mm} X_2(x) = \frac{x - x_r}{x_{r + 1} - x_r},
+\end{equation}
+
+\begin{equation} \label{eq_1_13}
+	Y_1(y) = \frac{y_{s + 1} - y}{y_{s + 1} - y_s}, \hspace{10mm} Y_2(y) = \frac{y - y_s}{y_{s + 1} - y_s},
+\end{equation}
+
+\begin{equation} \label{eq_1_14}
+	Z_1(z) = \frac{z_{p + 1} - z}{z_{p + 1} - z_p}, \hspace{10mm} Z_2(z) = \frac{z - z_p}{z_{p + 1} - z_p}.
+\end{equation}
+
+Тогда базисная вектор-функция, ассоциированная с ребром $\{y = y_s,\\ z = z_p\}$ имеет вид:
+
+\begin{equation*}
+	\overrightarrow{\psi}_1 = \left(
+	\begin{array}{c}
+		\frac{y_{s + 1} - y}{h_y} \cdot \frac{z_{p + 1} - z}{h_z}\\
+		0\\
+		0\\
+	\end{array}
+	\right),
+\end{equation*}
+где $h_y = y_{s + 1} - y_s$ $h_z = z_{p + 1} - z_p$.
+
+Полный список базисных вектор-функций на параллелепипиде $\Omega_{rsp} = [x_r, x_{r+1}] \times [y_s, y_{s+1}] \times [z_p, z_{p+1}]$ можно записать в виде:
+
+\begin{equation*}
+	\overrightarrow{\psi}_1 = \left(
+\begin{array}{c}
+		Y_1 \cdot Z_1\\
+		0\\
+		0\\
+\end{array}
+	\right),
+	\hspace{10mm}
+	\overrightarrow{\psi}_2 = \left(
+\begin{array}{c}
+	Y_2 \cdot Z_1\\
+	0\\
+	0\\
+\end{array}
+\right),
+	\hspace{10mm}
+	\overrightarrow{\psi}_3 = \left(
+\begin{array}{c}
+	Y_1 \cdot Z_2\\
+	0\\
+	0\\
+\end{array}
+\right),
+\end{equation*}
+
+\begin{equation*}
+	\overrightarrow{\psi}_4 = \left(
+	\begin{array}{c}
+		Y_2 \cdot Z_2\\
+		0\\
+		0\\
+	\end{array}
+	\right),
+	\hspace{10mm}
+	\overrightarrow{\psi}_5 = \left(
+	\begin{array}{c}
+		0\\
+		X_1 \cdot Z_1\\
+		0\\
+	\end{array}
+	\right),
+	\hspace{10mm}
+	\overrightarrow{\psi}_6 = \left(
+	\begin{array}{c}
+		0\\
+		X_2 \cdot Z_1\\
+		0\\
+	\end{array}
+	\right),
+\end{equation*}
+
+
+\begin{equation*}
+	\overrightarrow{\psi}_7 = \left(
+	\begin{array}{c}
+		0\\
+		X_1 \cdot Z_2\\
+		0\\
+	\end{array}
+	\right),
+	\hspace{10mm}
+	\overrightarrow{\psi}_8 = \left(
+	\begin{array}{c}
+		0\\
+		X_2 \cdot Z_2\\
+		0\\
+	\end{array}
+	\right),
+	\hspace{10mm}
+	\overrightarrow{\psi}_9 = \left(
+	\begin{array}{c}
+		Y_1 \cdot Z_2\\
+		0\\
+		0\\
+	\end{array}
+	\right),
+\end{equation*}
+
+\begin{equation*}
+	\overrightarrow{\psi}_{10} = \left(
+	\begin{array}{c}
+		Y_1 \cdot Z_1\\
+		0\\
+		0\\
+	\end{array}
+	\right),
+	\hspace{10mm}
+	\overrightarrow{\psi}_{11} = \left(
+	\begin{array}{c}
+		Y_2 \cdot Z_1\\
+		0\\
+		0\\
+	\end{array}
+	\right),
+	\hspace{10mm}
+	\overrightarrow{\psi}_{12} = \left(
+	\begin{array}{c}
+		Y_1 \cdot Z_2\\
+		0\\
+		0\\
+	\end{array}
+	\right),
+\end{equation*}
+
+Формулы для вычисления глобальных матриц жёсткости $\textbf{G}$ и масс $\textbf{M}$, определяющих глобальную матрицу $\textbf{C} = \textbf{G} + \textbf{M}$ конечноэлеметной СЛАУ имеют вид:
+
+\begin{equation} \label{eq_1_15}
+	G_{ij} = \int \limits_{\Omega} \frac{1}{\mu} \text{rot} \overrightarrow{\textbf{$\Psi_i$}} \cdot \text{rot} \overrightarrow{\textbf{$\Psi_j$}} d \Omega, \hspace{15mm} M_{ij} = \int \limits_{\Omega} \gamma \overrightarrow{\textbf{$\Psi_i$}} \cdot \overrightarrow{\textbf{$\Psi_j$}} d \Omega.
+\end{equation}
+
+Компоненты глобального вектора $\textbf{b}$ конечноэлементной СЛАУ определяются соотношением:
+
+\begin{equation} \label{eq_1_15}
+	b_{i} = \int \limits_{\Omega} \overrightarrow{\textbf{F}} \cdot \overrightarrow{\textbf{$\Psi_i$}} d \Omega.
+\end{equation}
+
+Локальная матрица жёсткости $\hat{\textbf{G}}$ на векторном параллелепипеде при $\overline{\mu} = const$ принимает вид:
+
+\begin{equation*}
+	\hat{\textbf{G}} = \frac{1}{\overline{\mu}} \left(
+	\begin{array}{ccc}
+		\frac{h_x h_y}{6h_z}\textbf{G}_1 + \frac{h_x h_z}{6h_y}\textbf{G}_2 & -\frac{h_z}{6}\textbf{G}_2 & \frac{h_y}{6}\textbf{G}_3 \\
+		-\frac{h_z}{6}\textbf{G}_2 & \frac{h_x h_y}{6h_z}\textbf{G}_1 + \frac{h_y h_z}{6h_x}\textbf{G}_2 & -\frac{h_x}{6}\textbf{G}_1 \\
+		\frac{h_y}{6}\textbf{G}^\text{T}_3 & -\frac{h_x}{6}\textbf{G}_1 & \frac{h_x h_z}{6h_y}\textbf{G}_1 + \frac{h_y h_z}{6h_x}\textbf{G}_2 \\
+	\end{array}
+	\right),
+\end{equation*}
+где
+\begin{equation*}
+	\textbf{G}_1 = \left(
+	\begin{array}{rrrr}
+		 2 & 1 & -2 & -1 \\
+		 1 & 2 & -1 & -2 \\
+		 -2 & -1 & 2 & 1 \\
+		 -1 & -2 & 1 & 2 \\
+	\end{array}
+	\right),
+	\textbf{G}_2 = \left(
+	\begin{array}{rrrr}
+		2 & -2 & 1 & -1 \\
+		-2 & 2 & -1 & 2 \\
+		1 & -1 & 2 & -2 \\
+		-1 & 1 & -2 & 2 \\
+	\end{array}
+	\right),
+\end{equation*}
+
+\begin{equation*}
+	\textbf{G}_3 = \left(
+	\begin{array}{rrrr}
+		-2 & 2 & -1 & 1 \\
+		-1 & 1 & -2 & 2 \\
+		2 & -2 & 1 & -1 \\
+		1 & -1 & 2 & -2 \\
+	\end{array}
+	\right).
+\end{equation*}
+
+Матрицу $\hat{\textbf{M}}$ можно представить в виде:
+
+\begin{equation*}
+	\textbf{M} = \left(
+	\begin{array}{ccc}
+		\textbf{D} & \textbf{O} & \textbf{O}\\
+		\textbf{O} & \textbf{D} & \textbf{O}\\
+		\textbf{O} & \textbf{O} & \textbf{D} \\
+	\end{array}
+	\right),
+\end{equation*}
+где $\textbf{O}$ - матрица $4 \times 4$, состоящая из нулей подматрица, а $\textbf{D}$ определяется следующим образом:
+
+\begin{equation*}
+	\textbf{D} = \left(
+	\begin{array}{rrrr}
+		4 & 2 & 2 & 1 \\
+		2 & 4 & 1 & 2 \\
+		2 & 1 & 4 & 2 \\
+		1 & 2 & 2 & 4 \\
+	\end{array}
+	\right).
+\end{equation*}
+
+Локальный вектор правой части определяется в виде $\hat{\textbf{b}}_i = \hat{\textbf{M}} \cdot \hat{\textbf{f}}_i$, где 
+\begin{equation} \label{eq_1_17}
+\hat{\textbf{f}}_i = \overrightarrow{\textbf{F}}(\hat{x}_c, \hat{y}_c, \hat{z}_c) \cdot \overrightarrow{\textbf{v}} / l,
+\end{equation}
+$\hat{x}_c, \hat{y}_c, \hat{z}_c$ - координаты центра ребра, $\overrightarrow{\textbf{v}}$ - вектор, направленный вдоль ребра $\Gamma$ и сонаправленный с базисной вектор-функцией $\overrightarrow{\psi}_i$.
+
+Для трехслойной схемы аппроксимации по времени вектор правой части находится следующим образом:
+
+\begin{equation} \label{eq_1_18}
+	\textbf{b} = \textbf{M}^{\sigma} \left(\frac{(t_j - t_{j - 2})}{(t_j - t_{j - 1})(t_{j-1} - t_{j-2})} \textbf{q}^{\Leftarrow 1} - \frac{(t_j - t_{j - 1})}{(t_j - t_{j - 2})(t_{j-1} - t_{j-2})} \textbf{q}^{\Leftarrow 2}\right),
+\end{equation}
+а глобальная матрица $\textbf{C}$:
+
+\begin{equation} \label{eq_1_18}
+	\textbf{С} = \textbf{G} + \frac{(2t_j - t_{j-1} - t_{j-2})}{(t_j - t_{j-1})(t_{j} - t_{j-2})} \textbf{M}^{\sigma}.
+\end{equation}
+
+% Далее глава тестирования.

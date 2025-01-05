@@ -1,11 +1,19 @@
 **/bin
 **/obj
-**/Output
-**/Subtotals
+**/Output/**
+*.poly
 **/.vs
 *.lnk
 *.sln
 **/__pycache__
 **/.vscode
-**/Pictures
-**/Docs
+**/Pictures/**/*.*
+**/_minted-main
+*.aux
+*.zip
+**/Docs/**/*.log
+**/Docs/**/*.toc
+**/Docs/**/*.pdf
+**/Docs/**/*.gz
+**/Docs/**/*.out
+**/Docs/"LaTeX отчет"

@@ -1,0 +1,63 @@
+\documentclass[14pt,a4paper]{extreport}
+
+\usepackage{style/style}
+\usepackage{physics}
+\usepackage{fancyhdr}
+
+\fancypagestyle{plain}{%
+\fancyhf{} % clear all header and footer fields
+\fancyfoot[C]{\small\thepage}}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\pagestyle{plain}
+
+\makeatletter
+  \def\my@tag@font{\small}
+  \def\maketag@@@#1{\hbox{\m@th\normalfont\my@tag@font#1}}
+  \let\amsmath@eqref\eqref
+  \renewcommand\eqref[1]{{\let\my@tag@font\relax\amsmath@eqref{#1}}}
+\makeatother
+
+\usepackage{titletoc}
+\titlecontents{chapter}[0em]{\bfseries}{\thecontentslabel.\hspace{1em}}{}{\titlerule*[1pc]{.}\contentspage}
+\titlecontents{section}[1.25em]{}{\thecontentslabel.\hspace{1em}}{}{\titlerule*[1pc]{.}\contentspage}
+\titlecontents{subsection}[2.5em]{}{\thecontentslabel.\hspace{1em}}{}{\titlerule*[1pc]{.}\contentspage}
+
+\begin{document}
+
+% Отключение нумерации страниц
+\pagenumbering{gobble}
+
+%\input{tex/annotation}
+
+\newpage
+
+\tableofcontents
+\newpage
+
+% Включение нумерации страниц
+\pagenumbering{arabic}
+\setcounter{page}{3}
+\input{tex/introduction}
+%\input{tex/research}
+\input{tex/theory}
+\input{tex/research}
+%\input{tex/progDescription}
+%\input{tex/conclusion}
+
+\newpage
+
+\addcontentsline{toc}{chapter}{Список литературы}
+\renewcommand\bibname{СПИСОК ЛИТЕРАТУРЫ}
+
+\begin{thebibliography}{00}
+    \bibitem{1}
+			Ю.Г. Соловейчик, М.Э. Рояк, М.Г. Персова Метод конечных элементов для скалярных и векторных задач Учеб. пособие. — Новосибирск: Изд-во НГТУ, 2007 — 896 с.
+    \bibitem{2}
+            А.Н. Тихонов, А.А. Самарский Уравнения математической физики: Учеб.пособие. / А.Н. Тихонов, А.А. Самарский — 6-е изд., — М: Изд-во МГУ, 1999 — 799 с.
+\end{thebibliography}
+
+\newpage
+\input{tex/appendix1}
+
+\end{document}
