@@ -17,3 +17,4 @@
 **/Docs/**/*.gz
 **/Docs/**/*.out
 **/Docs/"LaTeX отчет"
+*.wbk
